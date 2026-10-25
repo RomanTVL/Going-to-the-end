@@ -7,840 +7,511 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Ruslan+Display&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: колодец, освещённый фонарём — карта главная, справа узкая летопись путника */
+/* Layout: тёмный зал, один экран по центру, под ним табличка с номером дубля */
 :root {
-  --abyss: #0a080e;
-  --stone: #15111b;
-  --line: #2b2333;
-  --bone: #ece3d2;
-  --ash: #8a7f95;
-  --ember: #ffb347;
-  --blood: #ff5a5a;
-  --frost: #9fd3ff;
-  --f-display: "Ruslan Display", "Times New Roman", serif;
-  --f-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --hall: #050405;
+  --screen: #000;
+  --film: #efe8dc;
+  --dim: #8e877c;
+  --seat: #1c1719;
+  --cut: #ff4a3d;
+  --f-film: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --f-slate: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-html, body { min-height: 100%; }
+html, body { height: 100%; }
 body {
   margin: 0;
-  background: radial-gradient(120% 80% at 50% 0%, #1a1220 0%, var(--abyss) 60%) fixed, var(--abyss);
-  color: var(--bone);
-  font-family: var(--f-mono);
-  font-size: 14px;
-  line-height: 1.5;
+  background: radial-gradient(70% 50% at 50% 30%, #151012 0%, var(--hall) 70%) fixed, var(--hall);
+  color: var(--film);
+  font-family: var(--f-slate);
+  font-size: 13px;
 }
-.wrap {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding-block: 20px 32px;
+.hall {
+  min-height: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  padding-block: 16px;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 270px;
-  gap: 16px 22px;
 }
-header { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 20px; }
-h1 {
+.screen {
+  width: min(100%, calc((100dvh - 190px) * 0.8), 560px);
+  min-width: min(260px, 100%);
+  aspect-ratio: 4 / 5;
+  background: var(--screen);
+  box-shadow: 0 0 0 1px #201a1c, 0 0 80px rgba(239, 232, 220, .07), 0 40px 120px -40px rgba(239, 232, 220, .18);
+}
+canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.slate {
+  width: min(100%, 560px);
   margin: 0;
-  font-family: var(--f-display);
-  font-weight: 400;
-  font-size: clamp(28px, 5vw, 46px);
-  letter-spacing: .04em;
-  line-height: 1;
-  color: var(--bone);
-  text-shadow: 0 0 18px rgba(255, 179, 71, .35), 0 0 2px rgba(255, 179, 71, .6);
-  text-wrap: balance;
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px;
+  font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--dim);
+  font-variant-numeric: tabular-nums;
 }
-.tag { color: var(--ash); margin: 0; font-size: 13px; }
-.tag b { color: var(--ember); font-weight: 400; }
-.main { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
-.stage {
-  position: relative;
-  border: 1px solid var(--line);
-  background: #000;
-  box-shadow: 0 0 0 4px #07050a, 0 30px 80px -30px rgba(255, 140, 60, .25);
+.slate b { color: var(--film); font-weight: 500; }
+.hint { color: #6a625b; letter-spacing: .08em; justify-content: center; text-align: center; }
+.pads { display: none; gap: 10px; width: min(100%, 560px); }
+.pads button {
+  flex: 1; height: 58px; font: 500 20px var(--f-slate); color: var(--film);
+  background: var(--seat); border: 1px solid #2c2427; border-radius: 0;
+  -webkit-user-select: none; user-select: none; touch-action: none;
 }
-canvas { display: block; width: 100%; height: auto; touch-action: manipulation; cursor: crosshair; }
-.panel { min-width: 0; display: flex; flex-direction: column; gap: 18px; }
-.lbl { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ash); }
-.row { display: flex; justify-content: space-between; align-items: baseline; }
-.num { font-variant-numeric: tabular-nums; }
-.vitals { display: grid; gap: 6px; }
-.bar { height: 8px; background: var(--stone); border: 1px solid var(--line); margin-bottom: 8px; overflow: hidden; }
-.bar i { display: block; height: 100%; width: 50%; transition: width .2s ease; }
-.bar.hp i { background: linear-gradient(90deg, #8f1f2b, var(--blood)); }
-.bar.light i { background: linear-gradient(90deg, #7a3c10, var(--ember)); box-shadow: 0 0 10px var(--ember); }
-.bar.xp { height: 4px; }
-.bar.xp i { background: var(--frost); }
-.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0; }
-.stats div { border: 1px solid var(--line); background: var(--stone); padding: 6px 10px; }
-.stats dt { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ash); }
-.stats dd { margin: 0; font-size: 18px; font-variant-numeric: tabular-nums; }
-.track { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; }
-.track li { height: 22px; border: 1px solid var(--line); display: grid; place-items: center; font-size: 10px; color: var(--ash); font-variant-numeric: tabular-nums; }
-.track li.done { background: #2a1d14; color: #a77b4d; border-color: #3d2b1d; }
-.track li.here { background: var(--ember); color: #1a0f05; border-color: var(--ember); box-shadow: 0 0 12px rgba(255, 179, 71, .6); }
-.track li.end { font-family: var(--f-display); font-size: 13px; color: var(--bone); }
-.log { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 12.5px; min-height: 9.5em; }
-.log li { color: var(--bone); }
-.log li:nth-child(n+2) { opacity: .7; }
-.log li:nth-child(n+4) { opacity: .45; }
-.log li:nth-child(n+6) { opacity: .25; }
-.log .bad { color: var(--blood); }
-.log .good { color: #b9f27c; }
-.log .warm { color: var(--ember); }
-.log .cold { color: var(--frost); }
-.keys { font-size: 12px; color: var(--ash); border-top: 1px solid var(--line); padding-top: 12px; }
-.keys kbd { font-family: var(--f-mono); border: 1px solid var(--line); background: var(--stone); padding: 0 5px; color: var(--bone); }
-.pad { display: none; grid-template-columns: repeat(3, 56px); gap: 6px; justify-content: center; }
-.pad button { height: 52px; font-family: var(--f-mono); font-size: 18px; color: var(--bone); background: var(--stone); border: 1px solid var(--line); border-radius: 0; }
-.pad button:active { background: #2a1d14; border-color: var(--ember); }
-@media (max-width: 860px) {
-  .wrap { grid-template-columns: minmax(0, 1fr); }
-  .pad { display: grid; }
-  .keys { display: none; }
-}
-@media (pointer: coarse) { .pad { display: grid; } }
-
-.overlay { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; overflow-y: auto;
-  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
-  background: rgba(5, 3, 8, .86); backdrop-filter: blur(3px); }
-.card { width: min(560px, 100%); border: 1px solid var(--line); background: linear-gradient(180deg, #17111c, #0d0a11); padding: 28px; display: grid; gap: 14px; text-align: left; }
-.card h2 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: clamp(30px, 7vw, 48px); line-height: 1; color: var(--bone); text-shadow: 0 0 22px rgba(255, 179, 71, .4); text-wrap: balance; }
-.card p { margin: 0; color: #cfc5b6; max-width: 62ch; }
-.eyebrow { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--ember) !important; }
-.legend { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 4px 16px; font-size: 13px; color: var(--ash); }
-.legend b { display: inline-block; width: 1.6em; font-weight: 700; }
-.btn { justify-self: start; font-family: var(--f-mono); font-size: 15px; letter-spacing: .08em; text-transform: uppercase; padding: 12px 22px; color: #1a0f05; background: var(--ember); border: 0; cursor: pointer; box-shadow: 0 0 24px rgba(255, 179, 71, .35); }
-.btn:hover { filter: brightness(1.1); }
-button:focus-visible { outline: 2px solid var(--frost); outline-offset: 3px; }
-.perks { display: grid; gap: 8px; }
-.perk { text-align: left; font-family: var(--f-mono); color: var(--bone); background: var(--stone); border: 1px solid var(--line); padding: 12px 14px; cursor: pointer; display: grid; gap: 2px; }
-.perk:hover { border-color: var(--ember); }
-.perk strong { color: var(--ember); font-weight: 700; }
-.perk span { color: var(--ash); font-size: 13px; }
-.perk kbd { float: right; color: var(--ash); font-family: var(--f-mono); }
-.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin: 0; }
-.summary div { border: 1px solid var(--line); padding: 8px 10px; }
-.summary dt { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ash); }
-.summary dd { margin: 0; font-size: 20px; font-variant-numeric: tabular-nums; }
-.hint { font-size: 12px; color: var(--ash); }
-@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+.pads button.on { background: #2c2427; border-color: var(--film); }
+.pads .jump { flex: 1.4; }
+button:focus-visible { outline: 2px solid var(--film); outline-offset: 2px; }
+@media (pointer: coarse) { .pads { display: flex; } .hint { display: none; } }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>Going to the End</h1>
-    <p class="tag">Десять ярусов вниз. Один фонарь. <b id="best">Рекорд: —</b></p>
-  </header>
-
-  <div class="main">
-    <div class="stage">
-      <canvas id="cv" aria-label="Игровое поле"></canvas>
-    </div>
-    <div class="pad" id="pad" aria-label="Управление">
-      <button data-d="-1,-1" aria-label="Вверх-влево">↖</button>
-      <button data-d="0,-1" aria-label="Вверх">↑</button>
-      <button data-d="1,-1" aria-label="Вверх-вправо">↗</button>
-      <button data-d="-1,0" aria-label="Влево">←</button>
-      <button data-d="0,0" aria-label="Ждать">·</button>
-      <button data-d="1,0" aria-label="Вправо">→</button>
-      <button data-d="-1,1" aria-label="Вниз-влево">↙</button>
-      <button data-d="0,1" aria-label="Вниз">↓</button>
-      <button data-d="1,1" aria-label="Вниз-вправо">↘</button>
-    </div>
+<main class="hall">
+  <div class="screen"><canvas id="cv" aria-label="Экран с титрами"></canvas></div>
+  <div class="slate">
+    <span>Дубль <b id="take">1</b></span>
+    <span>Сцена <b id="scene">—</b></span>
+    <span>Время <b id="time">00:00</b></span>
+    <span>Рекорд <b id="best">—</b></span>
   </div>
-
-  <aside class="panel">
-    <section class="vitals">
-      <div class="row"><span class="lbl">Здоровье</span><span class="num" id="hpT"></span></div>
-      <div class="bar hp"><i id="hpB"></i></div>
-      <div class="row"><span class="lbl">Свет фонаря</span><span class="num" id="lT"></span></div>
-      <div class="bar light"><i id="lB"></i></div>
-      <div class="row"><span class="lbl">Опыт · ур. <span id="lvl"></span></span><span class="num" id="xpT"></span></div>
-      <div class="bar xp"><i id="xpB"></i></div>
-    </section>
-    <dl class="stats">
-      <div><dt>Атака</dt><dd id="sAtk"></dd></div>
-      <div><dt>Защита</dt><dd id="sDef"></dd></div>
-    </dl>
-    <section>
-      <div class="row"><span class="lbl">Путь вниз</span><span class="num lbl" id="depthT"></span></div>
-      <ol class="track" id="track"></ol>
-    </section>
-    <ul class="log" id="log" aria-live="polite"></ul>
-    <div class="keys">
-      <kbd>WASD</kbd>/<kbd>←↑↓→</kbd> ход · <kbd>Q</kbd><kbd>E</kbd><kbd>Z</kbd><kbd>C</kbd> диагонали · <kbd>Пробел</kbd> ждать. Атака — шаг во врага.
-    </div>
-  </aside>
-</div>
-
-<div class="overlay" id="ov"><div class="card" id="ovCard"></div></div>
+  <div class="pads" id="pads">
+    <button data-k="left" aria-label="Влево">◀</button>
+    <button data-k="jump" class="jump" aria-label="Прыжок">▲</button>
+    <button data-k="right" aria-label="Вправо">▶</button>
+  </div>
+  <p class="slate hint">← → или A D — идти · Пробел или ↑ — прыжок · не вылетай из кадра</p>
+</main>
 
 <script>
 (() => {
 'use strict';
 
-// ---------- constants ----------
-const MW = 64, MH = 40;        // map size in tiles
-let VW = 31, VH = 21; const TS = 24; // viewport in tiles (shrinks on phones), tile size in px
-const MAXD = 10;
-const FUEL_START = 150;
+const W = 540, H = 675, CX = W / 2;
+const LINE = 74;                       // distance between credit lines
+const PW = 10, PH = 10;                // the dot
+const GRAV = 1500, JUMP = 520, RUN = 230, ACC = 2200, MAXFALL = 780;
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const FILM = '#efe8dc', DIM = '#8e877c';
+const SERIF = '"Cormorant Garamond", Georgia, "Times New Roman", serif';
+const MONO = '"IBM Plex Mono", ui-monospace, monospace';
 
-const ENEMIES = [
-  { k: 'shade',  g: 's', name: 'Тень',           hp: 4,  atk: 2, def: 0, xp: 3,  c: '#a497ff', min: 1 },
-  { k: 'moth',   g: 'm', name: 'Пепельная моль', hp: 3,  atk: 1, def: 0, xp: 4,  c: '#f2d36b', min: 2, drain: 25, lured: true },
-  { k: 'hollow', g: 'h', name: 'Пустой',         hp: 8,  atk: 3, def: 1, xp: 6,  c: '#5fd3c6', min: 2 },
-  { k: 'wraith', g: 'w', name: 'Призрак',        hp: 10, atk: 4, def: 1, xp: 10, c: '#ff6b95', min: 4, fast: true },
-  { k: 'husk',   g: 'H', name: 'Оболочка',       hp: 20, atk: 6, def: 3, xp: 15, c: '#e0925a', min: 6, slow: true },
+// '~' marks a name that crumbles a moment after you stand on it
+const CREDITS = [
+  ['title', 'GOING TO THE END'],
+  ['c', 'Фильм окончен. Не вставай.'],
+  ['h', 'В ролях'],
+  ['r', 'Точка', 'Ты'],
+  ['r', 'Гравитация', 'Сама себя'],
+  ['r', 'Верхний край кадра', 'Время'],
+  ['r', 'Нижний край кадра', 'Пустота'],
+  ['c', 'а также'],
+  ['w', 'Тень', 'Свет', 'Пыль', 'Плёнка'],
+  ['r', 'Зритель в третьем ряду', '~Неизвестен'],
+  ['c', 'Все персонажи вымышлены, кроме тебя'],
+  ['h', 'Постановка'],
+  ['r', 'Режиссёр', 'Случай'],
+  ['r', 'Сценарий', 'Никто не дочитал'],
+  ['r', 'Оператор', 'Камера, что не ждёт'],
+  ['r', 'Монтаж', '~Вырезано'],
+  ['w', 'Аня', 'Боря', 'Вера', '~Гоша'],
+  ['r', 'Свет', 'Проектор № 2'],
+  ['r', 'Помощник режиссёра', 'Кофе'],
+  ['c', 'Снято одним дублем. Почти.'],
+  ['h', 'Музыка'],
+  ['r', 'Композитор', 'Тишина'],
+  ['r', 'Звукорежиссёр', 'Шорох попкорна'],
+  ['w', 'До', 'Ре', '~Ми', 'Фа', 'Соль', '~Ля', 'Си'],
+  ['r', 'Песня «До конца»', 'Все, кто остался'],
+  ['c', 'Музыка не прозвучала ни разу'],
+  ['h', 'Каскадёры'],
+  ['r', 'Падения', 'Ты'],
+  ['r', 'Ещё падения', 'Тоже ты'],
+  ['r', 'Дублёр', '~Отсутствовал'],
+  ['w', '~Раз', 'Два', '~Три'],
+  ['c', '~Ни одна точка не пострадала'],
+  ['r', 'Страховка', '~Не предусмотрена'],
+  ['h', 'Благодарности'],
+  ['r', 'Тем, кто не ушёл', 'Спасибо'],
+  ['r', 'Тем, кто ушёл', '~Тоже спасибо'],
+  ['r', 'Билетёру', 'За терпение'],
+  ['w', 'Маме', '~Папе', 'Коту'],
+  ['c', 'Свет в зале включат через минуту'],
+  ['r', 'Уборка зала', '~Уже идёт'],
+  ['c', 'Сцены после титров не будет'],
+  ['end', 'THE END'],
 ];
-const BOSS = { k: 'keeper', g: 'K', name: 'Хранитель Конца', hp: 70, atk: 8, def: 3, xp: 0, c: '#ffffff', boss: true, drain: 12 };
-
-const ITEMS = {
-  ember: { g: '*', name: 'Уголёк',         c: '#ffb347' },
-  flask: { g: '!', name: 'Флакон',         c: '#ff6b6b' },
-  shard: { g: '/', name: 'Осколок клинка', c: '#9fd3ff' },
-  ward:  { g: '[', name: 'Оберег',         c: '#b9f27c' },
-};
-
-const PERKS = [
-  { n: 'Крепость',        d: '+6 к макс. здоровью и полное исцеление', f: p => { p.maxHp += 6; p.hp = p.maxHp; } },
-  { n: 'Клинок',          d: '+2 к атаке',                              f: p => { p.atk += 2; } },
-  { n: 'Панцирь',         d: '+1 к защите',                             f: p => { p.def += 1; } },
-  { n: 'Долгий фитиль',   d: '+60 к запасу света, фонарь снова полон',  f: p => { p.maxFuel += 60; p.fuel = p.maxFuel; } },
-  { n: 'Жатва',           d: '+2 здоровья за каждое убийство',          f: p => { p.reap += 2; } },
-  { n: 'Пепельное сердце', d: '+12 света за каждое убийство',           f: p => { p.kindle += 12; } },
-];
-
-const DEPTH_NAMES = ['', 'Порог', 'Сырые залы', 'Корни', 'Немые кельи', 'Пепельный ход',
-  'Кости города', 'Глубокий колодец', 'Тихая вода', 'Последний свет', 'Конец'];
 
 // ---------- helpers ----------
-const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
-const pick = a => a[Math.floor(Math.random() * a.length)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-const cheb = (ax, ay, bx, by) => Math.max(Math.abs(ax - bx), Math.abs(ay - by));
 const $ = id => document.getElementById(id);
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
   set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* storage blocked */ } },
 };
+const fmt = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+
+const cv = $('cv'), ctx = cv.getContext('2d');
+const DPR = Math.min(2, window.devicePixelRatio || 1);
+cv.width = W * DPR; cv.height = H * DPR;
+
+// ---------- layout: every word on screen is a platform ----------
+let plats = [], deco = [], checkpoints = [], endTop = 0;
+
+function platform(text, font, size, x, base, color, extra = {}) {
+  ctx.font = font;
+  const fragile = text.startsWith('~');
+  if (fragile) text = text.slice(1);
+  const w = ctx.measureText(text).width;
+  const p = { text, font, size, x, w, base, top: base - size * .66, color, fragile, hold: 0, gone: false, goneT: 0, ...extra };
+  plats.push(p);
+  return p;
+}
+function measure(text, font) { ctx.font = font; return ctx.measureText(text.replace('~', '')).width; }
+
+function layout() {
+  plats = []; deco = []; checkpoints = [];
+  let y = H * .42;
+  for (const [type, ...a] of CREDITS) {
+    if (type === 'title') {
+      // the title is four separate words, the gaps between them are the first way down
+      const font = `600 40px ${SERIF}`, sep = 20;
+      const words = a[0].split(' '), ws = words.map(t => measure(t, font));
+      const x0 = CX - (ws.reduce((s, v) => s + v, 0) + sep * (words.length - 1)) / 2;
+      let x = x0, top = 0;
+      words.forEach((t, i) => { top = platform(t, font, 40, x, y, FILM, { glow: true }).top; x += ws[i] + sep; });
+      checkpoints.push({ name: 'Начало', top, x: x0 + ws[0] / 2 });
+      y += LINE * 1.6;
+    } else if (type === 'h') {
+      y += LINE * .45;
+      const text = a[0].toUpperCase(), font = `italic 600 30px ${SERIF}`;
+      const p = platform(text, font, 30, CX - measure(text, font) / 2, y, FILM);
+      checkpoints.push({ name: a[0], top: p.top, x: CX });
+      y += LINE * 1.15;
+    } else if (type === 'r') {
+      const rf = `600 14px ${SERIF}`, nf = `500 24px ${SERIF}`, role = a[0].toUpperCase();
+      platform(role, rf, 14, CX - 18 - measure(role, rf), y, DIM);
+      platform(a[1], nf, 24, CX + 18, y, FILM);
+      y += LINE;
+    } else if (type === 'c') {
+      // a sentence: every word stands apart, so there is always a gap to drop through
+      const font = `italic 500 22px ${SERIF}`, sep = 16, fragile = a[0].startsWith('~');
+      const words = a[0].replace('~', '').split(' '), ws = words.map(t => measure(t, font));
+      let x = CX - (ws.reduce((s, v) => s + v, 0) + sep * (words.length - 1)) / 2;
+      words.forEach((t, i) => { platform((fragile ? '~' : '') + t, font, 22, x, y, FILM); x += ws[i] + sep; });
+      y += LINE;
+    } else if (type === 'w') {
+      const font = `500 22px ${SERIF}`, sep = 34;
+      const ws = a.map(t => measure(t, font));
+      let x = CX - (ws.reduce((s, v) => s + v, 0) + sep * (a.length - 1)) / 2;
+      a.forEach((t, i) => {
+        platform(t, font, 22, x, y, FILM);
+        x += ws[i];
+        if (i < a.length - 1) deco.push({ text: '·', font, x: x + sep / 2 - 3, base: y, color: DIM });
+        x += sep;
+      });
+      y += LINE;
+    } else if (type === 'end') {
+      y += LINE * 1.2;
+      const font = `600 84px ${SERIF}`, sep = 34;
+      const words = a[0].split(' '), ws = words.map(t => measure(t, font));
+      let x = CX - (ws[0] + ws[1] + sep) / 2;
+      words.forEach((t, i) => { platform(t, font, 84, x, y, FILM, { end: true, glow: true }); x += ws[i] + sep; });
+      endTop = y - 84 * .66;
+    }
+  }
+}
 
 // ---------- state ----------
-let S = null;
+let S;
+const keys = { left: false, right: false, jump: false };
 
-function newGame() {
+function reset() {
+  layout();
+  const cp = checkpoints[0];
   S = {
-    depth: 1, turn: 0, mode: 'play', log: [], fx: [], shake: 0, flash: 0, dark: 0, perksPending: 0,
-    p: { x: 0, y: 0, hp: 20, maxHp: 20, atk: 3, def: 0, fuel: FUEL_START, maxFuel: FUEL_START,
-         lvl: 1, xp: 0, next: 10, reap: 0, kindle: 0, kills: 0 },
+    mode: 'title', camY: 0, time: 0, take: 1, cp: 0, cutT: 0, cutWhy: '', wonT: 0,
+    p: { x: cp.x - PW / 2, y: cp.top - PH, vx: 0, vy: 0, ground: null, coyote: 0, buffer: 0, trail: [] },
   };
-  genLevel();
-  say('Фонарь зажжён. Конец ждёт внизу.', 'warm');
-  refresh();
+  hud();
 }
 
-function lightR() { return clamp(1.6 + S.p.fuel / 25, 1.6, 7.5); }
+function begin() { if (S.mode === 'title') { S.mode = 'play'; hud(); } }
 
-// ---------- level generation ----------
-function genLevel() {
-  const d = S.depth;
-  const map = [];
-  for (let y = 0; y < MH; y++) map.push(new Array(MW).fill(1));
-  const rooms = [];
-  for (let t = 0; t < 400 && rooms.length < 14; t++) {
-    const w = rnd(5, 11), h = rnd(4, 8), x = rnd(1, MW - w - 2), y = rnd(1, MH - h - 2);
-    if (rooms.some(r => x < r.x + r.w + 1 && x + w + 1 > r.x && y < r.y + r.h + 1 && y + h + 1 > r.y)) continue;
-    for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) map[yy][xx] = 0;
-    const room = { x, y, w, h, cx: x + (w >> 1), cy: y + (h >> 1) };
-    if (rooms.length) {
-      const prev = rooms[rooms.length - 1];
-      if (Math.random() < .5) { hTunnel(map, prev.cx, room.cx, prev.cy); vTunnel(map, prev.cy, room.cy, room.cx); }
-      else { vTunnel(map, prev.cy, room.cy, prev.cx); hTunnel(map, prev.cx, room.cx, room.cy); }
-    }
-    rooms.push(room);
-  }
-  // a couple of extra loops so the dungeon isn't a single line
-  for (let i = 0; i < 3; i++) {
-    const a = pick(rooms), b = pick(rooms);
-    if (a !== b) { hTunnel(map, a.cx, b.cx, a.cy); vTunnel(map, a.cy, b.cy, b.cx); }
-  }
-
-  S.map = map;
-  S.rooms = rooms;
-  S.enemies = [];
-  S.items = [];
-  S.stairs = null;
-  S.gate = null;
-  S.explored = [];
-  S.vis = [];
-  for (let y = 0; y < MH; y++) { S.explored.push(new Array(MW).fill(false)); S.vis.push(new Array(MW).fill(0)); }
-
-  const start = rooms[0];
-  S.p.x = start.cx; S.p.y = start.cy;
-  // farthest room from the start holds the way down
-  let far = rooms[1] || rooms[0];
-  for (const r of rooms) if (Math.hypot(r.cx - start.cx, r.cy - start.cy) > Math.hypot(far.cx - start.cx, far.cy - start.cy)) far = r;
-
-  if (d < MAXD) {
-    S.stairs = { x: far.cx, y: far.cy };
-  } else {
-    S.enemies.push({ ...BOSS, x: far.cx, y: far.cy, maxHp: BOSS.hp, awake: false, cd: 0 });
-  }
-
-  const others = rooms.filter(r => r !== start);
-  const pool = ENEMIES.filter(e => e.min <= d);
-  const count = d === MAXD ? 6 : 4 + Math.floor(d * 1.6);
-  for (let i = 0; i < count; i++) {
-    const s = spotIn(pick(others)); if (!s) continue;
-    S.enemies.push(mkEnemy(pick(pool), s.x, s.y));
-  }
-  const drops = [['ember', rnd(2, 3) + (d > 3 ? 1 : 0)], ['flask', rnd(1, 2)],
-                 ['shard', Math.random() < .35 ? 1 : 0], ['ward', Math.random() < .3 ? 1 : 0]];
-  for (const [type, n] of drops) for (let i = 0; i < n; i++) {
-    const s = spotIn(pick(rooms)); if (s) S.items.push({ type, x: s.x, y: s.y });
-  }
-  computeFov();
+function respawn() {
+  const cp = checkpoints[S.cp];
+  for (const pl of plats) if (pl.top >= cp.top - 1) { pl.gone = false; pl.hold = 0; pl.goneT = 0; }
+  S.camY = Math.max(0, cp.top - H * .4);
+  Object.assign(S.p, { x: cp.x - PW / 2, y: cp.top - PH, vx: 0, vy: 0, ground: null, coyote: 0, buffer: 0, trail: [] });
+  S.mode = 'play';
 }
 
-function hTunnel(map, x1, x2, y) { for (let x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) map[y][x] = 0; }
-function vTunnel(map, y1, y2, x) { for (let y = Math.min(y1, y2); y <= Math.max(y1, y2); y++) map[y][x] = 0; }
-
-function mkEnemy(t, x, y) {
-  const m = 1 + (S.depth - 1) * .12;
-  const hp = Math.round(t.hp * m);
-  return { ...t, x, y, hp, maxHp: hp, atk: t.atk + Math.floor((S.depth - 1) / 3), awake: false };
-}
-
-function enemyAt(x, y) { return S.enemies.find(e => e.x === x && e.y === y); }
-function itemAt(x, y) { return S.items.find(i => i.x === x && i.y === y); }
-function free(x, y) {
-  return S.map[y][x] === 0 && !(S.p.x === x && S.p.y === y) && !enemyAt(x, y) && !itemAt(x, y) &&
-    !(S.stairs && S.stairs.x === x && S.stairs.y === y);
-}
-function spotIn(r) {
-  for (let t = 0; t < 40; t++) {
-    const x = rnd(r.x, r.x + r.w - 1), y = rnd(r.y, r.y + r.h - 1);
-    if (free(x, y)) return { x, y };
-  }
-  return null;
-}
-
-// ---------- field of view (ray cast, light falls off with distance) ----------
-function computeFov() {
-  const r = lightR(), p = S.p;
-  for (let y = 0; y < MH; y++) S.vis[y].fill(0);
-  S.vis[p.y][p.x] = 1; S.explored[p.y][p.x] = true;
-  for (let a = 0; a < 360; a += 1) {
-    const dx = Math.cos(a * Math.PI / 180), dy = Math.sin(a * Math.PI / 180);
-    let x = p.x + .5, y = p.y + .5;
-    for (let s = 0; s < r * 4; s++) {
-      x += dx * .25; y += dy * .25;
-      const tx = Math.floor(x), ty = Math.floor(y);
-      if (tx < 0 || ty < 0 || tx >= MW || ty >= MH) break;
-      const dist = Math.hypot(tx - p.x, ty - p.y);
-      if (dist > r) break;
-      const l = 1 - dist / (r + .6);
-      if (l > S.vis[ty][tx]) S.vis[ty][tx] = l;
-      S.explored[ty][tx] = true;
-      if (S.map[ty][tx] === 1) break;
-    }
-  }
-}
-
-// ---------- turns ----------
-function act(dx, dy) {
-  if (!S || S.mode !== 'play') return;
-  const p = S.p;
-  if (dx || dy) {
-    const nx = p.x + dx, ny = p.y + dy;
-    const e = enemyAt(nx, ny);
-    if (e) {
-      attack(p, e);
-    } else if (S.map[ny][nx] === 0) {
-      p.x = nx; p.y = ny;
-      pickup();
-      if (S.stairs && p.x === S.stairs.x && p.y === S.stairs.y) { descend(); return; }
-      if (S.gate && p.x === S.gate.x && p.y === S.gate.y) { win(); return; }
-    } else {
-      return; // bumping a wall costs nothing
-    }
-  }
-  endTurn();
-}
-
-function endTurn() {
-  S.turn++;
-  enemiesAct();
-  if (S.mode === 'dead') { refresh(); return; }
-  const p = S.p;
-  if (p.fuel > 0) {
-    p.fuel--;
-    if (p.fuel === 30) say('Фонарь тускнеет. Ищи угольки.', 'warm');
-    if (p.fuel === 0) say('Фонарь погас. Тьма начинает есть тебя.', 'bad');
-  } else {
-    S.dark++;
-    if (S.dark % 3 === 0) { hurt(1, 'Тьма'); say('Тьма кусает: −1', 'bad'); }
-  }
-  computeFov();
-  refresh();
-}
-
-function enemiesAct() {
-  const dist = distMap();
-  const p = S.p;
-  for (const e of [...S.enemies]) {
-    if (e.hp <= 0) continue;
-    if (S.vis[e.y][e.x] > 0) e.awake = true;
-    if (e.lured && cheb(e.x, e.y, p.x, p.y) <= lightR() + 4) e.awake = true;
-    if (!e.awake) { if (Math.random() < .25) wander(e); continue; }
-    if (e.slow && S.turn % 2) continue;
-    if (e.boss) {
-      e.cd = (e.cd || 0) + 1;
-      if (e.cd % 6 === 0) summon(e);
-    }
-    const steps = e.fast ? 2 : 1;
-    for (let s = 0; s < steps; s++) {
-      if (cheb(e.x, e.y, p.x, p.y) <= 1) { attack(e, p); break; }
-      if (!stepDown(e, dist)) break;
-    }
-    if (S.mode === 'dead') return;
-  }
-}
-
-// breadth-first distance from the player, so monsters path around walls
-function distMap() {
-  const D = [];
-  for (let y = 0; y < MH; y++) D.push(new Array(MW).fill(Infinity));
-  const q = [[S.p.x, S.p.y]]; D[S.p.y][S.p.x] = 0;
-  for (let i = 0; i < q.length; i++) {
-    const [x, y] = q[i];
-    if (D[y][x] > 30) continue;
-    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
-      const nx = x + dx, ny = y + dy;
-      if ((!dx && !dy) || nx < 0 || ny < 0 || nx >= MW || ny >= MH || S.map[ny][nx] !== 0) continue;
-      if (D[ny][nx] !== Infinity) continue;
-      D[ny][nx] = D[y][x] + 1; q.push([nx, ny]);
-    }
-  }
-  return D;
-}
-
-function stepDown(e, D) {
-  let best = null, bd = D[e.y][e.x];
-  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
-    const nx = e.x + dx, ny = e.y + dy;
-    if (!dx && !dy) continue;
-    if (S.map[ny][nx] !== 0 || enemyAt(nx, ny) || (nx === S.p.x && ny === S.p.y)) continue;
-    if (D[ny][nx] < bd) { bd = D[ny][nx]; best = [nx, ny]; }
-  }
-  if (!best) return false;
-  e.x = best[0]; e.y = best[1];
-  return true;
-}
-
-function wander(e) {
-  const dx = rnd(-1, 1), dy = rnd(-1, 1), nx = e.x + dx, ny = e.y + dy;
-  if (S.map[ny][nx] === 0 && !enemyAt(nx, ny) && !(nx === S.p.x && ny === S.p.y)) { e.x = nx; e.y = ny; }
-}
-
-function summon(boss) {
-  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
-    const nx = boss.x + dx, ny = boss.y + dy;
-    if ((dx || dy) && free(nx, ny)) {
-      const sh = mkEnemy(ENEMIES[0], nx, ny); sh.awake = true; S.enemies.push(sh);
-      say('Хранитель зовёт тень из тьмы.', 'cold');
-      return;
-    }
-  }
-}
-
-function attack(a, b) {
-  const dmg = Math.max(1, a.atk + rnd(-1, 1) - b.def);
-  const isP = b === S.p;
-  addFx(b.x, b.y, '−' + dmg, isP ? '#ff5a5a' : '#ffe2b8');
-  if (isP) {
-    hurt(dmg, a.name);
-    say(`${a.name} бьёт тебя: −${dmg}`, 'bad');
-    if (a.drain && S.mode !== 'dead') {
-      S.p.fuel = Math.max(0, S.p.fuel - a.drain);
-      addFx(b.x, b.y - .6, '−свет', '#ffb347');
-      say(a.boss ? 'Хранитель гасит твой свет.' : 'Моль пьёт твой свет.', 'warm');
-    }
-  } else {
-    b.hp -= dmg;
-    b.awake = true;
-    if (b.hp <= 0) kill(b);
-    else say(`Ты бьёшь: ${b.name} −${dmg}`);
-  }
-}
-
-function hurt(dmg, cause) {
-  const p = S.p;
-  p.hp -= dmg;
-  S.shake = REDUCED ? 0 : 7;
-  S.flash = .35;
-  if (p.hp <= 0) { p.hp = 0; die(cause); }
-}
-
-function kill(e) {
-  const p = S.p;
-  S.enemies = S.enemies.filter(x => x !== e);
-  p.kills++;
-  say(`${e.name} рассыпается в пепел. +${e.xp} опыта`, 'good');
-  if (p.reap) p.hp = Math.min(p.maxHp, p.hp + p.reap);
-  if (p.kindle) p.fuel = Math.min(p.maxFuel, p.fuel + p.kindle);
-  if (e.boss) {
-    S.gate = { x: e.x, y: e.y };
-    say('Хранитель пал. Врата Конца открыты.', 'warm');
-  }
-  p.xp += e.xp;
-  while (p.xp >= p.next) {
-    p.xp -= p.next; p.lvl++; p.next = Math.round(p.next * 1.5);
-    p.maxHp += 2; p.hp = Math.min(p.maxHp, p.hp + 2);
-    S.perksPending++;
-  }
-  if (S.perksPending) showPerks();
-}
-
-function pickup() {
-  const p = S.p, it = itemAt(p.x, p.y);
-  if (!it) return;
-  S.items = S.items.filter(x => x !== it);
-  if (it.type === 'ember') { p.fuel = Math.min(p.maxFuel, p.fuel + 50); say('Уголёк: фонарь разгорается. +50 света', 'warm'); addFx(p.x, p.y, '+свет', '#ffb347'); }
-  if (it.type === 'flask') { const h = 8 + S.depth; p.hp = Math.min(p.maxHp, p.hp + h); say(`Флакон: +${h} здоровья`, 'good'); addFx(p.x, p.y, '+' + h, '#b9f27c'); }
-  if (it.type === 'shard') { p.atk++; say('Осколок клинка: атака +1', 'cold'); }
-  if (it.type === 'ward') { p.def++; say('Оберег: защита +1', 'cold'); }
-}
-
-function descend() {
-  S.depth++;
-  S.p.fuel = Math.min(S.p.maxFuel, S.p.fuel + 20);
-  const best = +(store.get('gtte-best') || 0);
-  if (S.depth > best) store.set('gtte-best', S.depth);
-  genLevel();
-  say(S.depth === MAXD ? 'Ярус 10 — Конец. Здесь ждёт Хранитель.' : `Ярус ${S.depth}: ${DEPTH_NAMES[S.depth]}.`, 'cold');
-  refresh();
-}
-
-function die(cause) {
-  S.mode = 'dead';
-  say(`Ты пал. Причина: ${cause}.`, 'bad');
-  showEnd(false, cause);
+function cut(why) {
+  S.mode = 'cut'; S.cutT = 0; S.cutWhy = why; S.take++;
+  hud();
 }
 
 function win() {
-  S.mode = 'won';
-  store.set('gtte-best', MAXD + 1);
-  showEnd(true);
+  S.mode = 'won'; S.wonT = 0;
+  const best = +(store.get('gtte-credits-best') || 0);
+  if (!best || S.time < best) store.set('gtte-credits-best', S.time.toFixed(2));
+  hud();
 }
 
-function say(text, cls = '') { S.log.unshift({ text, cls }); S.log.length = Math.min(S.log.length, 8); }
-function addFx(x, y, text, color) { S.fx.push({ x, y, text, color, t0: performance.now() }); }
-
-// ---------- HUD ----------
-function refresh() {
+// ---------- update ----------
+function update(dt) {
   const p = S.p;
-  $('hpT').textContent = `${p.hp} / ${p.maxHp}`;
-  $('hpB').style.width = (p.hp / p.maxHp * 100) + '%';
-  $('lT').textContent = `${p.fuel} / ${p.maxFuel}`;
-  $('lB').style.width = (p.fuel / p.maxFuel * 100) + '%';
-  $('xpT').textContent = `${p.xp} / ${p.next}`;
-  $('xpB').style.width = (p.xp / p.next * 100) + '%';
-  $('lvl').textContent = p.lvl;
-  $('sAtk').textContent = p.atk;
-  $('sDef').textContent = p.def;
-  $('depthT').textContent = `${S.depth} · ${DEPTH_NAMES[S.depth]}`;
-  const tr = $('track'); tr.innerHTML = '';
-  for (let i = 1; i <= MAXD; i++) {
-    const li = document.createElement('li');
-    li.textContent = i === MAXD ? 'Ω' : i;
-    if (i === MAXD) li.classList.add('end');
-    if (i < S.depth) li.classList.add('done');
-    if (i === S.depth) li.classList.add('here');
-    tr.appendChild(li);
+  for (const pl of plats) if (pl.gone && pl.goneT < 1) pl.goneT += dt * 1.4;
+  if (S.mode === 'cut') { S.cutT += dt; if (S.cutT > 1.25) respawn(); return; }
+  if (S.mode === 'title') return;
+  if (S.mode === 'won') S.wonT += dt;
+
+  if (S.mode === 'play') {
+    S.time += dt;
+    // credits roll faster the closer you get to the end, and stop once THE END is in the frame
+    const k = clamp(S.camY / (endTop || 1), 0, 1);
+    S.camY = Math.min(S.camY + (34 + 40 * k) * dt, endTop - H * .6);
   }
-  const lg = $('log'); lg.innerHTML = '';
-  for (const m of S.log) { const li = document.createElement('li'); li.textContent = m.text; if (m.cls) li.className = m.cls; lg.appendChild(li); }
-  const best = +(store.get('gtte-best') || 0);
-  $('best').textContent = best > MAXD ? 'Рекорд: Конец достигнут' : best ? `Рекорд: ярус ${best}` : 'Рекорд: —';
+
+  const dir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+  const target = S.mode === 'won' ? 0 : dir * RUN;
+  p.vx += clamp(target - p.vx, -ACC * dt, ACC * dt);
+  p.coyote = p.ground ? .09 : Math.max(0, p.coyote - dt);
+  p.buffer = Math.max(0, p.buffer - dt);
+  if (p.buffer > 0 && p.coyote > 0 && S.mode === 'play') {
+    p.vy = -JUMP; p.buffer = 0; p.coyote = 0; p.ground = null;
+  }
+  p.vy = Math.min(MAXFALL, p.vy + GRAV * dt);
+
+  const prevBottom = p.y + PH;
+  p.x = clamp(p.x + p.vx * dt, 0, W - PW);
+  p.y += p.vy * dt;
+
+  // one-way platforms: land on a word only while falling onto its top
+  p.ground = null;
+  if (p.vy >= 0) {
+    let best = null;
+    for (const pl of plats) {
+      if (pl.gone || p.x + PW <= pl.x || p.x >= pl.x + pl.w) continue;
+      if (prevBottom <= pl.top + .5 && p.y + PH >= pl.top && (!best || pl.top < best.top)) best = pl;
+    }
+    if (best) { p.y = best.top - PH; p.vy = 0; p.ground = best; }
+  }
+
+  if (p.ground && p.ground.fragile) {
+    p.ground.hold += dt;
+    if (p.ground.hold > .55) { p.ground.gone = true; p.ground = null; }
+  }
+  if (p.ground && p.ground.end && S.mode === 'play') win();
+
+  for (let i = S.cp + 1; i < checkpoints.length; i++) if (p.y > checkpoints[i].top) { S.cp = i; hud(); }
+
+  p.trail.unshift({ x: p.x + PW / 2, y: p.y + PH / 2 });
+  if (p.trail.length > 10) p.trail.pop();
+
+  if (S.mode === 'play') {
+    // the camera chases a falling dot, but slower than it falls: a short slip is forgiven, a long drop is not
+    const low = p.y - S.camY - H * .68;
+    if (low > 0) S.camY = Math.min(S.camY + Math.min(low, 140 * dt), endTop - H * .6);
+    const sy = p.y - S.camY;
+    if (sy + PH < -2) cut('Тебя унесло за верх кадра');
+    else if (sy > H + 2) cut('Ты выпал из кадра');
+  }
 }
 
-// ---------- overlays ----------
-const ov = $('ov'), card = $('ovCard');
-function hideOv() { ov.hidden = true; }
+// ---------- render ----------
+const grain = document.createElement('canvas');
+grain.width = grain.height = 160;
+{
+  const g = grain.getContext('2d'), img = g.createImageData(160, 160);
+  for (let i = 0; i < img.data.length; i += 4) { const v = Math.random() * 255; img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255; }
+  g.putImageData(img, 0, 0);
+}
+const grainPat = ctx.createPattern(grain, 'repeat');
 
-function showTitle() {
-  card.innerHTML = `
-    <p class="eyebrow">Рогалик о последнем спуске</p>
-    <h2>Going to the End</h2>
-    <p>Под городом есть колодец в десять ярусов, и на дне его Конец. Твой фонарь горит, пока ты идёшь, и тускнеет с каждым шагом. Чем меньше света, тем меньше ты видишь. Когда он погаснет, тьма начнёт есть тебя.</p>
-    <p>Подбирай угольки, убивай тех, кто живёт во тьме, расти в силе и спускайся. На дне ждёт Хранитель Конца.</p>
-    <ul class="legend">
-      <li><b style="color:#fff">@</b>это ты</li>
-      <li><b style="color:#9fd3ff">&gt;</b>спуск ниже</li>
-      <li><b style="color:#ffb347">*</b>уголёк, +свет</li>
-      <li><b style="color:#ff6b6b">!</b>флакон, +здоровье</li>
-      <li><b style="color:#9fd3ff">/</b>осколок, +атака</li>
-      <li><b style="color:#b9f27c">[</b>оберег, +защита</li>
-      <li><b style="color:#f2d36b">m</b>моль пьёт свет</li>
-      <li><b style="color:#ff6b95">w</b>призрак быстр</li>
-    </ul>
-    <button class="btn" id="startBtn">Начать спуск</button>
-    <p class="hint">Enter — начать. На телефоне ходи кнопками или касанием поля.</p>`;
-  ov.hidden = false;
-  $('startBtn').onclick = start;
-  $('startBtn').focus();
+function drawText(pl, alpha, dy = 0, jitter = 0) {
+  ctx.globalAlpha = alpha;
+  ctx.font = pl.font;
+  ctx.fillStyle = pl.color;
+  ctx.fillText(pl.text, pl.x + jitter, pl.base + dy);
 }
 
-function start() { newGame(); hideOv(); }
+function render(t) {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, W, H);
+  const p = S.p, cam = S.camY;
+  const flick = REDUCED ? 1 : .94 + .06 * Math.random();
+  const wonFade = S.mode === 'won' ? clamp(S.wonT / 1.6, 0, 1) : 0;
 
-function showPerks() {
-  S.mode = 'perk';
-  const opts = [...PERKS].sort(() => Math.random() - .5).slice(0, 3);
-  card.innerHTML = `
-    <p class="eyebrow">Уровень ${S.p.lvl}</p>
-    <h2>Пепел делает сильнее</h2>
-    <p>Выбери один дар.</p>
-    <div class="perks">${opts.map((o, i) => `<button class="perk" data-i="${i}"><strong>${o.n} <kbd>${i + 1}</kbd></strong><span>${o.d}</span></button>`).join('')}</div>`;
-  ov.hidden = false;
-  S.perkOpts = opts;
-  card.querySelectorAll('.perk').forEach(b => b.onclick = () => choosePerk(+b.dataset.i));
-  card.querySelector('.perk').focus();
+  ctx.save();
+  ctx.translate(0, -cam);
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  for (const d of deco) {
+    if (d.base - cam < -40 || d.base - cam > H + 100) continue;
+    ctx.globalAlpha = .8 * flick * (1 - wonFade); ctx.font = d.font; ctx.fillStyle = d.color; ctx.fillText(d.text, d.x, d.base);
+  }
+  for (const pl of plats) {
+    const sy = pl.base - cam;
+    if (sy < -40 || sy > H + 120) continue;
+    let a = flick * (pl.end ? 1 : 1 - wonFade);
+    if (pl.gone) {
+      if (pl.goneT >= 1) continue;
+      drawText(pl, a * (1 - pl.goneT), pl.goneT * pl.goneT * 160);
+      continue;
+    }
+    const standing = p.ground === pl;
+    const shake = pl.fragile && pl.hold > 0 && !REDUCED ? (Math.random() - .5) * 3 * (pl.hold / .55) : 0;
+    if (pl.fragile) a *= .62 + .1 * Math.sin(t * .006 + pl.x);
+    if (pl.glow || standing) { ctx.shadowColor = 'rgba(255,240,210,.55)'; ctx.shadowBlur = standing ? 14 : 18; }
+    drawText(pl, a, 0, shake);
+    ctx.shadowBlur = 0;
+    if (pl.fragile) {
+      // a dashed hairline under a name that will not hold you for long
+      ctx.globalAlpha = a * .5; ctx.fillStyle = DIM;
+      for (let x = pl.x; x < pl.x + pl.w; x += 6) ctx.fillRect(x + shake, pl.base + 5, 3, 1);
+    }
+  }
+  ctx.globalAlpha = 1;
+
+  // the dot
+  if (S.mode !== 'cut') {
+    p.trail.forEach((q, i) => {
+      ctx.globalAlpha = .25 * (1 - i / p.trail.length);
+      ctx.fillStyle = FILM;
+      ctx.beginPath(); ctx.arc(q.x, q.y, Math.max(1, 4 - i * .3), 0, Math.PI * 2); ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+    ctx.shadowColor = '#fff3d6'; ctx.shadowBlur = 16; ctx.fillStyle = '#fffaf0';
+    ctx.beginPath(); ctx.arc(p.x + PW / 2, p.y + PH / 2, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+  ctx.restore();
+
+  // frame edges warm up red as you drift towards them
+  if (S.mode === 'play') {
+    const sy = p.y - cam;
+    const top = clamp(1 - sy / 140, 0, 1), bot = clamp(1 - (H - sy - PH) / 140, 0, 1);
+    if (top > 0) { const g = ctx.createLinearGradient(0, 0, 0, 90); g.addColorStop(0, `rgba(255,74,61,${.45 * top})`); g.addColorStop(1, 'rgba(255,74,61,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, 90); }
+    if (bot > 0) { const g = ctx.createLinearGradient(0, H, 0, H - 90); g.addColorStop(0, `rgba(255,74,61,${.45 * bot})`); g.addColorStop(1, 'rgba(255,74,61,0)'); ctx.fillStyle = g; ctx.fillRect(0, H - 90, W, 90); }
+  }
+
+  // film grain, a stray scratch and the vignette
+  ctx.save();
+  ctx.globalAlpha = .07;
+  ctx.globalCompositeOperation = 'screen';
+  ctx.translate(Math.random() * 160, Math.random() * 160);
+  ctx.fillStyle = grainPat; ctx.fillRect(-160, -160, W + 320, H + 320);
+  ctx.restore();
+  if (!REDUCED && Math.random() < .02) { ctx.fillStyle = 'rgba(239,232,220,.18)'; ctx.fillRect(Math.random() * W, 0, 1, H); }
+  const vg = ctx.createRadialGradient(W / 2, H / 2, H * .3, W / 2, H / 2, H * .75);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.7)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+
+  ctx.textAlign = 'center';
+  if (S.mode === 'title') {
+    const band = ctx.createLinearGradient(0, H - 150, 0, H);
+    band.addColorStop(0, 'rgba(0,0,0,0)'); band.addColorStop(.45, 'rgba(0,0,0,.92)'); band.addColorStop(1, '#000');
+    ctx.fillStyle = band; ctx.fillRect(0, H - 150, W, 150);
+    ctx.globalAlpha = .55 + .45 * Math.abs(Math.sin(t * .0022));
+    ctx.font = `500 12px ${MONO}`; ctx.fillStyle = DIM;
+    ctx.fillText('ПРОБЕЛ ИЛИ КАСАНИЕ — НАЧАТЬ СЕАНС', CX, H - 64);
+    ctx.globalAlpha = .7;
+    ctx.fillText('титры поедут вверх · держись в кадре · дойди до конца', CX, H - 42);
+    ctx.globalAlpha = 1;
+  }
+  if (S.mode === 'cut') {
+    const k = clamp(S.cutT / .15, 0, 1);
+    ctx.fillStyle = `rgba(0,0,0,${.75 * k})`; ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = k;
+    ctx.fillStyle = FILM; ctx.font = `italic 600 64px ${SERIF}`;
+    ctx.fillText('Стоп. Снято.', CX, H / 2 - 10);
+    ctx.font = `500 13px ${MONO}`; ctx.fillStyle = DIM;
+    ctx.fillText(S.cutWhy.toUpperCase(), CX, H / 2 + 26);
+    ctx.fillStyle = '#ff4a3d';
+    ctx.fillText(`ДУБЛЬ ${S.take}`, CX, H / 2 + 52);
+    ctx.globalAlpha = 1;
+  }
+  if (S.mode === 'won' && S.wonT > 1.2) {
+    const k = clamp((S.wonT - 1.2) / 1, 0, 1);
+    ctx.globalAlpha = k;
+    ctx.font = `italic 500 26px ${SERIF}`; ctx.fillStyle = FILM;
+    ctx.fillText('Спасибо за просмотр', CX, H * .22);
+    ctx.font = `500 12px ${MONO}`; ctx.fillStyle = DIM;
+    ctx.fillText(`ВРЕМЯ ${fmt(S.time)} · ДУБЛЕЙ ${S.take}`, CX, H * .22 + 30);
+    if (S.wonT > 2.4) ctx.fillText('ПРОБЕЛ ИЛИ КАСАНИЕ — ЕЩЁ ОДИН СЕАНС', CX, H - 48);
+    ctx.globalAlpha = 1;
+  }
 }
 
-function choosePerk(i) {
-  const o = S.perkOpts && S.perkOpts[i];
-  if (!o) return;
-  o.f(S.p);
-  say(`Дар принят: ${o.n}.`, 'warm');
-  S.perksPending--;
-  S.perkOpts = null;
-  if (S.perksPending > 0) { showPerks(); return; }
-  S.mode = 'play';
-  hideOv();
-  computeFov();
-  refresh();
+// ---------- hud ----------
+function hud() {
+  $('take').textContent = S.take;
+  $('scene').textContent = S.mode === 'won' ? 'Конец' : checkpoints[S.cp].name;
+  $('time').textContent = fmt(S.time);
+  const best = +(store.get('gtte-credits-best') || 0);
+  $('best').textContent = best ? fmt(best) : '—';
 }
 
-function showEnd(won, cause) {
-  const p = S.p;
-  card.innerHTML = `
-    <p class="eyebrow">${won ? 'Путь завершён' : 'Свет погас'}</p>
-    <h2>${won ? 'Ты дошёл до Конца' : `Пал на ярусе ${S.depth}`}</h2>
-    <p>${won ? 'Хранитель повержен, врата за спиной закрылись. Внизу больше ничего нет, и это было целью.' : `Тебя забрал${cause === 'Тьма' ? 'а тьма' : ': ' + cause}. Колодец ждёт следующего путника.`}</p>
-    <dl class="summary">
-      <div><dt>Ярус</dt><dd>${S.depth} / ${MAXD}</dd></div>
-      <div><dt>Ходов</dt><dd>${S.turn}</dd></div>
-      <div><dt>Убито</dt><dd>${p.kills}</dd></div>
-      <div><dt>Уровень</dt><dd>${p.lvl}</dd></div>
-    </dl>
-    <button class="btn" id="againBtn">Спуститься снова</button>
-    <p class="hint">Enter или R — новая попытка. Каждый колодец собирается заново.</p>`;
-  ov.hidden = false;
-  refresh();
-  $('againBtn').onclick = start;
-  $('againBtn').focus();
+// ---------- loop ----------
+let last = performance.now(), lastSec = -1;
+function frame(t) {
+  const dt = Math.min(1 / 30, Math.max(0, (t - last) / 1000)); last = t;
+  update(dt);
+  render(t);
+  const sec = Math.floor(S.time);
+  if (sec !== lastSec) { lastSec = sec; $('time').textContent = fmt(S.time); }
+  requestAnimationFrame(frame);
 }
 
 // ---------- input ----------
-const KEYS = {
-  ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0],
-  w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0], k: [0, -1], j: [0, 1], h: [-1, 0], l: [1, 0],
-  q: [-1, -1], e: [1, -1], z: [-1, 1], c: [1, 1], y: [-1, -1], u: [1, -1], b: [-1, 1], n: [1, 1],
-  ' ': [0, 0], '.': [0, 0], '5': [0, 0],
-  // russian layout, so WASD works without switching
-  'ц': [0, -1], 'ы': [0, 1], 'ф': [-1, 0], 'в': [1, 0], 'й': [-1, -1], 'у': [1, -1], 'я': [-1, 1], 'с': [1, 1],
+function press(k) {
+  if (S.mode === 'title') { begin(); return; }
+  if (S.mode === 'won') { if (S.wonT > 2.4) { reset(); begin(); } return; }
+  if (k === 'jump') S.p.buffer = .12;
+}
+const MAP = {
+  ArrowLeft: 'left', a: 'left', 'ф': 'left',
+  ArrowRight: 'right', d: 'right', 'в': 'right',
+  ' ': 'jump', ArrowUp: 'jump', w: 'jump', 'ц': 'jump', Enter: 'jump',
 };
-addEventListener('keydown', ev => {
-  if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
-  const k = ev.key.length === 1 ? ev.key.toLowerCase() : ev.key;
-  if (!S || S.mode === 'dead' || S.mode === 'won') {
-    if (k === 'Enter' || k === 'r' || k === 'к') { ev.preventDefault(); start(); }
-    return;
-  }
-  if (S.mode === 'perk') {
-    if (['1', '2', '3'].includes(k)) { ev.preventDefault(); choosePerk(+k - 1); }
-    return;
-  }
-  const d = KEYS[k];
-  if (d) { ev.preventDefault(); act(d[0], d[1]); }
+const keyOf = e => MAP[e.key.length === 1 ? e.key.toLowerCase() : e.key];
+addEventListener('keydown', e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = keyOf(e);
+  if (!k) return;
+  e.preventDefault();
+  if (e.repeat) return;
+  keys[k] = true;
+  press(k);
 });
-$('pad').addEventListener('click', ev => {
-  const b = ev.target.closest('button'); if (!b) return;
-  const [dx, dy] = b.dataset.d.split(',').map(Number);
-  act(dx, dy);
+addEventListener('keyup', e => {
+  const k = keyOf(e);
+  if (!k) return;
+  keys[k] = false;
+  // a short tap gives a short hop
+  if (k === 'jump' && S.p.vy < 0) S.p.vy *= .5;
 });
-const cv = $('cv');
-cv.addEventListener('click', ev => {
-  if (!S || S.mode !== 'play') return;
-  const r = cv.getBoundingClientRect();
-  const tx = (ev.clientX - r.left) / r.width * VW, ty = (ev.clientY - r.top) / r.height * VH;
-  const cam = camera();
-  const dx = tx - (S.p.x - cam.x + .5), dy = ty - (S.p.y - cam.y + .5);
-  if (Math.hypot(dx, dy) < .6) { act(0, 0); return; }
-  const oct = Math.round(Math.atan2(dy, dx) / (Math.PI / 4));
-  const dirs = { 0: [1, 0], 1: [1, 1], 2: [0, 1], 3: [-1, 1], 4: [-1, 0], '-4': [-1, 0], '-3': [-1, -1], '-2': [0, -1], '-1': [1, -1] };
-  const d = dirs[oct]; act(d[0], d[1]);
-});
-
-// ---------- rendering ----------
-const ctx = cv.getContext('2d');
-const DPR = Math.min(2, window.devicePixelRatio || 1);
-// phones get a closer camera so tiles stay readable
-function fitView() {
-  const narrow = cv.parentElement.clientWidth < 600;
-  VW = narrow ? 17 : 31; VH = narrow ? 17 : 21;
-  cv.width = VW * TS * DPR; cv.height = VH * TS * DPR;
-}
-fitView();
-addEventListener('resize', fitView);
-const motes = Array.from({ length: 36 }, () => ({ x: Math.random() * VW * TS, y: Math.random() * VH * TS, s: .2 + Math.random() * .5, o: Math.random() * 6 }));
-
-function camera() {
-  return { x: clamp(S.p.x - (VW >> 1), 0, MW - VW), y: clamp(S.p.y - (VH >> 1), 0, MH - VH) };
-}
-function mix(a, b, t) { return `rgb(${a[0] + (b[0] - a[0]) * t | 0},${a[1] + (b[1] - a[1]) * t | 0},${a[2] + (b[2] - a[2]) * t | 0})`; }
-const WALL_D = [20, 15, 26], WALL_L = [104, 70, 48], FLOOR_D = [10, 8, 14], FLOOR_L = [46, 31, 24];
-
-function glyph(ch, x, y, color, glow, alpha = 1, size = 18) {
-  ctx.globalAlpha = alpha;
-  ctx.font = `700 ${size}px "JetBrains Mono", ui-monospace, monospace`;
-  ctx.fillStyle = color; ctx.shadowColor = color; ctx.shadowBlur = glow;
-  ctx.fillText(ch, x * TS + TS / 2, y * TS + TS / 2 + 1);
-  ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+addEventListener('blur', () => { keys.left = keys.right = keys.jump = false; });
+cv.addEventListener('pointerdown', () => { if (S.mode === 'title' || S.mode === 'won') press('jump'); });
+for (const b of $('pads').querySelectorAll('button')) {
+  const k = b.dataset.k;
+  const down = e => { e.preventDefault(); keys[k] = true; b.classList.add('on'); press(k); };
+  const up = () => { keys[k] = false; b.classList.remove('on'); if (k === 'jump' && S.p.vy < 0) S.p.vy *= .5; };
+  b.addEventListener('pointerdown', down);
+  for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, up);
 }
 
-function draw(t) {
-  requestAnimationFrame(draw);
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  ctx.fillStyle = '#050307';
-  ctx.fillRect(0, 0, VW * TS, VH * TS);
-  if (!S) { drawIdle(t); return; }
-
-  const cam = camera();
-  const fl = REDUCED ? 1 : .9 + .1 * Math.sin(t * .013) * Math.sin(t * .0071 + 1);
-  if (S.shake > 0) { ctx.translate((Math.random() - .5) * S.shake, (Math.random() - .5) * S.shake); S.shake *= .82; if (S.shake < .3) S.shake = 0; }
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-
-  for (let vy = 0; vy < VH; vy++) for (let vx = 0; vx < VW; vx++) {
-    const mx = cam.x + vx, my = cam.y + vy;
-    if (!S.explored[my][mx]) continue;
-    const v = S.vis[my][mx] * fl;
-    const px = vx * TS, py = vy * TS;
-    if (S.map[my][mx] === 1) {
-      ctx.fillStyle = v > 0 ? mix(WALL_D, WALL_L, Math.pow(v, 1.2)) : '#16121c';
-      ctx.fillRect(px, py, TS, TS);
-      // front face where a wall meets the floor below it, gives the well some depth
-      if (my + 1 < MH && S.map[my + 1][mx] === 0) {
-        ctx.fillStyle = v > 0 ? `rgba(0,0,0,${.45})` : 'rgba(0,0,0,.35)';
-        ctx.fillRect(px, py + TS - 7, TS, 7);
-        if (v > 0) { ctx.fillStyle = `rgba(255,190,120,${.12 * v})`; ctx.fillRect(px, py, TS, 2); }
-      }
-    } else {
-      ctx.fillStyle = v > 0 ? mix(FLOOR_D, FLOOR_L, v) : '#0c0a10';
-      ctx.fillRect(px, py, TS, TS);
-      ctx.fillStyle = v > 0 ? `rgba(255,200,140,${.08 + .22 * v})` : 'rgba(140,130,160,.1)';
-      ctx.fillRect(px + TS / 2 - 1, py + TS / 2 - 1, 2, 2);
-    }
-  }
-
-  // stairs and gate remain visible once explored
-  if (S.stairs && S.explored[S.stairs.y][S.stairs.x]) {
-    const v = S.vis[S.stairs.y][S.stairs.x];
-    glyph('>', S.stairs.x - cam.x, S.stairs.y - cam.y, '#9fd3ff', v > 0 ? 14 : 4, v > 0 ? 1 : .45, 20);
-  }
-  if (S.gate) {
-    const pulse = REDUCED ? 1 : .7 + .3 * Math.sin(t * .005);
-    glyph('Ω', S.gate.x - cam.x, S.gate.y - cam.y, '#f4e9ff', 24 * pulse, 1, 22);
-  }
-  for (const it of S.items) {
-    const v = S.vis[it.y][it.x]; if (v <= 0) continue;
-    const I = ITEMS[it.type];
-    const bob = REDUCED ? 0 : Math.sin(t * .004 + it.x) * 1.2;
-    ctx.save(); ctx.translate(0, bob);
-    glyph(I.g, it.x - cam.x, it.y - cam.y, I.c, it.type === 'ember' ? 16 : 8, .4 + .6 * Math.min(1, v * 1.6));
-    ctx.restore();
-  }
-  for (const e of S.enemies) {
-    const v = S.vis[e.y][e.x]; if (v <= 0) continue;
-    const ex = e.x - cam.x, ey = e.y - cam.y;
-    glyph(e.g, ex, ey, e.c, e.boss ? 18 : 9, .45 + .55 * Math.min(1, v * 1.6), e.boss ? 22 : 18);
-    if (e.hp < e.maxHp) {
-      ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(ex * TS + 3, ey * TS + 1, TS - 6, 3);
-      ctx.fillStyle = e.c; ctx.fillRect(ex * TS + 3, ey * TS + 1, (TS - 6) * Math.max(0, e.hp) / e.maxHp, 3);
-    }
-  }
-  const ppx = S.p.x - cam.x, ppy = S.p.y - cam.y;
-  glyph('@', ppx, ppy, '#fff6e6', 14);
-
-  // lantern glow
-  const cx = ppx * TS + TS / 2, cy = ppy * TS + TS / 2, R = lightR() * TS * 1.15;
-  const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, R);
-  g.addColorStop(0, `rgba(255,160,70,${.17 * fl})`);
-  g.addColorStop(.6, `rgba(255,120,40,${.05 * fl})`);
-  g.addColorStop(1, 'rgba(255,120,40,0)');
-  ctx.globalCompositeOperation = 'lighter';
-  ctx.fillStyle = g; ctx.fillRect(0, 0, VW * TS, VH * TS);
-  // drifting ash in the lantern light
-  if (!REDUCED) for (const m of motes) {
-    m.y -= m.s; m.x += Math.sin(t * .001 + m.o) * .2;
-    if (m.y < -4) { m.y = VH * TS + 4; m.x = Math.random() * VW * TS; }
-    const d = Math.hypot(m.x - cx, m.y - cy);
-    if (d < R) { ctx.fillStyle = `rgba(255,190,120,${.5 * (1 - d / R)})`; ctx.fillRect(m.x, m.y, 1.5, 1.5); }
-  }
-  ctx.globalCompositeOperation = 'source-over';
-
-  // vignette
-  const vg = ctx.createRadialGradient(VW * TS / 2, VH * TS / 2, VH * TS * .35, VW * TS / 2, VH * TS / 2, VW * TS * .62);
-  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.65)');
-  ctx.fillStyle = vg; ctx.fillRect(0, 0, VW * TS, VH * TS);
-
-  // floating numbers
-  const now = performance.now();
-  S.fx = S.fx.filter(f => now - f.t0 < 900);
-  for (const f of S.fx) {
-    const k = (now - f.t0) / 900;
-    ctx.globalAlpha = 1 - k;
-    ctx.font = '700 13px "JetBrains Mono", monospace';
-    ctx.fillStyle = f.color; ctx.shadowColor = '#000'; ctx.shadowBlur = 4;
-    ctx.fillText(f.text, (f.x - cam.x) * TS + TS / 2, (f.y - cam.y) * TS - 2 - k * 18);
-    ctx.shadowBlur = 0; ctx.globalAlpha = 1;
-  }
-  if (S.flash > 0) {
-    ctx.fillStyle = `rgba(160,10,20,${S.flash})`; ctx.fillRect(0, 0, VW * TS, VH * TS);
-    S.flash = Math.max(0, S.flash - .03);
-  }
-  if (S.p.fuel === 0) {
-    ctx.fillStyle = `rgba(20,0,30,${.18 + .06 * Math.sin(t * .004)})`; ctx.fillRect(0, 0, VW * TS, VH * TS);
-  }
-}
-
-// title backdrop: a lone lantern in the dark
-function drawIdle(t) {
-  const cx = VW * TS / 2, cy = VH * TS / 2, R = 220 + 10 * Math.sin(t * .003);
-  const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, R);
-  g.addColorStop(0, 'rgba(255,160,70,.22)'); g.addColorStop(1, 'rgba(255,160,70,0)');
-  ctx.fillStyle = g; ctx.fillRect(0, 0, VW * TS, VH * TS);
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  glyph('@', VW >> 1, VH >> 1, '#fff6e6', 16);
-}
-
-refresh0();
-function refresh0() {
-  const best = +(store.get('gtte-best') || 0);
-  $('best').textContent = best > MAXD ? 'Рекорд: Конец достигнут' : best ? `Рекорд: ярус ${best}` : 'Рекорд: —';
-  for (const id of ['hpB', 'lB', 'xpB']) $(id).style.width = '0%';
-}
-requestAnimationFrame(draw);
-showTitle();
+// ---------- boot: re-measure the words once the typeface arrives ----------
+const fontsReady = Promise.race([
+  Promise.all([`600 40px ${SERIF}`, `italic 600 30px ${SERIF}`, `500 24px ${SERIF}`, `italic 500 22px ${SERIF}`].map(f => document.fonts.load(f))),
+  new Promise(r => setTimeout(r, 1500)),
+]).catch(() => {});
+reset();
+requestAnimationFrame(frame);
+fontsReady.then(() => { if (S.mode === 'title') reset(); });
 })();
 </script>
 </body>
