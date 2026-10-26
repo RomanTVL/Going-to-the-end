@@ -194,32 +194,56 @@ const DPR = Math.min(2, window.devicePixelRatio || 1);
 cv.width = W * DPR; cv.height = H * DPR;
 
 // ---------- sound: a projector hum, and every word you land on plays a note ----------
-const AU = { c: null, out: null, muted: store.get('gtte-mute') === '1' };
+const AU = { c: null, out: null, html: null, unlocked: false, muted: store.get('gtte-mute') === '1' };
+const VOL = .9;
+const SILENT_WAV = 'data:audio/wav;base64,UklGRrQBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YZABAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA';
 function audioInit() {
-  if (AU.c) { if (AU.c.state === 'suspended') AU.c.resume(); return; }
-  try {
-    const C = window.AudioContext || window.webkitAudioContext;
-    AU.c = new C();
-    AU.out = AU.c.createGain();
-    AU.out.gain.value = AU.muted ? 0 : .55;
-    AU.out.connect(AU.c.destination);
-    const c = AU.c, len = c.sampleRate * 2, buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
-    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
-    const src = c.createBufferSource(); src.buffer = buf; src.loop = true;
-    const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 700; bp.Q.value = .8;
-    const g = c.createGain(); g.gain.value = .02;
-    // the shutter of a projector flutters at 24 frames a second
-    const lfo = c.createOscillator(), lg = c.createGain();
-    lfo.frequency.value = 24; lg.gain.value = .01;
-    lfo.connect(lg); lg.connect(g.gain);
-    src.connect(bp); bp.connect(g); g.connect(AU.out);
-    src.start(); lfo.start();
-  } catch (e) { AU.c = null; }
+  if (!AU.c) {
+    try {
+      const C = window.AudioContext || window.webkitAudioContext;
+      AU.c = new C();
+      AU.out = AU.c.createGain();
+      AU.out.gain.value = AU.muted ? 0 : VOL;
+      AU.out.connect(AU.c.destination);
+      const c = AU.c, len = c.sampleRate * 2, buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      const src = c.createBufferSource(); src.buffer = buf; src.loop = true;
+      const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = .8;
+      const g = c.createGain(); g.gain.value = .05;
+      // the shutter of a projector flutters at 24 frames a second
+      const lfo = c.createOscillator(), lg = c.createGain();
+      lfo.frequency.value = 24; lg.gain.value = .025;
+      lfo.connect(lg); lg.connect(g.gain);
+      src.connect(bp); bp.connect(g); g.connect(AU.out);
+      src.start(); lfo.start();
+    } catch (e) { AU.c = null; return; }
+  }
+  if (AU.c.state !== 'running') AU.c.resume().catch(() => {});
+  if (!AU.unlocked) {
+    // iPhone plays Web Audio through the ringer channel, so the silent switch mutes it,
+    // unless the page asks for media playback or a media element has played once
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { /* not supported */ }
+    try {
+      AU.html = AU.html || new Audio(SILENT_WAV);
+      const pr = AU.html.play();
+      if (pr) pr.then(() => { AU.unlocked = true; }).catch(() => {});
+    } catch (e) { /* no media element */ }
+  }
 }
-function tone(freq, dur = .7, vol = .14, when = 0, type = 'sine') {
-  if (!AU.c) return;
+// a finger's pointerdown is not a user gesture for Safari, so unlock sound on the events that are
+for (const ev of ['pointerup', 'touchend', 'click', 'keydown']) addEventListener(ev, audioInit, { capture: true, passive: true });
+
+// the first sounds land while the context is still waking up; hold them until it runs
+function ready(fn) {
+  if (!AU.c || AU.c.state === 'closed') return false;
+  if (AU.c.state !== 'running') { AU.c.resume().then(fn).catch(() => {}); return false; }
+  return true;
+}
+function tone(freq, dur = .7, vol = .14, when = 0) {
+  if (!ready(() => tone(freq, dur, vol, when))) return;
   const c = AU.c, t = c.currentTime + when;
-  for (const [mul, v, ty] of [[1, vol, type], [2, vol * .25, 'triangle']]) {
+  // a few harmonics so the note survives a phone speaker
+  for (const [mul, v, ty] of [[1, vol, 'sine'], [2, vol * .35, 'triangle'], [3, vol * .12, 'sine']]) {
     const o = c.createOscillator(), g = c.createGain();
     o.type = ty; o.frequency.value = freq * mul;
     g.gain.setValueAtTime(0, t);
@@ -229,7 +253,7 @@ function tone(freq, dur = .7, vol = .14, when = 0, type = 'sine') {
   }
 }
 function noise(dur = .15, vol = .2, freq = 2500, type = 'highpass') {
-  if (!AU.c) return;
+  if (!ready(() => noise(dur, vol, freq, type))) return;
   const c = AU.c, t = c.currentTime, len = Math.ceil(c.sampleRate * dur);
   const buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
   for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
@@ -238,15 +262,16 @@ function noise(dur = .15, vol = .2, freq = 2500, type = 'highpass') {
   s.connect(f); f.connect(g); g.connect(AU.out); s.start(t);
 }
 const PENTA = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21];
-const SOLFEGE = { 'До': 261.6, 'Ре': 293.7, 'Ми': 329.6, 'Фа': 349.2, 'Соль': 392, 'Ля': 440, 'Си': 493.9 };
+const SOLFEGE = { 'До': 523.3, 'Ре': 587.3, 'Ми': 659.3, 'Фа': 698.5, 'Соль': 784, 'Ля': 880, 'Си': 987.8 };
 function landNote(pl, impact) {
-  const f = pl.note || 220 * Math.pow(2, PENTA[Math.floor(clamp((pl.x + pl.w / 2) / W, 0, .999) * PENTA.length)] / 12) / (pl.size >= 30 ? 2 : 1);
-  tone(f, .9, .05 + .1 * impact);
+  const f = pl.note || 440 * Math.pow(2, PENTA[Math.floor(clamp((pl.x + pl.w / 2) / W, 0, .999) * PENTA.length)] / 12) / (pl.size >= 30 ? 2 : 1);
+  tone(f, .9, .12 + .16 * impact);
 }
 function setMute(m) {
   AU.muted = m;
   store.set('gtte-mute', m ? '1' : '0');
-  if (AU.out) AU.out.gain.value = m ? 0 : .55;
+  if (AU.out) AU.out.gain.value = m ? 0 : VOL;
+  if (!m) tone(784, .5, .12);
   $('snd').setAttribute('aria-pressed', String(!m));
 }
 
@@ -343,7 +368,7 @@ function begin() {
   if (S.mode !== 'title') return;
   S.mode = 'play';
   $('dc').disabled = true;
-  tone(110, 1.6, .08);
+  tone(392, 1.4, .14);
   hud();
 }
 
@@ -360,7 +385,7 @@ function respawn() {
 function cut(why) {
   S.mode = 'cut'; S.cutT = 0; S.cutWhy = why; S.take++;
   S.burn = { x: S.p.x + PW / 2, y: clamp(S.p.y - S.camY, 0, H) };
-  noise(.5, .35, 300, 'lowpass');
+  noise(.5, .45, 900, 'lowpass');
   noise(.05, .3, 3000);
   hud();
 }
@@ -462,7 +487,7 @@ function update(dt) {
   for (let i = S.cp + 1; i < checkpoints.length; i++) if (p.y > checkpoints[i].top) {
     S.cp = i;
     for (const s of stars) if (s.got) s.banked = true;
-    tone(130.8, 1.4, .06);
+    tone(523.3, 1.2, .1);
     hud();
   }
 
