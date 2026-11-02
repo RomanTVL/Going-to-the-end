@@ -35,13 +35,14 @@ func main() {
 	// a fixed file:// location and data folder keep records and the ghost between launches
 	target := (&url.URL{Scheme: "file", Path: "/" + filepath.ToSlash(page)}).String()
 
+	width, height := windowSize()
 	w := webview2.NewWithOptions(webview2.WebViewOptions{
 		DataPath:  filepath.Join(root, "webview"),
 		AutoFocus: true,
 		WindowOptions: webview2.WindowOptions{
 			Title:  "Going to the End",
-			Width:  640,
-			Height: 860,
+			Width:  width,
+			Height: height,
 			IconId: 2, // resource 1 is the manifest, 2 the icon group
 			Center: true,
 		},
@@ -51,6 +52,9 @@ func main() {
 		return
 	}
 	defer w.Destroy()
+	// the page calls this for F and the fullscreen button; it answers whether fullscreen is now on
+	var fs fullscreen
+	_ = w.Bind("gtteFullscreen", func() bool { return fs.toggle(uintptr(w.Window())) })
 	w.Navigate(target)
 	w.Run()
 }

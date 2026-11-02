@@ -18,6 +18,7 @@
   --seat: #1c1719;
   --seat-edge: #2c2427;
   --cut: #ff4a3d;
+  --screen-w: min(100%, calc((100dvh - 210px) * 0.8), 560px);
   --f-film: "Cormorant Garamond", Georgia, "Times New Roman", serif;
   --f-slate: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   color-scheme: dark;
@@ -40,7 +41,7 @@ body {
   padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
 .screen {
-  width: min(100%, calc((100dvh - 210px) * 0.8), 560px);
+  width: var(--screen-w);
   min-width: min(260px, 100%);
   aspect-ratio: 4 / 5;
   background: var(--screen);
@@ -48,7 +49,7 @@ body {
 }
 canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 .slate {
-  width: min(100%, 560px);
+  width: var(--screen-w);
   margin: 0;
   display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px;
   font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--dim);
@@ -65,7 +66,13 @@ canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 .toggle:hover { color: var(--film); border-color: var(--dim); }
 .toggle[aria-pressed="true"] { color: var(--film); border-color: var(--film); }
 .hint { color: #6a625b; letter-spacing: .08em; justify-content: center; text-align: center; text-transform: none; }
-.pads { display: none; gap: 10px; width: min(100%, 560px); }
+.pads { display: none; gap: 10px; width: var(--screen-w); }
+/* on a big monitor the screen fills the height of the window */
+@media (min-width: 900px) and (min-height: 760px) { :root { --screen-w: min(100%, calc((100dvh - 150px) * 0.8)); } .hint { display: none; } }
+body.fs .hall { gap: 8px; padding-block: 8px; }
+body.fs { --screen-w: min(100%, calc((100dvh - 70px) * 0.8)); }
+body.fs .toggles, body.fs .hint { display: none; }
+.slate .cheat { color: var(--cut); }
 .pads button {
   flex: 1; height: 58px; font: 500 20px var(--f-slate); color: var(--film);
   background: var(--seat); border: 1px solid var(--seat-edge); border-radius: 0;
@@ -85,6 +92,7 @@ button:focus-visible { outline: 2px solid var(--film); outline-offset: 2px; }
     <span>Дубль <b id="take">1</b></span>
     <span>★ <b id="stars">0</b></span>
     <span>Таймер <b id="time">00:00</b></span>
+    <span class="cheat" id="cheatTag" hidden>Читы</span>
   </div>
   <div class="pads" id="pads">
     <button data-k="left" aria-label="Влево">◀</button>
@@ -95,8 +103,9 @@ button:focus-visible { outline: 2px solid var(--film); outline-offset: 2px; }
     <button class="toggle" id="snd" aria-pressed="true">Звук</button>
     <button class="toggle" id="pause" aria-pressed="false">Пауза</button>
     <button class="toggle" id="fresh" hidden>Новый забег</button>
+    <button class="toggle" id="full" aria-pressed="false">Полный экран</button>
   </div>
-  <p class="slate hint">← → или A D — идти · Пробел или ↑ — прыжок · P — пауза · M — звук · N — новый забег</p>
+  <p class="slate hint">← → или A D — идти · Пробел или ↑ — прыжок · P — пауза · M — звук · F — полный экран</p>
 </main>
 
 <script>
@@ -127,7 +136,7 @@ const SLAB = '"Kelly Slab", Georgia, serif';
 const AMATIC = '"Amatic SC", "Arial Narrow", sans-serif';
 const EXO = '"Exo 2", "Arial", sans-serif';
 const REC_HZ = 30;
-const GUEST_PAR = 25, FINAL_PAR = 40;
+const GUEST_PAR = 40, FINAL_PAR = 40;
 
 // ---------- the evening's programme: ten films and games, the last one is ours ----------
 // Credit rows: title, h (section heading and checkpoint), r (role and name), c (a sentence, word by word),
@@ -293,7 +302,6 @@ const LEVELS = [
     fonts: fontSet([`700 26px ${UNB}`, 26, 20], [`700 20px ${UNB}`, 20], [`500 10px ${UNB}`, 10],
       [`500 17px ${UNB}`, 17], [`500 15px ${UNB}`, 15, 16], [`500 16px ${UNB}`, 16, 34], [`700 60px ${UNB}`, 60]),
     hazard: 'redlight', props: ['guard', 'dalgona', 'guard', 'piggy'], back: 'stairs', sound: { base: 392, wave: 'triangle' },
-    par: 30, // standing still on red is part of the game, so the timer allows for it
     credits: [
       ['title', 'ИГРА НА ВЫЖИВАНИЕ'],
       ['c', 'Шевелиться можно только на зелёный'],
@@ -723,7 +731,7 @@ const LEVELS = [
       ['w', 'Ноль', '~Один', 'Ноль'],
       ['r', 'Выход', 'Через телефон'],
       ['*', -160, -40],
-      ['c', 'Код падает сверху. Не стой.'],
+      ['c', 'Красный код падает. Не стой.'],
       ['h', 'Реальность'],
       ['r', 'Корабль', 'Над землёй'],
       ['r', 'Еда', '~Безвкусная'],
@@ -1131,6 +1139,8 @@ function respawn() {
 
 function cut(why) {
   if (S.mode !== 'play') return;
+  // with cheats on, hazards pass through you; only leaving the frame still costs a take
+  if (cheatGod() && !/кадра|кадр/.test(why)) return;
   S.mode = 'cut'; S.cutT = 0; S.cutWhy = why; S.take++;
   S.burn = { x: S.p.x + PW / 2, y: clamp(S.p.y - S.camY, 0, H) };
   noise(.5, .45, 900, 'lowpass');
@@ -1141,16 +1151,21 @@ function cut(why) {
 function finishLevel() {
   const got = stars.filter(s => s.got).length;
   RUN.res[S.li] = { t: +S.time.toFixed(2), par: S.par, got, total: stars.length };
+  if (CHEAT.on) RUN.cheat = true;
   const best = store.json('gtte-best-' + LV.key);
-  if (!best || S.time < best) {
+  if (!RUN.cheat && (!best || S.time < best)) {
     store.set('gtte-best-' + LV.key, S.time.toFixed(2));
     store.set('gtte-ghost-' + LV.key, JSON.stringify(S.rec));
   }
   if (LV.final) {
     S.mode = 'ending'; S.modeT = 0; S.ending = judge();
     S.endDot = { x: S.p.x + PW / 2, y: S.p.y + PH / 2 - S.camY };
-    const seen = seenEndings();
-    if (!seen.includes(S.ending)) store.set('gtte-endings', JSON.stringify([...seen, S.ending]));
+    // a run with cheats does not open endings, so the list in the menu stays honest
+    if (!RUN.cheat) {
+      const seen = seenEndings();
+      if (!seen.includes(S.ending)) store.set('gtte-endings', JSON.stringify([...seen, S.ending]));
+      store.set('gtte-summary-' + S.ending, JSON.stringify(S.summary));
+    }
     RUN = freshRun();
   } else {
     S.mode = 'clear'; S.modeT = 0;
@@ -1330,7 +1345,7 @@ const HZ = {
       if (!h.live) return;
       const d = dotScreen(), dx = d.x - h.x, dy = d.y - h.y, len = Math.hypot(dx, dy) || 1;
       // it starts slow after every take and speeds up the longer it hunts
-      const v = 72 + 70 * progress() + 4 * Math.min(h.t, 15);
+      const v = 52 + 42 * progress() + 2.5 * Math.min(h.t, 16);
       h.x += dx / len * v * dt; h.y += dy / len * v * dt; h.ang = Math.atan2(dy, dx);
       h.waka -= dt;
       if (h.waka <= 0) { h.waka = .3; sweep(h.flip ? 300 : 500, h.flip ? 500 : 300, .12, .05); h.flip = !h.flip; }
@@ -1340,10 +1355,10 @@ const HZ = {
     why: 'Тебя съел обжора',
   },
   host: {
-    every: 1.8,
+    every: 2.6,
     spawn() {
       if (S.hz.filter(h => h.type === 'host').length >= 2) return;
-      const c = platformsAhead(130, q => q.w >= 28);
+      const c = platformsAhead(150, q => q.w >= 28);
       if (!c.length) return;
       const pl = pick(c);
       S.hz.push({ type: 'host', pl, rx: rand(4, pl.w - 22), t: 0, warn: 0, live: true, cd: rand(1.2, 1.8) });
@@ -1353,19 +1368,19 @@ const HZ = {
       h.cd -= dt;
       if (h.cd <= 0) {
         // a cross of tears: up, down, left and right
-        for (const [dx, dy] of [[1, 0], [-1, 0], [0, -1], [0, 1]]) S.hz.push({ type: 'tear', x: h.x, y: h.y - 14, vx: dx * 190, vy: dy * 190, r: 7, t: 0, warn: 0, live: true });
-        h.cd = rand(2, 2.6) * (1 - .2 * progress());
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, -1], [0, 1]]) S.hz.push({ type: 'tear', x: h.x, y: h.y - 14, vx: dx * 150, vy: dy * 150, r: 7, t: 0, warn: 0, live: true });
+        h.cd = rand(2.8, 3.4) * (1 - .15 * progress());
         sweep(500, 180, .2, .07, 'triangle');
       }
     },
-    hit: (h, d) => Math.abs(d.x - h.x) < 12 && d.y > h.y - 22 && d.y < h.y + 2,
+    hit: (h, d) => Math.abs(d.x - h.x) < 9 && d.y > h.y - 18 && d.y < h.y + 2,
     dead: h => h.pl.gone || h.pl.top < S.camY - 60,
     why: 'Череп оказался ближе, чем казалось',
   },
   tear: {
     step(h, dt) { h.x += h.vx * dt; h.y += h.vy * dt; },
     hit: (h, d) => Math.hypot(d.x - h.x, d.y - h.y) < h.r + 4,
-    dead: h => h.t > 1.5,
+    dead: h => h.t > 1.2,
     why: 'Тебя залили слезами',
   },
   leviathan: {
@@ -2119,8 +2134,8 @@ const BACK = {
         const y = head - i * 16;
         if (y < -10 || y > H + 10) continue;
         const ch = GLYPHS[(c.seed + i * 7 + Math.floor(t / 180)) % GLYPHS.length];
-        ctx.globalAlpha = (i === 0 ? .55 : .3 * (1 - i / c.len)) * k;
-        ctx.fillStyle = i === 0 ? '#d8ffe0' : '#00c853';
+        ctx.globalAlpha = (i === 0 ? .3 : .16 * (1 - i / c.len)) * k;
+        ctx.fillStyle = i === 0 ? '#9dffb6' : '#00a844';
         ctx.fillText(ch, c.x, y);
       }
     }
@@ -2330,7 +2345,7 @@ function drawHazards(t, cam) {
       ctx.fillStyle = '#ffe14d'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, 21, m * .5, PI2 - m * .5); ctx.closePath(); ctx.fill();
       ctx.shadowBlur = 0; circle(3, -11, 2.6, '#000');
     } else if (h.type === 'host') {
-      const x = h.x, y = h.y, charge = h.cd < .6, sw = charge ? 1 + .15 * Math.sin(h.t * 40) : 1;
+      const x = h.x, y = h.y, charge = h.cd < .9, sw = charge ? 1 + .15 * Math.sin(h.t * 40) : 1;
       ctx.translate(x, y); ctx.scale(sw, sw);
       ctx.fillStyle = '#5a3a2a'; ctx.beginPath(); ctx.ellipse(0, -2, 14, 5, 0, 0, PI2); ctx.fill();
       ctx.fillStyle = '#d8d0c0'; ctx.beginPath(); ctx.arc(0, -14, 11, Math.PI, PI2); ctx.lineTo(11, -4); ctx.lineTo(-11, -4); ctx.closePath(); ctx.fill();
@@ -2368,7 +2383,8 @@ function drawHazards(t, cam) {
     } else if (h.type === 'code') {
       ctx.font = `500 16px ${MONO}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       if (!h.live) {
-        ctx.globalAlpha = .1 + .3 * w; ctx.fillStyle = '#00ff6a'; ctx.fillRect(h.x - 9, 0, 18, H);
+        ctx.globalAlpha = .12 + .32 * w; ctx.fillStyle = '#ff2a2a'; ctx.fillRect(h.x - 10, 0, 20, H);
+        ctx.fillStyle = '#ff6a6a';
         ctx.globalAlpha = .4 + .5 * w;
         for (let i = 0; i < 5; i++) ctx.fillText(GLYPHS[(h.seed + i + Math.floor(t / 90)) % GLYPHS.length], h.x, 14 + i * 18);
       } else {
@@ -2376,8 +2392,8 @@ function drawHazards(t, cam) {
           const y = h.y - i * 17;
           if (y < -20 || y > H + 20) continue;
           ctx.globalAlpha = i === 0 ? 1 : .9 * (1 - i / 16);
-          ctx.fillStyle = i === 0 ? '#ffffff' : '#00ff6a';
-          if (i === 0) { ctx.shadowColor = '#00ff6a'; ctx.shadowBlur = 14; } else ctx.shadowBlur = 0;
+          ctx.fillStyle = i === 0 ? '#ffffff' : '#ff3b3b';
+          if (i === 0) { ctx.shadowColor = '#ff2a2a'; ctx.shadowBlur = 16; } else ctx.shadowBlur = 0;
           ctx.fillText(GLYPHS[(h.seed + i * 5 + Math.floor(t / 60)) % GLYPHS.length], h.x, y);
         }
       }
@@ -2629,6 +2645,80 @@ function finish(t, light) {
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
 }
 
+
+// ---------- menus: the programme, the endings and the cheats ----------
+const ENDINGS = [
+  { key: 'full', name: 'The Beginning', how: 'Успей на всех сеансах и собери все звёзды' },
+  { key: 'almost', name: 'Свет в зале', how: 'Успей везде и собери больше половины звёзд, но не все' },
+  { key: 'blind', name: 'Мимо звёзд', how: 'Успей везде, но собери меньше половины звёзд' },
+  { key: 'late', name: 'Пустой зал', how: 'Опоздай хоть раз, но собери половину звёзд или больше' },
+  { key: 'truck', name: 'Грузовик', how: 'Опоздай хоть раз и собери меньше половины звёзд' },
+];
+const DEMO = { truck: [612, 5, 31], late: [640, 9, 70], blind: [380, 14, 29], almost: [470, 14, 88], full: [505, 14, 103] };
+const CHEAT = { on: store.get('gtte-cheat') === '1', god: store.get('gtte-god') !== '0' };
+const cheatGod = () => CHEAT.on && CHEAT.god;
+const menu = { screen: 'main', sel: 0, rows: [] };
+
+function menuItems() {
+  const seen = seenEndings();
+  if (menu.screen === 'endings') return [
+    ...ENDINGS.map(e => {
+      const open = seen.includes(e.key);
+      return { label: e.name, note: open ? 'смотреть' : CHEAT.on ? 'смотреть (читы)' : 'закрыта', sub: e.how, open, act: open || CHEAT.on ? () => replayEnding(e.key) : null };
+    }),
+    { label: 'Назад', act: () => go('main') },
+  ];
+  if (menu.screen === 'cheats') return [
+    { label: 'Чит-режим', note: CHEAT.on ? 'вкл' : 'выкл', act: () => setCheat('on', !CHEAT.on) },
+    { label: 'Снаряды не убивают', note: CHEAT.god ? 'да' : 'нет', act: () => setCheat('god', !CHEAT.god), dim: !CHEAT.on },
+    { label: 'Начать с любого сеанса', note: '→', act: CHEAT.on ? () => go('levels') : null, dim: !CHEAT.on },
+    { label: 'Любая концовка', note: '→', act: CHEAT.on ? () => go('endings') : null, dim: !CHEAT.on },
+    { label: 'K во время сеанса — пропустить его', info: true, dim: !CHEAT.on },
+    { label: 'Забег с читами не открывает концовки и рекорды', info: true, dim: true },
+    { label: 'Назад', act: () => go('main') },
+  ];
+  if (menu.screen === 'levels') return [
+    ...LEVELS.map((L, i) => ({ label: `${String(i + 1).padStart(2, '0')}  ${L.name}`, act: () => { RUN = { li: i, res: [], v: 3, cheat: true }; saveRun(); startLevel(i); } })),
+    { label: 'Назад', act: () => go('cheats') },
+  ];
+  return [
+    { label: RUN.li > 0 ? `Продолжить вечер · сеанс ${RUN.li + 1}` : 'Начать вечер', act: () => { if (CHEAT.on) RUN.cheat = true; startLevel(RUN.li); } },
+    { label: 'Концовки', note: `${seen.length} / 5`, act: () => go('endings') },
+    { label: 'Читы', note: CHEAT.on ? 'вкл' : 'выкл', act: () => go('cheats') },
+    { label: 'Полный экран', note: 'F', act: toggleFullscreen },
+    ...(RUN.li > 0 ? [{ label: 'Новый забег', act: newRun }] : []),
+  ];
+}
+function go(screen) { menu.screen = screen; menu.sel = 0; tone(660, .12, .05); }
+function setCheat(k, v) {
+  CHEAT[k] = v; store.set(k === 'on' ? 'gtte-cheat' : 'gtte-god', v ? '1' : '0');
+  if (k === 'on' && v && RUN.li > 0) RUN.cheat = true;
+  saveRun(); hud();
+}
+function menuMove(d) {
+  const items = menuItems();
+  let i = menu.sel;
+  for (let n = 0; n < items.length; n++) { i = (i + d + items.length) % items.length; if (items[i].act) break; }
+  menu.sel = i; tone(520, .06, .04);
+}
+function menuActivate(i = menu.sel) {
+  const it = menuItems()[i];
+  if (it && it.act) { menu.sel = i; it.act(); }
+}
+function menuBack() { if (menu.screen === 'levels') go('cheats'); else if (menu.screen !== 'main') go('main'); }
+
+function replayEnding(key) {
+  startLevel(LEVELS.length - 1, 'ending');
+  const e = plats.find(q => q.end);
+  S.camY = endTop - H * .6;
+  S.p.x = e.x + 30; S.p.y = e.top - PH; S.p.vy = 0;
+  S.ending = key; S.modeT = 0; S.replay = true;
+  const d = DEMO[key];
+  const total = LEVELS.reduce((n, L) => n + L.credits.filter(c => c[0] === '*').length, 0);
+  S.summary = store.json('gtte-summary-' + key) || { time: d[0], inTime: d[1], got: Math.round(d[2] / 103 * total), total, fast: d[1] === LEVELS.length };
+  S.endDot = { x: S.p.x + PW / 2, y: S.p.y + PH / 2 - S.camY };
+}
+
 function drawMenu(t) {
   const film = '#efe8dc', dim = '#8e877c';
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
@@ -2637,30 +2727,62 @@ function drawMenu(t) {
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
   ctx.shadowColor = 'rgba(255,240,210,.55)'; ctx.shadowBlur = 18;
-  caption('GOING TO THE END', `600 40px ${SERIF}`, 92, film);
+  const titles = { main: 'GOING TO THE END', endings: 'Концовки', cheats: 'Читы', levels: 'С какого сеанса' };
+  caption(titles[menu.screen], `600 ${menu.screen === 'main' ? 40 : 34}px ${SERIF}`, 74, film);
   ctx.shadowBlur = 0;
-  caption(`${LEVELS.length} сеансов. Один вечер. Одна жизнь.`, `italic 500 20px ${SERIF}`, 124, dim);
-  LEVELS.forEach((L, i) => {
-    const y = 160 + i * 29, r = RUN.res[i], cur = i === RUN.li;
-    ctx.globalAlpha = r || cur ? 1 : .42;
+  const subs = { main: `${LEVELS.length} сеансов. Один вечер. Одна жизнь.`, endings: 'Открытые можно пересмотреть. Под каждой — как её открыть.', cheats: 'Для тестов и просмотра концовок', levels: 'Тестовый забег, в рекорды не идёт' };
+  caption(subs[menu.screen], `italic 500 ${menu.screen === 'main' ? 20 : 17}px ${SERIF}`, 104, dim);
+
+  const items = menuItems(), endings = menu.screen === 'endings', levels = menu.screen === 'levels';
+  const rowH = endings ? 64 : levels ? 30 : 34, y0 = endings ? 140 : levels ? 132 : 146;
+  menu.rows = [];
+  items.forEach((it, i) => {
+    const y = y0 + i * rowH, sel = i === menu.sel && it.act;
+    menu.rows.push({ y0: y - rowH / 2 - 4, y1: y + rowH / 2 - 4, i });
+    if (sel) { ctx.fillStyle = 'rgba(255,74,61,.12)'; ctx.fillRect(40, y - (endings ? 30 : 20), W - 80, endings ? 56 : 28); ctx.fillStyle = CUT; ctx.fillRect(40, y - (endings ? 30 : 20), 3, endings ? 56 : 28); }
+    ctx.globalAlpha = it.dim || (!it.act && !it.info) ? .45 : 1;
     ctx.textAlign = 'left';
-    ctx.font = `500 11px ${MONO}`; ctx.fillStyle = cur ? CUT : dim;
-    ctx.fillText(cur ? '▶' : String(i + 1).padStart(2, '0'), 52, y);
-    ctx.font = `500 18px ${SERIF}`; ctx.fillStyle = cur || r ? film : dim;
-    ctx.fillText(L.name, 78, y + 1);
-    ctx.textAlign = 'right'; ctx.font = `500 11px ${MONO}`;
-    if (r) {
-      ctx.fillStyle = r.t <= r.par ? '#b9f27c' : CUT;
-      ctx.fillText(`${fmt(r.t)}/${fmt(r.par)}`, W - 98, y);
-      ctx.fillStyle = dim; ctx.fillText(`★ ${r.got}/${r.total}`, W - 48, y);
-    }
+    ctx.font = it.info ? `italic 500 15px ${SERIF}` : `500 ${levels ? 18 : 21}px ${SERIF}`;
+    ctx.fillStyle = sel ? '#ffffff' : it.info ? dim : film;
+    ctx.fillText((endings && !it.open && it.sub ? '🔒︎ ' : '') + it.label, 56, y - (endings && it.sub ? 8 : 0));
+    if (it.sub) { ctx.font = `500 11px ${MONO}`; ctx.fillStyle = it.open ? '#b9f27c' : dim; ctx.fillText(it.sub, 56, y + 14); }
+    if (it.note) { ctx.textAlign = 'right'; ctx.font = `500 11px ${MONO}`; ctx.fillStyle = it.note === 'вкл' || it.note === 'да' ? CUT : dim; ctx.fillText(it.note.toUpperCase(), W - 56, y - (endings ? 8 : 0)); }
+    ctx.globalAlpha = 1;
   });
-  ctx.globalAlpha = 1; ctx.textAlign = 'center';
-  caption(RUN.li > 0 ? `ПРОБЕЛ ИЛИ КАСАНИЕ — ПРОДОЛЖИТЬ СЕАНС ${RUN.li + 1}` : 'ПРОБЕЛ ИЛИ КАСАНИЕ — НАЧАТЬ ВЕЧЕР', `500 12px ${MONO}`, H - 74, dim, .55 + .45 * Math.abs(Math.sin(t * .0022)));
-  caption(`таймер ${GUEST_PAR} секунд на фильм · собирай звёзды · держись в кадре`, `500 11px ${MONO}`, H - 52, dim, .7);
-  const seen = seenEndings().length;
-  caption(`КОНЦОВКИ: ${seen} / 5`, `500 11px ${MONO}`, H - 30, seen ? film : dim, .8);
+
+  if (menu.screen === 'main') {
+    // the evening's programme with this run's results
+    LEVELS.forEach((L, i) => {
+      const y = 340 + i * 20, r = RUN.res[i], cur = i === RUN.li;
+      ctx.globalAlpha = r || cur ? 1 : .4;
+      ctx.textAlign = 'left'; ctx.font = `500 10px ${MONO}`; ctx.fillStyle = cur ? CUT : dim;
+      ctx.fillText(cur ? '▶' : String(i + 1).padStart(2, '0'), 56, y);
+      ctx.font = `500 15px ${SERIF}`; ctx.fillStyle = cur || r ? film : dim; ctx.fillText(L.name, 80, y + 1);
+      if (r) {
+        ctx.textAlign = 'right'; ctx.font = `500 10px ${MONO}`;
+        ctx.fillStyle = r.t <= r.par ? '#b9f27c' : CUT; ctx.fillText(`${fmt(r.t)}/${fmt(r.par)}`, W - 110, y);
+        ctx.fillStyle = dim; ctx.fillText(`★ ${r.got}/${r.total}`, W - 56, y);
+      }
+    });
+    ctx.globalAlpha = 1;
+  }
+  ctx.textAlign = 'center';
+  caption('↑ ↓ — выбрать · ПРОБЕЛ или касание — открыть · ESC — назад', `500 10px ${MONO}`, H - 22, dim, .7);
+  if (CHEAT.on) caption('ЧИТ-РЕЖИМ', `500 10px ${MONO}`, 24, CUT, .9);
 }
+
+// ---------- fullscreen: the Windows build swaps in a real borderless window ----------
+function toggleFullscreen() {
+  if (typeof window.gtteFullscreen === 'function') { window.gtteFullscreen().then(v => setFs(!!v)).catch(() => {}); return; }
+  const el = document.documentElement;
+  try {
+    if (!document.fullscreenElement) (el.requestFullscreen || el.webkitRequestFullscreen).call(el).catch?.(() => {});
+    else (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  } catch (e) { /* fullscreen not allowed here */ }
+}
+function setFs(on) { document.body.classList.toggle('fs', on); $('full').setAttribute('aria-pressed', String(on)); }
+document.addEventListener('fullscreenchange', () => setFs(!!document.fullscreenElement));
+
 
 function drawIntro() {
   const T = S.modeT, a = T < 2.3 ? 1 : 1 - (T - 2.3) / .7;
@@ -2685,7 +2807,7 @@ function introHint() {
   return {
     bullet: 'следи за красным лазером', walker: 'прыгай на грибы сверху', nail: 'гвозди блестят перед падением',
     redlight: 'двигайся, только пока кукла поёт', meteor: 'гравитация слабая, прыжки длинные', creeper: 'криперы взрывают слова',
-    bludger: 'бладжеры отскакивают от краёв', chaser: 'не дай себя догнать', code: 'код падает столбами сверху', water: 'вода поднимается снизу',
+    bludger: 'бладжеры отскакивают от краёв', chaser: 'не дай себя догнать', code: 'красный код падает столбами сверху', water: 'вода поднимается снизу',
     double: 'не стой на месте: ты догонишь себя', host: 'черепа плюются слезами крестом', leviathan: 'хватай пузыри, в воде можно грести прыжком',
   }[LV.hazard] || 'дойди до конца';
 }
@@ -2970,6 +3092,7 @@ function hud() {
   $('take').textContent = S.take;
   $('stars').textContent = `${stars.filter(s => s.got).length} / ${stars.length}`;
   $('fresh').hidden = !(S.mode === 'menu' && RUN.li > 0);
+  $('cheatTag').hidden = !(CHEAT.on || RUN.cheat);
   $('pause').setAttribute('aria-pressed', String(S.mode === 'pause'));
   timer();
 }
@@ -2998,15 +3121,18 @@ function togglePause(force) {
 }
 function newRun() {
   RUN = freshRun(); saveRun();
-  startLevel(0, 'menu');
+  startLevel(0, 'menu'); go('main');
 }
 function press(k) {
   audioInit();
   if (S.mode === 'pause') { togglePause(); return; }
-  if (S.mode === 'menu') { startLevel(RUN.li); return; }
+  if (S.mode === 'menu') { if (k === 'left') menuMove(-1); else if (k === 'right') menuMove(1); else menuActivate(); return; }
   if (S.mode === 'intro') { if (S.modeT > .6) play(); return; }
   if (S.mode === 'clear') { if (S.modeT > 2.2) startLevel(RUN.li); return; }
-  if (S.mode === 'ending') { if (S.modeT > ENDING_LEN[S.ending]) startLevel(0, 'menu'); return; }
+  if (S.mode === 'ending') {
+    if (S.modeT > ENDING_LEN[S.ending] || S.replay && S.modeT > 1) { const back = S.replay; startLevel(RUN.li, 'menu'); if (back) go('endings'); }
+    return;
+  }
   if (k === 'jump') S.p.buffer = .12;
 }
 const MAP = {
@@ -3019,8 +3145,16 @@ addEventListener('keydown', e => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   const ch = e.key.length === 1 ? e.key.toLowerCase() : e.key;
   if (ch === 'm' || ch === 'ь') { setMute(!AU.muted); return; }
+  if (ch === 'f' || ch === 'а' || ch === 'F11') { e.preventDefault(); toggleFullscreen(); return; }
+  if (S.mode === 'menu') {
+    if (ch === 'ArrowUp' || ch === 'w' || ch === 'ц') { e.preventDefault(); menuMove(-1); return; }
+    if (ch === 'ArrowDown' || ch === 's' || ch === 'ы') { e.preventDefault(); menuMove(1); return; }
+    if (ch === 'Escape' || ch === 'Backspace') { e.preventDefault(); menuBack(); return; }
+    if (ch === 'n' || ch === 'т') { newRun(); return; }
+  }
+  if (S.mode === 'ending' && S.replay && ch === 'Escape') { startLevel(RUN.li, 'menu'); go('endings'); return; }
+  if ((ch === 'k' || ch === 'л') && CHEAT.on && S.mode === 'play') { RUN.cheat = true; finishLevel(); return; }
   if (ch === 'p' || ch === 'з' || ch === 'Escape') { e.preventDefault(); togglePause(); return; }
-  if ((ch === 'n' || ch === 'т') && S.mode === 'menu') { newRun(); return; }
   const k = keyOf(e);
   if (!k) return;
   e.preventDefault();
@@ -3037,7 +3171,16 @@ addEventListener('keyup', e => {
 });
 addEventListener('blur', () => { keys.left = keys.right = keys.jump = false; if (S.mode === 'play') togglePause(true); });
 document.addEventListener('visibilitychange', () => { if (document.hidden && S.mode === 'play') togglePause(true); });
-cv.addEventListener('pointerdown', () => { if (S.mode !== 'play' && S.mode !== 'cut') press('jump'); });
+cv.addEventListener('pointerdown', e => {
+  if (S.mode === 'menu') {
+    // tap a menu row to open it
+    const r = cv.getBoundingClientRect(), y = (e.clientY - r.top) / r.height * H;
+    const row = menu.rows.find(q => y >= q.y0 && y <= q.y1);
+    if (row) { audioInit(); menuActivate(row.i); }
+    return;
+  }
+  if (S.mode !== 'play' && S.mode !== 'cut') press('jump');
+});
 for (const b of $('pads').querySelectorAll('button')) {
   const k = b.dataset.k;
   const down = e => { e.preventDefault(); keys[k] = true; b.classList.add('on'); press(k); };
@@ -3048,6 +3191,7 @@ for (const b of $('pads').querySelectorAll('button')) {
 $('snd').addEventListener('click', () => setMute(!AU.muted));
 $('pause').addEventListener('click', () => togglePause());
 $('fresh').addEventListener('click', newRun);
+$('full').addEventListener('click', toggleFullscreen);
 
 // ---------- boot: re-measure the words once the typefaces arrive ----------
 const fontsReady = Promise.race([
