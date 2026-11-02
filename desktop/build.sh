@@ -6,7 +6,9 @@ UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Ge
 
 rm -rf web && mkdir -p web/fonts
 # fonts are bundled so the game looks the same offline
-css=$(curl -fsSL -A "$UA" 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=IBM+Plex+Mono:wght@400;500&display=swap')
+# the same font families the page asks Google Fonts for
+fonts_url=$(grep -o 'https://fonts.googleapis.com/css2?[^"]*' ../index.html | head -1)
+css=$(curl -fsSL -A "$UA" "$fonts_url")
 i=0
 while read -r u; do
   i=$((i + 1))
