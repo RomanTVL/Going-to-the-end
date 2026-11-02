@@ -7,7 +7,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Cormorant+SC:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=Marck+Script&family=Oswald:wght@400;500;600&family=Philosopher:wght@400;700&family=Pixelify+Sans:wght@500;700&family=Playfair+Display:ital,wght@0,600;1,500&family=Press+Start+2P&family=Rubik+Mono+One&family=Ruslan+Display&family=Russo+One&family=Unbounded:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Cormorant+SC:wght@500;600&family=Amatic+SC:wght@700&family=Exo+2:wght@500;700&family=IBM+Plex+Mono:wght@400;500&family=Kelly+Slab&family=Marck+Script&family=Oswald:wght@400;500;600&family=Philosopher:wght@400;700&family=Pixelify+Sans:wght@500;700&family=Playfair+Display:ital,wght@0,600;1,500&family=Press+Start+2P&family=Rubik+Mono+One&family=Ruslan+Display&family=Russo+One&family=Unbounded:wght@500;700&display=swap">
 <style>
 /* Layout: тёмный зал, один экран по центру, под ним табличка с номером сеанса и таймером */
 :root {
@@ -123,6 +123,9 @@ const PLAY = '"Playfair Display", Georgia, serif';
 const RUSLAN = '"Ruslan Display", Georgia, serif';
 const PHIL = '"Philosopher", Georgia, serif';
 const MARCK = '"Marck Script", Georgia, cursive';
+const SLAB = '"Kelly Slab", Georgia, serif';
+const AMATIC = '"Amatic SC", "Arial Narrow", sans-serif';
+const EXO = '"Exo 2", "Arial", sans-serif';
 const REC_HZ = 30;
 const GUEST_PAR = 25, FINAL_PAR = 40;
 
@@ -341,7 +344,7 @@ const LEVELS = [
     fonts: fontSet([`400 34px ${WIDE}`, 34, 22], [`400 23px ${WIDE}`, 23], [`400 11px ${WIDE}`, 11],
       [`400 20px ${WIDE}`, 20], [`400 17px ${WIDE}`, 17, 16], [`400 18px ${WIDE}`, 18, 34], [`400 70px ${WIDE}`, 70]),
     hazard: 'meteor', props: ['planet', 'satellite', 'rocket'], back: 'space', sound: { base: 262, wave: 'square' },
-    grav: .72, jump: .85, fall: .95,
+    grav: .82, jump: .9, fall: 1,
     credits: [
       ['title', 'ПОСЛЕДНЯЯ ОРБИТА'],
       ['c', 'Давным-давно, в одном кинозале'],
@@ -437,6 +440,56 @@ const LEVELS = [
     ],
   },
   {
+    key: 'club', name: 'Клуб, о котором молчат', genre: 'по мотивам фильма о подпольном бойцовском клубе',
+    pal: { bg: '#0b0c07', film: '#e6e9d2', dim: '#8a8f6e', accent: '#ff5fa2', star: '#ff9cc8' },
+    fonts: fontSet([`400 30px ${SLAB}`, 30, 20], [`400 24px ${SLAB}`, 24], [`400 12px ${SLAB}`, 12],
+      [`400 21px ${SLAB}`, 21], [`400 19px ${SLAB}`, 19, 16], [`400 20px ${SLAB}`, 20, 34], [`400 74px ${SLAB}`, 74]),
+    hazard: 'double', props: ['bulb', 'soap', 'fist', 'soap'], back: 'grime', starKind: 'soap', sound: { base: 220, wave: 'triangle' },
+    credits: [
+      ['title', 'КЛУБ, О КОТОРОМ МОЛЧАТ'],
+      ['c', 'Ты встретишь себя через секунду'],
+      ['h', 'Правила'],
+      ['r', 'Правило первое', 'Никому не говорить'],
+      ['r', 'Правило второе', '~Никому не говорить'],
+      ['r', 'Правило третье', 'Бой до конца'],
+      ['r', 'Правило четвёртое', 'Один на один'],
+      ['r', 'Правило пятое', 'Без рубашек'],
+      ['r', 'Правило шестое', 'Сколько нужно'],
+      ['*', 0, -44],
+      ['w', 'Подвал', 'Лампа', '~Синяк'],
+      ['r', 'Правило седьмое', 'Новичок дерётся'],
+      ['r', 'Правило восьмое', '~Не останавливайся'],
+      ['*', 170, -40],
+      ['c', 'Не стой: ты догонишь себя'],
+      ['h', 'В ролях'],
+      ['r', 'Рассказчик', 'Ты'],
+      ['r', 'Двойник', 'Тоже ты', { blink: 2 }],
+      ['r', 'Мыло', 'Розовое', { sway: 70 }],
+      ['*', 0, -44],
+      ['r', 'Бессонница', 'Шестой месяц'],
+      ['r', 'Каталог мебели', '~Прочитан'],
+      ['*', -165, -40],
+      ['w', 'Кулак', '~Зуб', 'Пластырь'],
+      ['r', 'Самолёт', 'Одноразовый', { sway: 60 }],
+      ['*', 160, -40],
+      ['c', 'Ты не твоя работа'],
+      ['h', 'Проект'],
+      ['r', 'Подвал', 'Без окон'],
+      ['r', 'Кадр', '~Двадцать пятый', { blink: 2.4 }],
+      ['r', 'Метка смены части', 'В углу экрана'],
+      ['*', 0, -44],
+      ['w', 'Мыло', '~Бомба', 'Город'],
+      ['c', 'Всё, что у тебя есть, владеет тобой'],
+      ['h', 'Благодарности'],
+      ['r', 'Подвалу', 'За тишину'],
+      ['r', 'Себе', '~За компанию'],
+      ['r', 'Бессоннице', 'За ночи'],
+      ['*', 0, -44],
+      ['c', 'Ты никому не расскажешь'],
+      ['end', 'THE END'],
+    ],
+  },
+  {
     key: 'wizard', name: 'Школа волшебства', genre: 'по мотивам сказки о мальчике со шрамом',
     pal: { bg: '#0d0717', film: '#f4e7c4', dim: '#9d8a6a', accent: '#c9a227', star: '#ffd75e' },
     fonts: fontSet([`400 30px ${RUSLAN}`, 30, 20], [`400 24px ${RUSLAN}`, 24], [`700 12px ${PHIL}`, 12],
@@ -483,6 +536,107 @@ const LEVELS = [
       ['r', 'Друзьям', 'За всё'],
       ['*', 0, -44],
       ['c', 'Шалость удалась'],
+      ['end', 'THE END'],
+    ],
+  },
+  {
+    key: 'deep', name: 'Океан чужой планеты', genre: 'по мотивам игры о выживании под водой',
+    pal: { bg: '#021a24', film: '#d9f7ff', dim: '#5aa6bd', accent: '#ff9a3c', star: '#ffe14d' },
+    fonts: fontSet([`700 30px ${EXO}`, 30, 20], [`700 22px ${EXO}`, 22], [`500 11px ${EXO}`, 11],
+      [`500 20px ${EXO}`, 20], [`500 17px ${EXO}`, 17, 16], [`500 18px ${EXO}`, 18, 34], [`700 70px ${EXO}`, 70]),
+    hazard: 'leviathan', oxygen: true, swim: true, props: ['kelp', 'lifepod', 'kelp', 'seamoth', 'coral'], back: 'abyss', starKind: 'peeper', sound: { base: 294, wave: 'sine' },
+    grav: .66, jump: .86, fall: .78,
+    credits: [
+      ['title', 'ОКЕАН ЧУЖОЙ ПЛАНЕТЫ'],
+      ['c', 'Корабль разбился. Ты под водой.'],
+      ['h', 'В ролях'],
+      ['r', 'Выживший', 'Ты'],
+      ['r', 'Спасательная капсула', '~Протекает'],
+      ['r', 'Глазастик', 'Смотрит'],
+      ['r', 'Левиафан', 'Где-то рядом'],
+      ['r', 'Капитан', 'В записях'],
+      ['r', 'Компьютер', 'Всё под контролем'],
+      ['*', 0, -44],
+      ['w', 'Кислород', 'Вода', '~Соль'],
+      ['r', 'Подлодка', 'Маленькая', { sway: 70 }],
+      ['r', 'Сканер', '~Сканирует'],
+      ['*', -165, -40],
+      ['c', 'Хватай пузыри, пока дышишь'],
+      ['h', 'Глубина'],
+      ['r', 'Мелководье', 'Безопасно'],
+      ['r', 'Водоросли', 'Целый лес', { sway: 80 }],
+      ['r', 'Пещеры', '~Тесно', { blink: 2 }],
+      ['*', 0, -44],
+      ['r', 'Обрыв', 'Не заплывай'],
+      ['r', 'Бездна', 'Смотрит в ответ'],
+      ['*', 165, -40],
+      ['w', 'Двести', '~Пятьсот', 'Тысяча'],
+      ['r', 'Рёв', 'Совсем близко', { blink: 2.4 }],
+      ['*', -160, -40],
+      ['c', 'Левиафан проплыл мимо. Почти.'],
+      ['h', 'Ремесло'],
+      ['r', 'Титан', 'Из обломков'],
+      ['r', 'Медь', '~Мало'],
+      ['r', 'Батарея', 'Садится'],
+      ['*', 0, -44],
+      ['w', 'Нож', '~Ласты', 'Баллон'],
+      ['c', 'Ни одна рыба не дала себя поймать'],
+      ['h', 'Благодарности'],
+      ['r', 'Пузырям', 'За воздух'],
+      ['r', 'Глазастикам', '~За компанию'],
+      ['r', 'Ракете', 'За путь домой'],
+      ['*', 0, -44],
+      ['c', 'Поверхность ждёт'],
+      ['end', 'THE END'],
+    ],
+  },
+  {
+    key: 'basement', name: 'Мальчик в подвале', genre: 'по мотивам игры о слезах и подвале',
+    pal: { bg: '#120b07', film: '#f1e2c8', dim: '#a08466', accent: '#c4001c', star: '#e8233a' },
+    fonts: fontSet([`700 48px ${AMATIC}`, 48, 22], [`700 36px ${AMATIC}`, 36], [`700 18px ${AMATIC}`, 18],
+      [`700 30px ${AMATIC}`, 30], [`700 28px ${AMATIC}`, 28, 16], [`700 28px ${AMATIC}`, 28, 34], [`700 100px ${AMATIC}`, 100]),
+    hazard: 'host', props: ['tearface', 'poop', 'bomb', 'key', 'poop'], back: 'basement', starKind: 'heart', sound: { base: 262, wave: 'triangle' },
+    credits: [
+      ['title', 'МАЛЬЧИК В ПОДВАЛЕ'],
+      ['c', 'Мама слышит голос сверху'],
+      ['h', 'В ролях'],
+      ['r', 'Мальчик', 'Ты'],
+      ['r', 'Мама', '~Где-то наверху'],
+      ['r', 'Мухи', 'Жужжат'],
+      ['r', 'Черепа', 'Плюются слезами'],
+      ['r', 'Кот', 'Девять жизней'],
+      ['r', 'Торговец', 'Не верит в долг'],
+      ['*', 0, -44],
+      ['w', 'Ключ', 'Бомба', '~Монетка'],
+      ['r', 'Сундук', 'Золотой'],
+      ['r', 'Сердце', '~Половинка'],
+      ['*', -165, -40],
+      ['c', 'Слёзы — твоё единственное оружие'],
+      ['h', 'Этажи'],
+      ['r', 'Подвал', 'Сыро'],
+      ['r', 'Пещеры', 'Темно', { sway: 70 }],
+      ['r', 'Глубины', '~Глубже', { blink: 2 }],
+      ['*', 0, -44],
+      ['r', 'Чрево', 'Не спрашивай'],
+      ['r', 'Собор', 'Светло'],
+      ['*', 165, -40],
+      ['w', 'Пилюля', '~Карта', 'Руна'],
+      ['r', 'Секретная комната', 'За стеной'],
+      ['*', -160, -40],
+      ['c', 'Каждый забег — другой'],
+      ['h', 'Предметы'],
+      ['r', 'Луковица', 'Больше слёз'],
+      ['r', 'Вилка', '~Мамина', { blink: 2.4 }],
+      ['r', 'Носок', 'Тоже мамин'],
+      ['*', 0, -44],
+      ['w', 'Лук', '~Крест', 'Нимб'],
+      ['c', 'Черепа плюют крестом. Не стой в линию.'],
+      ['h', 'Благодарности'],
+      ['r', 'Маме', '~За заботу'],
+      ['r', 'Мухам', 'За компанию'],
+      ['r', 'Подвалу', 'За приют'],
+      ['*', 0, -44],
+      ['c', 'Ты выбрался. На этот раз.'],
       ['end', 'THE END'],
     ],
   },
@@ -921,6 +1075,7 @@ function startLevel(i, mode = 'intro') {
     burn: null, parts: [], rec: [], recT: 0, ghost: store.json('gtte-ghost-' + LV.key), par: LV.par || (LV.final ? FINAL_PAR : GUEST_PAR),
     hz: [], hzT: 2, amb: makeAmbient(), cues: new Set(), ending: null, shake: 0,
     rl: { phase: 'green', t: 0, dur: 2.8 }, water: 50, blood: [], splats: [],
+    trace: [], since: 0, twin: null, oxy: 100, bubbles: [], bubT: .5, swimCD: 0, beep: 0,
     p: { x: cp.x - PW / 2, y: cp.top - PH, vx: 0, vy: 0, ground: null, coyote: 0, buffer: 0, trail: [], squash: 0 },
   };
   hud();
@@ -947,6 +1102,9 @@ function makeAmbient() {
   if (LV.back === 'rain') A.cols = many(36, (_, i) => ({ x: i * 15 + 4, y: rand(-H, H), sp: rand(60, 180), len: Math.floor(rand(8, 20)), seed: Math.floor(rand(0, 999)) }));
   if (LV.back === 'aurora') A.field = many(110, () => ({ x: rand(0, W), y: rand(0, H), d: rand(.03, .15), r: Math.random() < .08 ? 1.6 : .8 }));
   if (LV.back === 'maze') A.seed = Math.floor(rand(0, 1000));
+  if (LV.back === 'grime') { A.blots = many(9, () => ({ x: rand(0, W), y: rand(0, H), r: rand(20, 70), d: rand(.05, .2) })); A.flashAt = performance.now() + 3000; A.flashX = 90; }
+  if (LV.back === 'basement') A.flies = many(4, () => ({ x: rand(30, W - 30), y: rand(40, H - 40), s: rand(.6, 1.4), ph: rand(0, 6) }));
+  if (LV.back === 'abyss') { A.snow = many(70, () => ({ x: rand(0, W), y: rand(0, H), d: rand(.05, .3) })); A.school = many(3, () => ({ x: rand(0, W), y: rand(0, H), s: rand(.6, 1.2) })); }
   return A;
 }
 
@@ -963,6 +1121,7 @@ function respawn() {
   for (const pl of plats) if (pl.top >= cp.top - 1) { pl.gone = false; pl.hold = 0; pl.goneT = 0; }
   for (const s of stars) if (!s.banked) s.got = false;
   S.hz = []; S.hzT = 1.4; S.water = 50;
+  S.trace = []; S.since = S.time; S.twin = null; S.oxy = 100; S.bubbles = [];
   S.camY = Math.max(0, cp.top - H * .4);
   Object.assign(S.p, { x: cp.x - PW / 2, y: cp.top - PH, vx: 0, vy: 0, ground: null, coyote: 0, buffer: 0, trail: [], squash: 0 });
   S.mode = 'play';
@@ -1180,6 +1339,55 @@ const HZ = {
     dead: () => false,
     why: 'Тебя съел обжора',
   },
+  host: {
+    every: 1.8,
+    spawn() {
+      if (S.hz.filter(h => h.type === 'host').length >= 2) return;
+      const c = platformsAhead(130, q => q.w >= 28);
+      if (!c.length) return;
+      const pl = pick(c);
+      S.hz.push({ type: 'host', pl, rx: rand(4, pl.w - 22), t: 0, warn: 0, live: true, cd: rand(1.2, 1.8) });
+    },
+    step(h, dt) {
+      h.x = h.pl.x + h.rx + 9; h.y = h.pl.top;
+      h.cd -= dt;
+      if (h.cd <= 0) {
+        // a cross of tears: up, down, left and right
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, -1], [0, 1]]) S.hz.push({ type: 'tear', x: h.x, y: h.y - 14, vx: dx * 190, vy: dy * 190, r: 7, t: 0, warn: 0, live: true });
+        h.cd = rand(2, 2.6) * (1 - .2 * progress());
+        sweep(500, 180, .2, .07, 'triangle');
+      }
+    },
+    hit: (h, d) => Math.abs(d.x - h.x) < 12 && d.y > h.y - 22 && d.y < h.y + 2,
+    dead: h => h.pl.gone || h.pl.top < S.camY - 60,
+    why: 'Череп оказался ближе, чем казалось',
+  },
+  tear: {
+    step(h, dt) { h.x += h.vx * dt; h.y += h.vy * dt; },
+    hit: (h, d) => Math.hypot(d.x - h.x, d.y - h.y) < h.r + 4,
+    dead: h => h.t > 1.5,
+    why: 'Тебя залили слезами',
+  },
+  leviathan: {
+    every: 5.2, screen: true,
+    spawn() {
+      if (S.hz.some(h => h.type === 'leviathan')) return;
+      const fromL = Math.random() < .5, d = dotScreen();
+      S.hz.push({ type: 'leviathan', screen: true, fromL, x: fromL ? -80 : W + 80, y: clamp(d.y + rand(-40, 40), 90, H - 90), vx: fromL ? 450 : -450, warn: 1.5, t: 0, len: 380, pts: [] });
+      // the roar comes first, the leviathan after
+      sweep(90, 45, 1.4, .18, 'sawtooth'); noise(1.2, .2, 300, 'lowpass');
+    },
+    step(h, dt) {
+      if (!h.live) return;
+      h.x += h.vx * dt;
+      const dir = Math.sign(h.vx);
+      h.pts = [];
+      for (let i = 0; i <= 26; i++) { const s = i / 26; h.pts.push([h.x - dir * h.len * s, h.y + Math.sin(s * 5 - h.t * 7) * 20 * s, (1 - s * .78) * 26]); }
+    },
+    hit: (h, d) => h.live && h.pts.some(([x, y, r]) => Math.hypot(d.x - x, d.y - y) < r * .8 + 4),
+    dead: h => h.live && (h.fromL ? h.x - h.len > W + 60 : h.x + h.len < -60),
+    why: 'Тебя проглотил левиафан',
+  },
   code: {
     every: .95, screen: true,
     spawn() {
@@ -1208,11 +1416,44 @@ function updateRedLight(dt) {
   }
 }
 
+
+// the double walks your own path a second behind you: stand still and you meet yourself
+function updateDouble() {
+  const d = dotWorld(), D = 1.35 - .35 * progress();
+  S.trace.push({ t: S.time, x: d.x, y: d.y });
+  while (S.trace.length > 2 && S.trace[1].t <= S.time - D) S.trace.shift();
+  S.twin = S.time - S.since >= D ? S.trace[0] : null;
+  if (S.twin && Math.hypot(S.twin.x - d.x, S.twin.y - d.y) < 8) cut('Ты встретил себя');
+}
+
+// air runs out under water; bubbles rising from the bottom of the frame refill it
+function updateOxygen(dt) {
+  S.oxy -= (5.5 + 2.5 * progress()) * dt;
+  S.bubT -= dt;
+  if (S.bubT <= 0) { S.bubT = rand(.6, 1.1); S.bubbles.push({ x: rand(30, W - 30), y: H + 20, r: rand(9, 13), ph: rand(0, 6) }); }
+  for (const b of S.bubbles) { b.y -= 75 * dt; b.x += Math.sin(b.y * .03 + b.ph) * .7; }
+  const d = dotScreen();
+  S.bubbles = S.bubbles.filter(b => {
+    if (Math.hypot(b.x - d.x, b.y - d.y) < b.r + 7) {
+      S.oxy = Math.min(100, S.oxy + 36);
+      tone(988, .18, .07); tone(1318, .2, .05, .06);
+      burst(b.x, b.y + S.camY, 8, '#bfefff', 90, 3);
+      return false;
+    }
+    return b.y > -30;
+  });
+  S.beep -= dt;
+  if (S.oxy < 30 && S.beep <= 0) { S.beep = .8; tone(1046, .12, .08, 0, 'square'); }
+  if (S.oxy <= 0) cut('Кончился кислород');
+}
+
 function updateHazards(dt) {
   const type = LV.hazard, H_ = HZ[type];
   if (S.mode === 'play' && type === 'redlight') updateRedLight(dt);
   if (S.mode === 'play' && type === 'water') S.water = Math.min(330, S.water + (7 + 11 * progress()) * dt);
-  if (!H_) return;
+  if (S.mode === 'play' && type === 'double') { updateDouble(); if (S.mode !== 'play') return; }
+  if (S.mode === 'play' && LV.oxygen) { updateOxygen(dt); if (S.mode !== 'play') return; }
+  if (!H_ || !H_.spawn) return;
   if (S.mode === 'play') {
     S.hzT -= dt;
     if (S.time > 1.8 && S.hzT <= 0) {
@@ -1265,6 +1506,12 @@ function update(dt) {
   p.buffer = Math.max(0, p.buffer - dt);
   if (p.buffer > 0 && p.coyote > 0 && S.mode === 'play') {
     p.vy = -JUMP * (LV.jump || 1); p.buffer = 0; p.coyote = 0; p.ground = null;
+  }
+  // under water a jump in mid-air is a swimming stroke, and every stroke costs a little air
+  S.swimCD = Math.max(0, S.swimCD - dt);
+  if (LV.swim && S.mode === 'play' && !p.ground && p.buffer > 0 && S.swimCD <= 0) {
+    p.vy = Math.min(p.vy, -JUMP * .52); p.buffer = 0; S.swimCD = .3; S.oxy -= 2.5;
+    sweep(260, 420, .14, .05, 'sine'); burst(p.x + PW / 2, p.y + PH, 4, '#bfefff', 60, 3);
   }
   p.vy = Math.min(MAXFALL * (LV.fall || 1), p.vy + GRAV * (LV.grav || 1) * dt);
 
@@ -1345,6 +1592,87 @@ function px(x, y, w, h, c) { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); }
 
 // ---------- props: drawn around (0, 0) at roughly 80 px tall ----------
 const PROPS = {
+  bulb(pr, t) {
+    ctx.strokeStyle = '#2a2a22'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0, -120); ctx.lineTo(0, -14); ctx.stroke();
+    ctx.fillStyle = '#3a3a30'; ctx.fillRect(-4, -16, 8, 8);
+    const on = Math.sin(t * .013 + pr.ph) > -.9 || Math.random() < .5;
+    if (on) {
+      const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 60); g.addColorStop(0, 'rgba(255,236,170,.35)'); g.addColorStop(1, 'rgba(255,236,170,0)');
+      ctx.fillStyle = g; ctx.fillRect(-60, -60, 120, 120);
+    }
+    ctx.fillStyle = on ? '#fff1b8' : '#6b6a52'; ctx.beginPath(); ctx.ellipse(0, 0, 8, 10, 0, 0, PI2); ctx.fill();
+    ctx.strokeStyle = 'rgba(160,110,20,.8)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-3, 2); ctx.lineTo(-1, -3); ctx.lineTo(1, 2); ctx.lineTo(3, -3); ctx.stroke();
+  },
+  soap(pr) {
+    ctx.rotate((pr.n % 2 ? -1 : 1) * .25);
+    const g = ctx.createLinearGradient(0, -12, 0, 12); g.addColorStop(0, '#ffb3d1'); g.addColorStop(1, '#e05592');
+    ctx.fillStyle = g; rr(-24, -12, 48, 24, 9); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.45)'; rr(-18, -9, 22, 5, 3); ctx.fill();
+    ctx.strokeStyle = 'rgba(140,30,80,.35)'; ctx.lineWidth = 1; rr(-16, -5, 32, 12, 5); ctx.stroke();
+  },
+  fist() {
+    ctx.fillStyle = '#d9a989'; rr(-18, -14, 36, 30, 9); ctx.fill();
+    ctx.fillStyle = '#c08a6a'; for (let i = 0; i < 4; i++) rr(-17 + i * 9, -18, 8, 12, 4), ctx.fill();
+    ctx.fillStyle = '#f2f0e6'; ctx.fillRect(-19, -2, 38, 6); ctx.fillRect(-19, 8, 38, 5);
+    ctx.fillStyle = '#8a1c1c'; circle(-8, -12, 2, '#8a1c1c'); circle(5, -13, 1.6, '#8a1c1c');
+  },
+  poop() {
+    ctx.fillStyle = '#5a3a1e';
+    ctx.beginPath(); ctx.ellipse(0, 12, 22, 9, 0, 0, PI2); ctx.fill();
+    ctx.fillStyle = '#6e4826'; ctx.beginPath(); ctx.ellipse(0, 2, 16, 8, 0, 0, PI2); ctx.fill();
+    ctx.fillStyle = '#80552e'; ctx.beginPath(); ctx.ellipse(0, -7, 10, 6, 0, 0, PI2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-3, -11); ctx.quadraticCurveTo(2, -20, 5, -12); ctx.fill();
+  },
+  bomb(pr, t) {
+    circle(0, 4, 15, '#1b1b1b'); circle(-5, -1, 4, 'rgba(255,255,255,.25)');
+    ctx.fillStyle = '#3a3a3a'; ctx.fillRect(-4, -14, 8, 6);
+    ctx.strokeStyle = '#c9a25a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, -14); ctx.quadraticCurveTo(6, -24, 12, -22); ctx.stroke();
+    if (Math.sin(t * .03 + pr.ph) > 0) { ctx.shadowColor = '#ffcf4a'; ctx.shadowBlur = 10; circle(12, -22, 3, '#ffcf4a'); ctx.shadowBlur = 0; }
+  },
+  key() {
+    ctx.rotate(-.6); ctx.fillStyle = '#e8b93a';
+    ctx.beginPath(); ctx.arc(0, -16, 8, 0, PI2); ctx.fill(); circle(0, -16, 3.5, '#120b07');
+    ctx.fillStyle = '#e8b93a'; ctx.fillRect(-2, -8, 4, 28); ctx.fillRect(2, 12, 7, 3); ctx.fillRect(2, 18, 5, 3);
+  },
+  tearface(pr, t) {
+    ctx.fillStyle = '#f2d7c4'; ctx.beginPath(); ctx.ellipse(0, 18, 11, 12, 0, 0, PI2); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, -4, 18, 0, PI2); ctx.fill();
+    circle(-7, -6, 4.5, '#111'); circle(7, -6, 4.5, '#111');
+    circle(-8, -8, 1.4, '#fff'); circle(6, -8, 1.4, '#fff');
+    ctx.strokeStyle = '#111'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(0, 8, 5, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
+    ctx.fillStyle = 'rgba(120,180,255,.9)';
+    for (const sx of [-7, 7]) { const k = (t * .002 + pr.ph + (sx > 0 ? .5 : 0)) % 1; ctx.beginPath(); ctx.ellipse(sx, -1 + k * 24, 2.2, 3.2, 0, 0, PI2); ctx.fill(); }
+  },
+  kelp(pr, t) {
+    ctx.strokeStyle = '#2f7d4e'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+    for (let k = 0; k < 3; k++) {
+      ctx.beginPath(); ctx.moveTo(-8 + k * 8, 60);
+      for (let y = 60; y > -60; y -= 12) ctx.lineTo(-8 + k * 8 + Math.sin(y * .05 + t * .0015 + pr.ph + k) * (8 + (60 - y) * .08), y);
+      ctx.stroke();
+    }
+    ctx.fillStyle = 'rgba(255,214,90,.8)'; for (let k = 0; k < 4; k++) circle(Math.sin(t * .002 + k) * 10, -40 + k * 22, 2.4, 'rgba(255,214,90,.75)');
+    ctx.lineCap = 'butt';
+  },
+  lifepod(pr, t) {
+    ctx.rotate(.2);
+    const g = ctx.createLinearGradient(-22, 0, 22, 0); g.addColorStop(0, '#d8d8d0'); g.addColorStop(1, '#8a8a84');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(-18, 26); ctx.lineTo(-22, -10); ctx.quadraticCurveTo(0, -36, 22, -10); ctx.lineTo(18, 26); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#ff8a1e'; ctx.fillRect(-21, 2, 42, 7);
+    circle(0, -12, 6, '#3a6e8a');
+    if (Math.sin(t * .006 + pr.ph) > .6) { ctx.shadowColor = '#ff5a3c'; ctx.shadowBlur = 12; circle(0, -28, 3, '#ff5a3c'); ctx.shadowBlur = 0; }
+  },
+  seamoth() {
+    ctx.fillStyle = '#e9edf0'; ctx.beginPath(); ctx.ellipse(0, 4, 26, 14, 0, 0, PI2); ctx.fill();
+    ctx.fillStyle = 'rgba(140,220,255,.7)'; ctx.beginPath(); ctx.ellipse(10, 0, 13, 11, 0, 0, PI2); ctx.fill();
+    ctx.fillStyle = '#ff8a1e'; ctx.fillRect(-26, 8, 18, 4);
+    ctx.fillStyle = 'rgba(255,248,200,.35)'; ctx.beginPath(); ctx.moveTo(24, 2); ctx.lineTo(70, -12); ctx.lineTo(70, 18); ctx.closePath(); ctx.fill();
+  },
+  coral(pr) {
+    ctx.strokeStyle = pr.n % 2 ? '#ff6fa8' : '#b86bff'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+    const branch = (x, y, a, l, d) => { if (d > 3) return; const x2 = x + Math.cos(a) * l, y2 = y + Math.sin(a) * l; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x2, y2); ctx.stroke(); branch(x2, y2, a - .5, l * .7, d + 1); branch(x2, y2, a + .45, l * .7, d + 1); };
+    branch(0, 34, -Math.PI / 2, 24, 0);
+    ctx.lineCap = 'butt';
+  },
   tie(pr, t) {
     ctx.rotate(Math.sin(t * .0012 + pr.ph) * .07);
     const g = ctx.createLinearGradient(-10, 0, 10, 0);
@@ -1613,6 +1941,64 @@ function drawProps(t, cam) {
 const GLYPHS = '0123456789ZXJQ$#@%&ЖЯЮЭЙФ';
 function wrapY(y) { return ((y % H) + H) % H; }
 const BACK = {
+  grime(t, cam, k) {
+    // a bare bulb over a basement fight, grime, a stray single frame and the reel-change cue mark
+    const flick = Math.random() < .03 ? .4 : 1;
+    const g = ctx.createRadialGradient(CX, -40, 0, CX, -40, 520);
+    g.addColorStop(0, `rgba(230,220,150,${.16 * flick})`); g.addColorStop(1, 'rgba(230,220,150,0)');
+    ctx.globalAlpha = k; ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    for (const b of S.amb.blots) { ctx.globalAlpha = .18 * k; circle(b.x, wrapY(b.y - cam * b.d), b.r, '#262a14'); }
+    const A = S.amb;
+    if (t > A.flashAt) {
+      if (t < A.flashAt + 70) {
+        // the twenty-fifth frame
+        ctx.globalAlpha = .32 * k; ctx.fillStyle = '#f4f0d8';
+        const x = A.flashX;
+        circle(x, 250, 22, '#f4f0d8'); rr(x - 34, 276, 68, 150, 22); ctx.fill();
+      } else { A.flashAt = t + rand(3500, 6500); A.flashX = pick([90, 450]); }
+    }
+    const pr = progress();
+    if ((pr > .44 && pr < .456) || (pr > .87 && pr < .886)) {
+      ctx.globalAlpha = .75; ctx.strokeStyle = '#f4f0d8'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(W - 46, 46, 16, 0, PI2); ctx.stroke(); circle(W - 46, 46, 11, 'rgba(20,20,10,.8)');
+    }
+  },
+  basement(t, cam, k) {
+    // stone floor tiles of a damp basement
+    const cell = 64, off = -((cam * .3) % cell);
+    for (let r = -1; r < H / cell + 2; r++) {
+      const ry = Math.floor((cam * .3) / cell) + r;
+      for (let c = 0; c < W / cell + 1; c++) {
+        const hsh = Math.sin((ry * 41 + c * 23) * 12.9898) * 43758.5453, v = hsh - Math.floor(hsh);
+        ctx.globalAlpha = (.28 + v * .2) * k; ctx.fillStyle = v < .5 ? '#2a1a10' : '#24160d';
+        rr(c * cell + 3 + v * 4, r * cell + off + 3, cell - 6 - v * 6, cell - 6, 10); ctx.fill();
+        if (v > .93) { ctx.globalAlpha = .35 * k; circle(c * cell + 30, r * cell + off + 30, 14 + v * 6, '#4a0a0a'); }
+      }
+    }
+    for (const f of S.amb.flies) {
+      const x = f.x + Math.sin(t * .01 * f.s + f.ph) * 24, y = f.y + Math.cos(t * .013 * f.s + f.ph) * 18;
+      ctx.globalAlpha = .7 * k; circle(x, y, 2.6, '#0a0a0a');
+      ctx.globalAlpha = .4 * k; ctx.fillStyle = '#ddd'; ctx.fillRect(x - 4, y - 3 - Math.abs(Math.sin(t * .1)) * 2, 3, 2); ctx.fillRect(x + 1, y - 3 - Math.abs(Math.sin(t * .1)) * 2, 3, 2);
+    }
+  },
+  abyss(t, cam, k) {
+    // light from the surface fades the deeper you go
+    const d = progress(), mix = (a, b) => a.map((v, i) => Math.round(v + (b[i] - v) * d));
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, `rgb(${mix([14, 92, 112], [4, 30, 44])})`); g.addColorStop(1, `rgb(${mix([3, 34, 48], [1, 8, 14])})`);
+    ctx.globalAlpha = 1; ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = .06 * k * (1 - d * .7); ctx.fillStyle = '#d9f7ff';
+    for (let i = 0; i < 5; i++) {
+      const x = 60 + i * 110 + Math.sin(t * .0004 + i) * 30;
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + 40, 0); ctx.lineTo(x + 140, H); ctx.lineTo(x + 60, H); ctx.closePath(); ctx.fill();
+    }
+    for (const m of S.amb.snow) { ctx.globalAlpha = .35 * k; ctx.fillStyle = '#cfefff'; ctx.fillRect(m.x + Math.sin(t * .001 + m.y) * 6, wrapY(m.y - cam * m.d + t * .006), 1.6, 1.6); }
+    for (const f of S.amb.school) {
+      const x = ((f.x + t * .03 * f.s) % (W + 200)) - 100, y = wrapY(f.y - cam * .1);
+      ctx.globalAlpha = .25 * k; ctx.fillStyle = '#012632';
+      for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.ellipse(x - i * 14, y + (i % 2) * 8, 7, 3, 0, 0, PI2); ctx.fill(); }
+    }
+  },
   noir(t, cam, k) {
     // light through venetian blinds and a red glow from below
     ctx.save(); ctx.globalAlpha = .045 * k; ctx.fillStyle = '#ffffff';
@@ -1786,6 +2172,17 @@ function drawCollectible(x, y, t) {
     ctx.save(); ctx.rotate(.3 + f); ctx.beginPath(); ctx.ellipse(12, -2, 11, 4, 0, 0, PI2); ctx.fill(); ctx.restore();
     const g = ctx.createRadialGradient(-2, -2, 1, 0, 0, 7); g.addColorStop(0, '#fff3b0'); g.addColorStop(1, '#c9a227');
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, 6.5, 0, PI2); ctx.fill();
+  } else if (kind === 'soap') {
+    ctx.rotate(-.3); const g = ctx.createLinearGradient(0, -6, 0, 6); g.addColorStop(0, '#ffb3d1'); g.addColorStop(1, '#e05592');
+    ctx.fillStyle = g; rr(-11, -6, 22, 12, 4); ctx.fill();
+  } else if (kind === 'heart') {
+    ctx.fillStyle = '#e8233a'; ctx.beginPath(); ctx.moveTo(0, 8); ctx.bezierCurveTo(-13, -1, -8, -13, 0, -5); ctx.bezierCurveTo(8, -13, 13, -1, 0, 8); ctx.fill();
+    ctx.shadowBlur = 0; circle(-4, -5, 2, 'rgba(255,255,255,.6)');
+  } else if (kind === 'peeper') {
+    ctx.scale(Math.sin(t * .002 + x) > 0 ? 1 : -1, 1);
+    ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.ellipse(0, 0, 10, 6, 0, 0, PI2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-9, 0); ctx.lineTo(-16, -5); ctx.lineTo(-16, 5); ctx.closePath(); ctx.fill();
+    ctx.shadowBlur = 0; circle(4, -1, 3.6, '#fff'); circle(5, -1, 2, '#1a1a1a');
   } else if (kind === 'pellet') {
     circle(0, 0, 7 + Math.sin(t * .012) * 1.5, c);
   } else if (kind === 'pill') {
@@ -1932,6 +2329,42 @@ function drawHazards(t, cam) {
       ctx.shadowColor = '#ffe14d'; ctx.shadowBlur = 18;
       ctx.fillStyle = '#ffe14d'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, 21, m * .5, PI2 - m * .5); ctx.closePath(); ctx.fill();
       ctx.shadowBlur = 0; circle(3, -11, 2.6, '#000');
+    } else if (h.type === 'host') {
+      const x = h.x, y = h.y, charge = h.cd < .6, sw = charge ? 1 + .15 * Math.sin(h.t * 40) : 1;
+      ctx.translate(x, y); ctx.scale(sw, sw);
+      ctx.fillStyle = '#5a3a2a'; ctx.beginPath(); ctx.ellipse(0, -2, 14, 5, 0, 0, PI2); ctx.fill();
+      ctx.fillStyle = '#d8d0c0'; ctx.beginPath(); ctx.arc(0, -14, 11, Math.PI, PI2); ctx.lineTo(11, -4); ctx.lineTo(-11, -4); ctx.closePath(); ctx.fill();
+      circle(-4, -13, 3, charge ? '#ff2a2a' : '#1a1a1a'); circle(4, -13, 3, charge ? '#ff2a2a' : '#1a1a1a');
+      ctx.fillStyle = '#1a1a1a'; ctx.fillRect(-5, -7, 10, 2);
+    } else if (h.type === 'tear') {
+      const g = ctx.createRadialGradient(h.x - 2, h.y - 2, 1, h.x, h.y, h.r);
+      g.addColorStop(0, '#ffb0b0'); g.addColorStop(1, '#a8001a');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(h.x, h.y, h.r, 0, PI2); ctx.fill();
+    } else if (h.type === 'leviathan') {
+      const dir = h.vx > 0 ? 1 : -1;
+      if (!h.live) {
+        // two orange eyes at the edge of the frame before it comes
+        const ex = h.fromL ? 14 : W - 14, a = .35 + .65 * w * (Math.random() < .9 ? 1 : .3);
+        ctx.globalAlpha = a; ctx.shadowColor = '#ff9a3c'; ctx.shadowBlur = 16;
+        circle(ex, h.y - 7, 4, '#ffb347'); circle(ex, h.y + 7, 4, '#ffb347');
+        ctx.globalAlpha = .12 * w; ctx.fillStyle = '#ff9a3c'; ctx.fillRect(0, h.y - 30, W, 60);
+      } else {
+        for (let i = h.pts.length - 1; i >= 0; i--) {
+          const [x, y, r] = h.pts[i];
+          const g = ctx.createRadialGradient(x, y - r * .4, 1, x, y, r);
+          g.addColorStop(0, '#5c6b6a'); g.addColorStop(1, '#1d2626');
+          ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, PI2); ctx.fill();
+          if (i % 3 === 0) { ctx.shadowColor = '#ff9a3c'; ctx.shadowBlur = 8; circle(x, y - r * .55, 2.4, '#ffb347'); ctx.shadowBlur = 0; }
+        }
+        // head with four mandibles
+        ctx.translate(h.x, h.y); ctx.scale(dir, 1);
+        ctx.fillStyle = '#3a4646'; ctx.beginPath(); ctx.ellipse(8, 0, 34, 22, 0, 0, PI2); ctx.fill();
+        ctx.strokeStyle = '#2a3232'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+        const open = 6 + Math.sin(h.t * 20) * 4;
+        for (const [ay, s] of [[-14, -1], [-6, -1], [6, 1], [14, 1]]) { ctx.beginPath(); ctx.moveTo(30, ay); ctx.lineTo(54, ay + s * open); ctx.stroke(); }
+        ctx.lineCap = 'butt';
+        ctx.shadowColor = '#ff9a3c'; ctx.shadowBlur = 14; circle(18, -9, 3.5, '#ffb347'); circle(18, 9, 3.5, '#ffb347'); ctx.shadowBlur = 0;
+      }
     } else if (h.type === 'code') {
       ctx.font = `500 16px ${MONO}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       if (!h.live) {
@@ -1986,6 +2419,30 @@ function drawDoll() {
   if (R.phase === 'red') {
     const g = ctx.createRadialGradient(CX, H / 2, H * .3, CX, H / 2, H * .75);
     g.addColorStop(0, 'rgba(255,42,122,0)'); g.addColorStop(1, 'rgba(255,42,122,.22)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  }
+}
+
+
+// rising bubbles and the oxygen gauge in the corner of the frame
+function drawOxygen(t) {
+  for (const b of S.bubbles) {
+    ctx.globalAlpha = .9; ctx.strokeStyle = 'rgba(210,245,255,.85)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, PI2); ctx.stroke();
+    ctx.fillStyle = 'rgba(160,230,255,.15)'; ctx.fill();
+    circle(b.x - b.r * .35, b.y - b.r * .35, b.r * .22, 'rgba(255,255,255,.8)');
+  }
+  const o = clamp(S.oxy / 100, 0, 1), low = S.oxy < 30, cx = 38, cy = 38;
+  ctx.globalAlpha = 1;
+  ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(255,255,255,.15)'; ctx.beginPath(); ctx.arc(cx, cy, 20, 0, PI2); ctx.stroke();
+  ctx.strokeStyle = low ? (Math.sin(t * .02) > 0 ? '#ff4a3d' : '#ff9a3c') : '#7fe6ff';
+  ctx.beginPath(); ctx.arc(cx, cy, 20, -Math.PI / 2, -Math.PI / 2 + o * PI2); ctx.stroke();
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = `700 11px ${EXO}`; ctx.fillStyle = '#d9f7ff';
+  ctx.fillText('O₂', cx, cy - 4); ctx.font = `500 10px ${EXO}`; ctx.fillText(String(Math.max(0, Math.round(S.oxy))), cx, cy + 8);
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  if (low) {
+    const g = ctx.createRadialGradient(CX, H / 2, H * .3, CX, H / 2, H * .8);
+    g.addColorStop(0, 'rgba(0,20,40,0)'); g.addColorStop(1, `rgba(0,10,30,${.5 * (1 - o / .3)})`);
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   }
 }
@@ -2089,6 +2546,17 @@ function render(t) {
 
   drawHazards(t, cam);
 
+  // your double, a second behind
+  if (S.twin && S.mode === 'play') {
+    const j = REDUCED ? 0 : (Math.random() - .5) * 2;
+    ctx.globalAlpha = Math.random() < .1 ? .4 : .95;
+    ctx.shadowColor = P.accent; ctx.shadowBlur = 18;
+    circle(S.twin.x + j, S.twin.y, 7, 'rgba(255,95,162,.35)');
+    circle(S.twin.x + j, S.twin.y, 3.5, '#1a1a12');
+    ctx.strokeStyle = P.accent; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.arc(S.twin.x + j, S.twin.y, 7, 0, PI2); ctx.stroke();
+    ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+  }
+
   // the ghost of your best take
   if (S.ghost && (S.mode === 'play' || S.mode === 'cut')) {
     const i = Math.floor(S.time * REC_HZ) * 2;
@@ -2121,6 +2589,7 @@ function render(t) {
   ctx.restore();
 
   if (LV.hazard === 'water' && S.mode !== 'ending') drawWater(t);
+  if (LV.oxygen && S.mode !== 'ending') drawOxygen(t);
   if (LV.hazard === 'redlight' && (S.mode === 'play' || S.mode === 'pause' || S.mode === 'cut')) drawDoll();
 
   // frame edges warm up red as you drift towards them
@@ -2172,12 +2641,12 @@ function drawMenu(t) {
   ctx.shadowBlur = 0;
   caption(`${LEVELS.length} сеансов. Один вечер. Одна жизнь.`, `italic 500 20px ${SERIF}`, 124, dim);
   LEVELS.forEach((L, i) => {
-    const y = 172 + i * 33, r = RUN.res[i], cur = i === RUN.li;
+    const y = 160 + i * 29, r = RUN.res[i], cur = i === RUN.li;
     ctx.globalAlpha = r || cur ? 1 : .42;
     ctx.textAlign = 'left';
     ctx.font = `500 11px ${MONO}`; ctx.fillStyle = cur ? CUT : dim;
     ctx.fillText(cur ? '▶' : String(i + 1).padStart(2, '0'), 52, y);
-    ctx.font = `500 20px ${SERIF}`; ctx.fillStyle = cur || r ? film : dim;
+    ctx.font = `500 18px ${SERIF}`; ctx.fillStyle = cur || r ? film : dim;
     ctx.fillText(L.name, 78, y + 1);
     ctx.textAlign = 'right'; ctx.font = `500 11px ${MONO}`;
     if (r) {
@@ -2217,6 +2686,7 @@ function introHint() {
     bullet: 'следи за красным лазером', walker: 'прыгай на грибы сверху', nail: 'гвозди блестят перед падением',
     redlight: 'двигайся, только пока кукла поёт', meteor: 'гравитация слабая, прыжки длинные', creeper: 'криперы взрывают слова',
     bludger: 'бладжеры отскакивают от краёв', chaser: 'не дай себя догнать', code: 'код падает столбами сверху', water: 'вода поднимается снизу',
+    double: 'не стой на месте: ты догонишь себя', host: 'черепа плюются слезами крестом', leviathan: 'хватай пузыри, в воде можно грести прыжком',
   }[LV.hazard] || 'дойди до конца';
 }
 
@@ -2288,7 +2758,7 @@ function updateEnding(dt) {
       // a cartoon burst of blood, mostly carried along with the truck
       S.blood = Array.from({ length: 110 }, () => ({ x: d.x, y: d.y, vx: rand(-120, 760), vy: rand(-420, 200), r: rand(1.5, 5.5), t: 0, life: rand(.6, 1.6) }));
       S.splats = Array.from({ length: 11 }, (_, i) => ({ x: d.x + rand(30, 300), y: d.y + rand(-140, 160), r: rand(6, 20), drip: rand(20, 80), t0: IMPACT + .08 + i * .025 }));
-      S.splats.push({ x: rand(380, 500), y: rand(80, 200), r: 34, drip: 120, t0: IMPACT + .2 }, { x: rand(40, 140), y: rand(420, 560), r: 26, drip: 90, t0: IMPACT + .26 });
+      S.splats.push({ x: rand(440, 510), y: rand(40, 110), r: 34, drip: 120, t0: IMPACT + .2 }, { x: rand(30, 90), y: rand(560, 630), r: 26, drip: 60, t0: IMPACT + .26 });
     });
     for (const b of S.blood) { b.t += dt; b.x += b.vx * dt; b.y += b.vy * dt; b.vy += 900 * dt; }
   }
@@ -2323,11 +2793,14 @@ const MOTTO = 'ТОРОПИСЬ ЖИТЬ. ЖИЗНЬ ОДНА.';
 function drawSplat(s, T) {
   const k = clamp((T - s.t0) / .12, 0, 1);
   if (k <= 0) return;
+  // the stains soften once the words arrive, so they can be read
+  ctx.globalAlpha = 1 - .72 * clamp((T - 3.5) / .8, 0, 1);
   ctx.fillStyle = '#9d0012';
   ctx.beginPath(); ctx.arc(s.x, s.y, s.r * k, 0, PI2); ctx.fill();
   for (let i = 0; i < 6; i++) { const a = i * 1.1 + s.r, d = s.r * (1 + .4 * (i % 3)); circle(s.x + Math.cos(a) * d * k, s.y + Math.sin(a) * d * k, s.r * .28 * k, '#9d0012'); }
   const drip = s.drip * clamp((T - s.t0 - .2) / 3, 0, 1);
   if (drip > 0) { ctx.fillRect(s.x - s.r * .18, s.y, s.r * .36, drip); circle(s.x, s.y + drip, s.r * .26, '#9d0012'); }
+  ctx.globalAlpha = 1;
 }
 
 function drawEnding(t) {
