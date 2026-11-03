@@ -1,5 +1,6 @@
 function drawIntro() {
-  const T = S.modeT, a = T < 2.3 ? 1 : 1 - (T - 2.3) / .7;
+  // the marathon threads each reel faster
+  const T = S.quick ? S.modeT * 1.9 : S.modeT, a = T < 2.3 ? 1 : 1 - (T - 2.3) / .7;
   ctx.fillStyle = `rgba(0,0,0,${clamp(a, 0, 1)})`; ctx.fillRect(0, 0, W, H);
   const k = clamp(a, 0, 1) * clamp(T / .4, 0, 1);
   if (LV.props.length) {
@@ -14,7 +15,7 @@ function drawIntro() {
   ctx.fillStyle = '#efe8dc'; ctx.globalAlpha = .06 * k;
   ctx.beginPath(); ctx.moveTo(CX, cy); ctx.arc(CX, cy, 170, -Math.PI / 2, -Math.PI / 2 + sw * PI2); ctx.closePath(); ctx.fill();
   ctx.globalAlpha = .1 * k; ctx.font = `600 220px ${SERIF}`; ctx.textBaseline = 'middle'; ctx.fillText(String(n), CX, cy + 10); ctx.textBaseline = 'alphabetic';
-  caption(`СЕАНС ${S.li + 1} ИЗ ${LEVELS.length}`, `500 12px ${MONO}`, H * .33, '#8e877c', k);
+  caption(`${RUN.kind === 'marathon' ? `МАРАФОН · ${fmt(marathonTime())} · ` : ''}СЕАНС ${S.li + 1} ИЗ ${EVENING}`, `500 12px ${MONO}`, H * .33, RUN.kind === 'marathon' ? '#ffd23f' : '#8e877c', k);
   ctx.shadowColor = LV.pal.accent; ctx.shadowBlur = 20;
   caption(LV.name, LV.fonts.head[0], H * .33 + 50, LV.pal.light ? '#ffffff' : LV.pal.film, k);
   ctx.shadowBlur = 0;
@@ -59,6 +60,7 @@ function drawCut() {
 }
 
 function drawClear() {
+  if (RUN.kind === 'marathon') { drawMarathonClear(); return; }
   const T = S.modeT, r = RUN.res[S.li];
   if (T < 1.1 || !r) return;
   const k = clamp((T - 1.1) / .8, 0, 1), ok = r.t <= r.par;
@@ -75,5 +77,6 @@ function drawClear() {
   ctx.fillStyle = '#ffffff'; ctx.fillRect(bx + bw / 1.6 - 1, by - 4, 2, 14); ctx.globalAlpha = 1;
   caption(ok ? `${fmt(r.t)} — успел, таймер ${fmt(r.par)}` : `${fmt(r.t)} — опоздал на ${fmt(r.t - r.par)}`, `500 13px ${MONO}`, by + 34, ok ? '#b9f27c' : CUT, k);
   caption(`★ ${r.got} / ${r.total}`, `500 13px ${MONO}`, by + 58, LV.pal.star, k);
+  drawCueMarks(T, 2.4);
   if (T > 2.2) caption(`ПРОБЕЛ — СЛЕДУЮЩИЙ СЕАНС: ${LEVELS[S.li + 1].name.toUpperCase()}`, `500 11px ${MONO}`, H - 30, LV.pal.light ? '#1b1b3a' : '#a59d92', k);
 }

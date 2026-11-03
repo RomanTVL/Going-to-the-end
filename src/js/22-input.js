@@ -6,16 +6,20 @@ function togglePause(force) {
 }
 function newRun() {
   RUN = freshRun(); saveRun();
-  startLevel(0, 'menu'); go('main');
+  toMenu();
 }
 function press(k) {
   audioInit();
   if (S.mode === 'pause') { togglePause(); return; }
-  if (S.mode === 'menu') { if (k === 'left') menuMove(menu.screen === 'levels' ? -10 : -1); else if (k === 'right') menuMove(menu.screen === 'levels' ? 10 : 1); else menuActivate(); return; }
+  if (S.mode === 'menu') { if (k === 'left') menuMove(menu.screen === 'levels' ? -9 : -1); else if (k === 'right') menuMove(menu.screen === 'levels' ? 9 : 1); else menuActivate(); return; }
   if (S.mode === 'intro') { if (S.modeT > .6) play(); return; }
-  if (S.mode === 'clear') { if (S.modeT > 2.2) startLevel(RUN.li); return; }
+  if (S.mode === 'clear') {
+    if (S.mdone) { if (S.modeT > 2.4) toMenu(); }
+    else if (RUN.kind !== 'marathon' && S.modeT > 2.2) reelChange(() => startLevel(RUN.li));
+    return;
+  }
   if (S.mode === 'ending') {
-    if (S.modeT > ENDING_LEN[S.ending] || S.replay && S.modeT > 1) { const back = S.replay; startLevel(RUN.li, 'menu'); if (back) go('endings'); }
+    if (S.modeT > ENDING_LEN[S.ending] || S.replay && S.modeT > 1) toMenu(S.replay ? 'endings' : 'main');
     return;
   }
   if (k === 'jump') S.p.buffer = .12;
@@ -37,7 +41,9 @@ addEventListener('keydown', e => {
     if (ch === 'Escape' || ch === 'Backspace') { e.preventDefault(); menuBack(); return; }
     if (ch === 'n' || ch === 'т') { newRun(); return; }
   }
-  if (S.mode === 'ending' && S.replay && ch === 'Escape') { startLevel(RUN.li, 'menu'); go('endings'); return; }
+  if (S.mode === 'ending' && S.replay && ch === 'Escape') { toMenu('endings'); return; }
+  // leaving the marathon halfway: back to the menu from the pause
+  if (S.mode === 'pause' && RUN.kind === 'marathon' && (ch === 'q' || ch === 'й')) { toMenu(); return; }
   if ((ch === 'k' || ch === 'л') && CHEAT.on && S.mode === 'play') { RUN.cheat = true; finishLevel(); return; }
   if (ch === 'p' || ch === 'з' || ch === 'Escape') { e.preventDefault(); togglePause(); return; }
   const k = keyOf(e);

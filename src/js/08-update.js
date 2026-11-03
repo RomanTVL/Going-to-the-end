@@ -11,7 +11,9 @@ function update(dt) {
   S.parts = S.parts.filter(q => (q.t += dt) < q.life);
   for (const q of S.parts) { q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 500 * dt; }
   if (S.mode === 'cut') { S.cutT += dt; if (S.cutT > 1.45) respawn(); return; }
-  if (S.mode === 'intro') { if (S.modeT > 3) play(); return; }
+  if (S.mode === 'intro') { if (S.modeT > (S.quick ? 1.6 : 3)) play(); return; }
+  // in the marathon the next reel is threaded on its own
+  if (S.mode === 'clear' && RUN.kind === 'marathon' && !S.mdone && S.modeT > 2.6) { nextFilm(); return; }
   if (S.mode === 'ending') { updateEnding(dt); return; }
   S.clock += dt;
 

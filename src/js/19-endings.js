@@ -53,7 +53,7 @@ function lines(T, rows, color, glow) {
 }
 function endingStats(T, at, color, y = H - 92) {
   const s = S.summary;
-  if (T > at) caption(`ВРЕМЯ ${fmt(s.time)} · В ГРАФИКЕ ${s.inTime}/${LEVELS.length} · ★ ${s.got}/${s.total}`, `500 12px ${MONO}`, y, color, clamp((T - at) / .8, 0, 1));
+  if (T > at) caption(`ВРЕМЯ ${fmt(s.time)} · В ГРАФИКЕ ${s.inTime}/${EVENING} · ★ ${s.got}/${s.total}`, `500 12px ${MONO}`, y, color, clamp((T - at) / .8, 0, 1));
   if (T > at + 1) caption('ПРОБЕЛ — ПРОЖИТЬ ЕЩЁ РАЗ', `500 12px ${MONO}`, y + 30, color, clamp((T - at - 1) / .8, 0, 1));
 }
 const MOTTO = 'ТОРОПИСЬ ЖИТЬ. ЖИЗНЬ ОДНА.';

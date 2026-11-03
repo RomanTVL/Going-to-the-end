@@ -11,7 +11,7 @@ function startLevel(i, mode = 'intro') {
     burn: null, parts: [], rec: [], recT: 0, ghost: store.json('gtte-ghost-' + LV.key), par: LV.par || (LV.final ? FINAL_PAR : GUEST_PAR),
     hz: [], hzT: 2, amb: makeAmbient(), cues: new Set(), ending: null, shake: 0,
     rl: { phase: 'green', t: 0, dur: 2.8 }, water: 50, blood: [], splats: [],
-    trace: [], since: 0, twin: null, oxy: 100, bubbles: [], bubT: .5, swimCD: 0, beep: 0,
+    quick: RUN.kind === 'marathon', trace: [], since: 0, twin: null, oxy: 100, bubbles: [], bubT: .5, swimCD: 0, beep: 0,
     world: 'a', flipT: 3.4, rex: { next: 2.6, n: 0, warn: 0, lungeAt: 0, lunge: 0 }, night: freshNight(), snapT: 4, ripples: [], floaters: [], gag: null,
     p: { x: cp.x - PW / 2, y: cp.top - PH, vx: 0, vy: 0, ground: null, coyote: 0, buffer: 0, trail: [], squash: 0 },
   };
@@ -86,6 +86,8 @@ function cut(why) {
   // with cheats on, hazards pass through you; only leaving the frame still costs a take
   if (cheatGod() && !/кадра|кадр/.test(why)) return;
   S.mode = 'cut'; S.cutT = 0; S.cutWhy = why; S.take++;
+  // where and why: for the evening's statistics and the death map
+  if (RUN.deaths) RUN.deaths.push([S.li, +dotFrac().toFixed(3), why]);
   S.burn = { x: S.p.x + PW / 2, y: clamp(S.p.y - S.camY, 0, H) };
   noise(.5, .45, 900, 'lowpass');
   noise(.05, .3, 3000);
@@ -94,13 +96,15 @@ function cut(why) {
 
 function finishLevel() {
   const got = stars.filter(s => s.got).length;
-  RUN.res[S.li] = { t: +S.time.toFixed(2), par: S.par, got, total: stars.length };
+  const r = { t: +S.time.toFixed(2), par: S.par, got, total: stars.length, takes: S.take };
   if (CHEAT.on) RUN.cheat = true;
   const best = store.json('gtte-best-' + LV.key);
   if (!RUN.cheat && (!best || S.time < best)) {
     store.set('gtte-best-' + LV.key, S.time.toFixed(2));
     store.set('gtte-ghost-' + LV.key, JSON.stringify(S.rec));
   }
+  RUN.res[S.li] = r;
+  if (RUN.kind === 'marathon') { marathonStep(); hud(); return; }
   if (LV.final) {
     S.mode = 'ending'; S.modeT = 0; S.ending = judge();
     S.endDot = { x: S.p.x + PW / 2, y: S.p.y + PH / 2 - S.camY };
@@ -110,7 +114,7 @@ function finishLevel() {
       if (!seen.includes(S.ending)) store.set('gtte-endings', JSON.stringify([...seen, S.ending]));
       store.set('gtte-summary-' + S.ending, JSON.stringify(S.summary));
     }
-    RUN = freshRun();
+    RUN = freshRun(RUN.kind);
   } else {
     S.mode = 'clear'; S.modeT = 0;
     S.gag = makeGag();
@@ -119,6 +123,11 @@ function finishLevel() {
   }
   saveRun();
   hud();
+}
+// how far down the film the dot is, 0 at the title and 1 at THE END
+function dotFrac() {
+  const a = checkpoints[0] ? checkpoints[0].top : 0;
+  return clamp((S.p.y - a) / ((endTop - a) || 1), 0, 1);
 }
 
 // the verdict on the whole evening

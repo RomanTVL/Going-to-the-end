@@ -1692,11 +1692,24 @@ function layout() {
 
 // ===== src/js/05-run.js =====
 // ---------- the run: every session in a row, judged at the very end ----------
-const freshRun = () => ({ li: 0, res: [], v: 4 });
-let RUN = store.json('gtte-run');
-if (!RUN || RUN.v !== 4 || typeof RUN.li !== 'number' || RUN.li >= LEVELS.length || !Array.isArray(RUN.res)) RUN = freshRun();
-const saveRun = () => store.set('gtte-run', JSON.stringify(RUN));
+const EVENING = LEVELS.filter(L => !L.extra).length;
+// kinds: evening (saved between visits) and marathon (one sitting)
+const RUN_KEY = { evening: 'gtte-run' };
+const freshRun = (kind = 'evening') => ({ li: 0, res: [], v: 4, kind, deaths: [] });
+function loadRun(kind = 'evening') {
+  const r = RUN_KEY[kind] && store.json(RUN_KEY[kind]);
+  if (!r || r.v !== 4 || typeof r.li !== 'number' || r.li >= EVENING || !Array.isArray(r.res)) return freshRun(kind);
+  return Object.assign(r, { kind, deaths: Array.isArray(r.deaths) ? r.deaths : [] });
+}
+let RUN = loadRun();
+const saveRun = () => { const k = RUN_KEY[RUN.kind]; if (k) store.set(k, JSON.stringify(RUN)); };
 const seenEndings = () => store.json('gtte-endings') || [];
+// back to the menu always lands on the evening's own run
+function toMenu(screen = 'main') {
+  RUN = loadRun();
+  startLevel(RUN.li, 'menu');
+  menu.screen = screen; menu.sel = 0;
+}
 
 // ===== src/js/06-state.js =====
 // ---------- state ----------
@@ -1712,7 +1725,7 @@ function startLevel(i, mode = 'intro') {
     burn: null, parts: [], rec: [], recT: 0, ghost: store.json('gtte-ghost-' + LV.key), par: LV.par || (LV.final ? FINAL_PAR : GUEST_PAR),
     hz: [], hzT: 2, amb: makeAmbient(), cues: new Set(), ending: null, shake: 0,
     rl: { phase: 'green', t: 0, dur: 2.8 }, water: 50, blood: [], splats: [],
-    trace: [], since: 0, twin: null, oxy: 100, bubbles: [], bubT: .5, swimCD: 0, beep: 0,
+    quick: RUN.kind === 'marathon', trace: [], since: 0, twin: null, oxy: 100, bubbles: [], bubT: .5, swimCD: 0, beep: 0,
     world: 'a', flipT: 3.4, rex: { next: 2.6, n: 0, warn: 0, lungeAt: 0, lunge: 0 }, night: freshNight(), snapT: 4, ripples: [], floaters: [], gag: null,
     p: { x: cp.x - PW / 2, y: cp.top - PH, vx: 0, vy: 0, ground: null, coyote: 0, buffer: 0, trail: [], squash: 0 },
   };
@@ -1787,6 +1800,8 @@ function cut(why) {
   // with cheats on, hazards pass through you; only leaving the frame still costs a take
   if (cheatGod() && !/кадра|кадр/.test(why)) return;
   S.mode = 'cut'; S.cutT = 0; S.cutWhy = why; S.take++;
+  // where and why: for the evening's statistics and the death map
+  if (RUN.deaths) RUN.deaths.push([S.li, +dotFrac().toFixed(3), why]);
   S.burn = { x: S.p.x + PW / 2, y: clamp(S.p.y - S.camY, 0, H) };
   noise(.5, .45, 900, 'lowpass');
   noise(.05, .3, 3000);
@@ -1795,13 +1810,15 @@ function cut(why) {
 
 function finishLevel() {
   const got = stars.filter(s => s.got).length;
-  RUN.res[S.li] = { t: +S.time.toFixed(2), par: S.par, got, total: stars.length };
+  const r = { t: +S.time.toFixed(2), par: S.par, got, total: stars.length, takes: S.take };
   if (CHEAT.on) RUN.cheat = true;
   const best = store.json('gtte-best-' + LV.key);
   if (!RUN.cheat && (!best || S.time < best)) {
     store.set('gtte-best-' + LV.key, S.time.toFixed(2));
     store.set('gtte-ghost-' + LV.key, JSON.stringify(S.rec));
   }
+  RUN.res[S.li] = r;
+  if (RUN.kind === 'marathon') { marathonStep(); hud(); return; }
   if (LV.final) {
     S.mode = 'ending'; S.modeT = 0; S.ending = judge();
     S.endDot = { x: S.p.x + PW / 2, y: S.p.y + PH / 2 - S.camY };
@@ -1811,7 +1828,7 @@ function finishLevel() {
       if (!seen.includes(S.ending)) store.set('gtte-endings', JSON.stringify([...seen, S.ending]));
       store.set('gtte-summary-' + S.ending, JSON.stringify(S.summary));
     }
-    RUN = freshRun();
+    RUN = freshRun(RUN.kind);
   } else {
     S.mode = 'clear'; S.modeT = 0;
     S.gag = makeGag();
@@ -1820,6 +1837,11 @@ function finishLevel() {
   }
   saveRun();
   hud();
+}
+// how far down the film the dot is, 0 at the title and 1 at THE END
+function dotFrac() {
+  const a = checkpoints[0] ? checkpoints[0].top : 0;
+  return clamp((S.p.y - a) / ((endTop - a) || 1), 0, 1);
 }
 
 // the verdict on the whole evening
@@ -2294,7 +2316,9 @@ function update(dt) {
   S.parts = S.parts.filter(q => (q.t += dt) < q.life);
   for (const q of S.parts) { q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 500 * dt; }
   if (S.mode === 'cut') { S.cutT += dt; if (S.cutT > 1.45) respawn(); return; }
-  if (S.mode === 'intro') { if (S.modeT > 3) play(); return; }
+  if (S.mode === 'intro') { if (S.modeT > (S.quick ? 1.6 : 3)) play(); return; }
+  // in the marathon the next reel is threaded on its own
+  if (S.mode === 'clear' && RUN.kind === 'marathon' && !S.mdone && S.modeT > 2.6) { nextFilm(); return; }
   if (S.mode === 'ending') { updateEnding(dt); return; }
   S.clock += dt;
 
@@ -3684,7 +3708,7 @@ function render(t) {
   const P = LV.pal;
   ctx.fillStyle = P.bg;
   ctx.fillRect(0, 0, W, H);
-  if (S.mode === 'menu') { drawMenu(t); finish(t); return; }
+  if (S.mode === 'menu') { drawMenu(t); finish(t); drawReel(t); return; }
   const p = S.p, cam = S.camY;
   const still = S.mode === 'pause';
   const flick = REDUCED || still ? 1 : .95 + .05 * Math.random();
@@ -3833,7 +3857,7 @@ function render(t) {
   }
 
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-  if (S.mode === 'ending') { drawEnding(t); finish(t, true); return; }
+  if (S.mode === 'ending') { drawEnding(t); finish(t, true); drawReel(t); return; }
   finish(t, P.light);
   if (S.mode === 'intro') drawIntro();
   if (S.mode === 'cut') drawCut();
@@ -3842,7 +3866,9 @@ function render(t) {
     ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(0, 0, W, H);
     caption('Пауза', `italic 500 44px ${SERIF}`, H / 2 - 6, '#efe8dc');
     caption('ПЛЁНКА ОСТАНОВЛЕНА · P — ПРОДОЛЖИТЬ', `500 12px ${MONO}`, H / 2 + 24, '#8e877c');
+    if (RUN.kind === 'marathon') caption('Q — ВЫЙТИ ИЗ МАРАФОНА', `500 12px ${MONO}`, H / 2 + 48, '#8e877c');
   }
+  drawReel(t);
 }
 
 // film grain, a stray scratch and the vignette
@@ -4173,7 +4199,7 @@ const GAGS = {
 };
 
 // ===== src/js/16-menus.js =====
-// ---------- menus: the programme, the endings and the cheats ----------
+// ---------- menus: the programme, the marathon, the endings and the cheats ----------
 const ENDINGS = [
   { key: 'full', name: 'The Beginning', how: 'Успей на всех сеансах и собери все звёзды' },
   { key: 'almost', name: 'Свет в зале', how: 'Успей везде и собери больше половины звёзд, но не все' },
@@ -4181,7 +4207,7 @@ const ENDINGS = [
   { key: 'late', name: 'Пустой зал', how: 'Опоздай хоть раз, но собери половину звёзд или больше' },
   { key: 'truck', name: 'Грузовик', how: 'Опоздай хоть раз и собери меньше половины звёзд' },
 ];
-const DEMO = { truck: [612, 5, 31], late: [640, 9, 70], blind: [380, 14, 29], almost: [470, 14, 88], full: [505, 14, 103] };
+const DEMO = { truck: [1120, 9, 31], late: [1180, 17, 70], blind: [690, 25, 29], almost: [760, 25, 88], full: [820, 25, 103] };
 const CHEAT = { on: store.get('gtte-cheat') === '1', god: store.get('gtte-god') !== '0' };
 const cheatGod = () => CHEAT.on && CHEAT.god;
 const menu = { screen: 'main', sel: 0, rows: [] };
@@ -4205,17 +4231,19 @@ function menuItems() {
     { label: 'Назад', act: () => go('main') },
   ];
   if (menu.screen === 'levels') return [
-    ...LEVELS.map((L, i) => ({ label: L.name, lv: L, n: i + 1, act: () => { RUN = { li: i, res: [], v: 4, cheat: true }; saveRun(); startLevel(i); } })),
+    ...LEVELS.map((L, i) => ({ label: L.name, lv: L, n: i + 1, act: () => { RUN = Object.assign(freshRun(), { li: i, cheat: true }); saveRun(); reelChange(() => startLevel(i)); } })),
     { label: 'Назад', act: () => go('cheats') },
   ];
   return [
-    { label: RUN.li > 0 ? `Продолжить вечер · сеанс ${RUN.li + 1}` : 'Начать вечер', act: () => { if (CHEAT.on) RUN.cheat = true; startLevel(RUN.li); } },
+    { label: RUN.li > 0 ? `Продолжить вечер · сеанс ${RUN.li + 1}` : 'Начать вечер', act: () => { if (CHEAT.on) RUN.cheat = true; reelChange(() => startLevel(RUN.li)); } },
+    { label: 'Марафон', note: marathonBest() ? `рекорд ${fmt(marathonBest())}` : `все ${EVENING} подряд`, act: startMarathon },
     { label: 'Концовки', note: `${seen.length} / 5`, act: () => go('endings') },
     { label: 'Читы', note: CHEAT.on ? 'вкл' : 'выкл', act: () => go('cheats') },
     { label: 'Полный экран', note: 'F', act: toggleFullscreen },
     ...(RUN.li > 0 ? [{ label: 'Новый забег', act: newRun }] : []),
   ];
 }
+const marathonBest = () => +store.get('gtte-marathon-best') || 0;
 function go(screen) { menu.screen = screen; menu.sel = 0; tone(660, .12, .05); }
 function setCheat(k, v) {
   CHEAT[k] = v; store.set(k === 'on' ? 'gtte-cheat' : 'gtte-god', v ? '1' : '0');
@@ -4224,7 +4252,7 @@ function setCheat(k, v) {
 }
 function menuMove(d) {
   const items = menuItems();
-  if (menu.screen === 'levels' && Math.abs(d) === 10) { menu.sel = clamp(menu.sel + d, 0, items.length - 1); tone(520, .06, .04); return; }
+  if (menu.screen === 'levels' && Math.abs(d) === 9) { menu.sel = clamp(menu.sel + d, 0, items.length - 1); tone(520, .06, .04); return; }
   let i = menu.sel;
   for (let n = 0; n < items.length; n++) { i = (i + d + items.length) % items.length; if (items[i].act) break; }
   menu.sel = i; tone(520, .06, .04);
@@ -4243,7 +4271,7 @@ function replayEnding(key) {
   S.ending = key; S.modeT = 0; S.replay = true;
   const d = DEMO[key];
   const total = LEVELS.reduce((n, L) => n + L.credits.filter(c => c[0] === '*').length, 0);
-  S.summary = store.json('gtte-summary-' + key) || { time: d[0], inTime: d[1], got: Math.round(d[2] / 103 * total), total, fast: d[1] === LEVELS.length };
+  S.summary = store.json('gtte-summary-' + key) || { time: d[0], inTime: d[1], got: Math.round(d[2] / 103 * total), total, fast: d[1] === EVENING };
   S.endDot = { x: S.p.x + PW / 2, y: S.p.y + PH / 2 - S.camY };
 }
 
@@ -4268,16 +4296,16 @@ function drawMenu(t) {
   menu.rows = [];
   items.forEach((it, i) => {
     if (levels) {
-      // twenty sessions in two columns with the film's own token
-      const col = it.lv ? Math.floor(i / 10) : 0, row = it.lv ? i % 10 : 10, x = 48 + col * 226, y = y0 + row * rowH;
+      // the sessions in three columns of nine, each with the film's own token
+      const col = it.lv ? Math.floor(i / 9) : 0, row = it.lv ? i % 9 : 9, x = 30 + col * 166, y = y0 + row * rowH;
       const sel = i === menu.sel;
-      menu.rows.push({ x0: x - 8, x1: x + 218, y0: y - 22, y1: y + 22, i });
-      if (sel) { ctx.fillStyle = 'rgba(255,74,61,.14)'; ctx.fillRect(x - 8, y - 20, 222, 38); ctx.fillStyle = CUT; ctx.fillRect(x - 8, y - 20, 3, 38); }
+      menu.rows.push({ x0: x - 8, x1: x + 158, y0: y - 22, y1: y + 22, i });
+      if (sel) { ctx.fillStyle = 'rgba(255,74,61,.14)'; ctx.fillRect(x - 8, y - 20, 162, 38); ctx.fillStyle = CUT; ctx.fillRect(x - 8, y - 20, 3, 38); }
       ctx.textAlign = 'left';
       if (it.lv) {
         ctx.save(); ctx.globalAlpha = .95; drawCollectible(x + 10, y - 2, t, it.lv); ctx.restore();
         ctx.font = `500 10px ${MONO}`; ctx.fillStyle = dim; ctx.fillText(String(it.n).padStart(2, '0'), x + 26, y - 6);
-        ctx.font = `500 16px ${SERIF}`; ctx.fillStyle = sel ? '#ffffff' : film; ctx.fillText(it.label, x + 26, y + 10);
+        ctx.font = `500 14px ${SERIF}`; ctx.fillStyle = sel ? '#ffffff' : film; ctx.fillText(it.label, x + 26, y + 10);
       } else { ctx.font = `500 21px ${SERIF}`; ctx.fillStyle = sel ? '#ffffff' : film; ctx.fillText(it.label, x + 8, y + 6); }
       return;
     }
@@ -4295,15 +4323,15 @@ function drawMenu(t) {
   });
 
   if (menu.screen === 'main') {
-    // the evening's programme in two columns, with each film's token and this run's results
-    ctx.textAlign = 'center'; ctx.font = `500 10px ${MONO}`; ctx.fillStyle = dim; ctx.fillText('ПРОГРАММА ВЕЧЕРА', CX, 334);
+    // the evening's programme in three columns, with each film's token and this run's results
+    ctx.textAlign = 'center'; ctx.font = `500 10px ${MONO}`; ctx.fillStyle = dim; ctx.fillText('ПРОГРАММА ВЕЧЕРА', CX, 358);
     LEVELS.forEach((L, i) => {
-      const col = Math.floor(i / 10), x = 52 + col * 226, y = 360 + (i % 10) * 26, r = RUN.res[i], cur = i === RUN.li;
+      const col = Math.floor(i / 9), x = 30 + col * 166, y = 384 + (i % 9) * 24, r = RUN.res[i], cur = i === RUN.li;
       ctx.globalAlpha = r || cur ? 1 : .5;
       ctx.save(); drawCollectible(x + 6, y - 5, t, L); ctx.restore();
       ctx.globalAlpha = r || cur ? 1 : .5;
-      ctx.textAlign = 'left'; ctx.font = `500 15px ${SERIF}`; ctx.fillStyle = cur ? CUT : r || cur ? film : dim; ctx.fillText(L.name, x + 20, y);
-      if (r) { circle(x + 208, y - 5, 3.5, r.t <= r.par ? '#b9f27c' : CUT); }
+      ctx.textAlign = 'left'; ctx.font = `500 14px ${SERIF}`; ctx.fillStyle = cur ? CUT : r || cur ? film : dim; ctx.fillText(L.name, x + 20, y);
+      if (r) { circle(x + 156, y - 5, 3, r.t <= r.par ? '#b9f27c' : CUT); }
     });
     ctx.globalAlpha = 1;
   }
@@ -4327,7 +4355,8 @@ document.addEventListener('fullscreenchange', () => setFs(!!document.fullscreenE
 
 // ===== src/js/18-cards.js =====
 function drawIntro() {
-  const T = S.modeT, a = T < 2.3 ? 1 : 1 - (T - 2.3) / .7;
+  // the marathon threads each reel faster
+  const T = S.quick ? S.modeT * 1.9 : S.modeT, a = T < 2.3 ? 1 : 1 - (T - 2.3) / .7;
   ctx.fillStyle = `rgba(0,0,0,${clamp(a, 0, 1)})`; ctx.fillRect(0, 0, W, H);
   const k = clamp(a, 0, 1) * clamp(T / .4, 0, 1);
   if (LV.props.length) {
@@ -4342,7 +4371,7 @@ function drawIntro() {
   ctx.fillStyle = '#efe8dc'; ctx.globalAlpha = .06 * k;
   ctx.beginPath(); ctx.moveTo(CX, cy); ctx.arc(CX, cy, 170, -Math.PI / 2, -Math.PI / 2 + sw * PI2); ctx.closePath(); ctx.fill();
   ctx.globalAlpha = .1 * k; ctx.font = `600 220px ${SERIF}`; ctx.textBaseline = 'middle'; ctx.fillText(String(n), CX, cy + 10); ctx.textBaseline = 'alphabetic';
-  caption(`СЕАНС ${S.li + 1} ИЗ ${LEVELS.length}`, `500 12px ${MONO}`, H * .33, '#8e877c', k);
+  caption(`${RUN.kind === 'marathon' ? `МАРАФОН · ${fmt(marathonTime())} · ` : ''}СЕАНС ${S.li + 1} ИЗ ${EVENING}`, `500 12px ${MONO}`, H * .33, RUN.kind === 'marathon' ? '#ffd23f' : '#8e877c', k);
   ctx.shadowColor = LV.pal.accent; ctx.shadowBlur = 20;
   caption(LV.name, LV.fonts.head[0], H * .33 + 50, LV.pal.light ? '#ffffff' : LV.pal.film, k);
   ctx.shadowBlur = 0;
@@ -4387,6 +4416,7 @@ function drawCut() {
 }
 
 function drawClear() {
+  if (RUN.kind === 'marathon') { drawMarathonClear(); return; }
   const T = S.modeT, r = RUN.res[S.li];
   if (T < 1.1 || !r) return;
   const k = clamp((T - 1.1) / .8, 0, 1), ok = r.t <= r.par;
@@ -4403,6 +4433,7 @@ function drawClear() {
   ctx.fillStyle = '#ffffff'; ctx.fillRect(bx + bw / 1.6 - 1, by - 4, 2, 14); ctx.globalAlpha = 1;
   caption(ok ? `${fmt(r.t)} — успел, таймер ${fmt(r.par)}` : `${fmt(r.t)} — опоздал на ${fmt(r.t - r.par)}`, `500 13px ${MONO}`, by + 34, ok ? '#b9f27c' : CUT, k);
   caption(`★ ${r.got} / ${r.total}`, `500 13px ${MONO}`, by + 58, LV.pal.star, k);
+  drawCueMarks(T, 2.4);
   if (T > 2.2) caption(`ПРОБЕЛ — СЛЕДУЮЩИЙ СЕАНС: ${LEVELS[S.li + 1].name.toUpperCase()}`, `500 11px ${MONO}`, H - 30, LV.pal.light ? '#1b1b3a' : '#a59d92', k);
 }
 
@@ -4462,7 +4493,7 @@ function lines(T, rows, color, glow) {
 }
 function endingStats(T, at, color, y = H - 92) {
   const s = S.summary;
-  if (T > at) caption(`ВРЕМЯ ${fmt(s.time)} · В ГРАФИКЕ ${s.inTime}/${LEVELS.length} · ★ ${s.got}/${s.total}`, `500 12px ${MONO}`, y, color, clamp((T - at) / .8, 0, 1));
+  if (T > at) caption(`ВРЕМЯ ${fmt(s.time)} · В ГРАФИКЕ ${s.inTime}/${EVENING} · ★ ${s.got}/${s.total}`, `500 12px ${MONO}`, y, color, clamp((T - at) / .8, 0, 1));
   if (T > at + 1) caption('ПРОБЕЛ — ПРОЖИТЬ ЕЩЁ РАЗ', `500 12px ${MONO}`, y + 30, color, clamp((T - at - 1) / .8, 0, 1));
 }
 const MOTTO = 'ТОРОПИСЬ ЖИТЬ. ЖИЗНЬ ОДНА.';
@@ -4654,8 +4685,10 @@ function hud() {
 }
 function timer() {
   const el = $('time');
-  el.textContent = `${fmt(S.time)} / ${fmt(S.par)}`;
-  el.classList.toggle('late', S.time > S.par);
+  // the marathon runs on one clock for the whole evening
+  const m = RUN.kind === 'marathon', now = m ? marathonTime() : S.time, par = m ? EVENING * GUEST_PAR : S.par;
+  el.textContent = `${fmt(now)} / ${fmt(par)}`;
+  el.classList.toggle('late', now > par);
 }
 
 // ===== src/js/21-loop.js =====
@@ -4681,16 +4714,20 @@ function togglePause(force) {
 }
 function newRun() {
   RUN = freshRun(); saveRun();
-  startLevel(0, 'menu'); go('main');
+  toMenu();
 }
 function press(k) {
   audioInit();
   if (S.mode === 'pause') { togglePause(); return; }
-  if (S.mode === 'menu') { if (k === 'left') menuMove(menu.screen === 'levels' ? -10 : -1); else if (k === 'right') menuMove(menu.screen === 'levels' ? 10 : 1); else menuActivate(); return; }
+  if (S.mode === 'menu') { if (k === 'left') menuMove(menu.screen === 'levels' ? -9 : -1); else if (k === 'right') menuMove(menu.screen === 'levels' ? 9 : 1); else menuActivate(); return; }
   if (S.mode === 'intro') { if (S.modeT > .6) play(); return; }
-  if (S.mode === 'clear') { if (S.modeT > 2.2) startLevel(RUN.li); return; }
+  if (S.mode === 'clear') {
+    if (S.mdone) { if (S.modeT > 2.4) toMenu(); }
+    else if (RUN.kind !== 'marathon' && S.modeT > 2.2) reelChange(() => startLevel(RUN.li));
+    return;
+  }
   if (S.mode === 'ending') {
-    if (S.modeT > ENDING_LEN[S.ending] || S.replay && S.modeT > 1) { const back = S.replay; startLevel(RUN.li, 'menu'); if (back) go('endings'); }
+    if (S.modeT > ENDING_LEN[S.ending] || S.replay && S.modeT > 1) toMenu(S.replay ? 'endings' : 'main');
     return;
   }
   if (k === 'jump') S.p.buffer = .12;
@@ -4712,7 +4749,9 @@ addEventListener('keydown', e => {
     if (ch === 'Escape' || ch === 'Backspace') { e.preventDefault(); menuBack(); return; }
     if (ch === 'n' || ch === 'т') { newRun(); return; }
   }
-  if (S.mode === 'ending' && S.replay && ch === 'Escape') { startLevel(RUN.li, 'menu'); go('endings'); return; }
+  if (S.mode === 'ending' && S.replay && ch === 'Escape') { toMenu('endings'); return; }
+  // leaving the marathon halfway: back to the menu from the pause
+  if (S.mode === 'pause' && RUN.kind === 'marathon' && (ch === 'q' || ch === 'й')) { toMenu(); return; }
   if ((ch === 'k' || ch === 'л') && CHEAT.on && S.mode === 'play') { RUN.cheat = true; finishLevel(); return; }
   if (ch === 'p' || ch === 'з' || ch === 'Escape') { e.preventDefault(); togglePause(); return; }
   const k = keyOf(e);
@@ -5401,6 +5440,95 @@ Object.assign(GAGS, {
     },
   },
 });
+
+// ===== src/js/22c-modes.js =====
+// ---------- modes: reel changes between films and the marathon ----------
+
+// ===== a reel change: the last frame is pulled up through the gate and the next reel runs in =====
+const reelShot = document.createElement('canvas');
+reelShot.width = cv.width; reelShot.height = cv.height;
+let REEL = null;
+function reelChange(fn) {
+  reelShot.getContext('2d').drawImage(cv, 0, 0);
+  REEL = { at: performance.now() };
+  noise(.35, .22, 2400, 'bandpass'); sweep(140, 60, .3, .06, 'sawtooth');
+  fn();
+}
+function drawReel(t) {
+  if (!REEL) return;
+  // the frame's timestamp can be a little older than the key press that started the change
+  const k = Math.max(0, (t - REEL.at) / 620);
+  if (k >= 1) { REEL = null; return; }
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const e = k * k * (3 - 2 * k), off = -e * (H + 60);
+  // motion blur: the old frame smeared along the pull
+  ctx.globalAlpha = 1; ctx.drawImage(reelShot, 0, off, W, H);
+  if (!REDUCED) { ctx.globalAlpha = .35; ctx.drawImage(reelShot, 0, off + 26 * (1 - k), W, H); ctx.globalAlpha = .18; ctx.drawImage(reelShot, 0, off + 60 * (1 - k), W, H); }
+  ctx.globalAlpha = 1;
+  // the frame line between the two reels, with a splice of tape
+  const fl = off + H;
+  ctx.fillStyle = '#050405'; ctx.fillRect(0, fl, W, 60);
+  ctx.fillStyle = 'rgba(255,248,225,.16)'; ctx.fillRect(0, fl + 24, W, 12);
+  // sprocket holes on both edges racing past
+  for (const x of [0, W - 22]) {
+    ctx.fillStyle = '#0b0909'; ctx.fillRect(x, 0, 22, H);
+    for (let y = (-k * 900) % 34; y < H; y += 34) { ctx.fillStyle = '#2a2424'; rr(x + 5, y, 12, 18, 3); ctx.fill(); }
+  }
+  // a hot flash as the splice crosses the lamp
+  const f = Math.max(0, 1 - Math.abs(k - .55) / .12);
+  if (f > 0) { ctx.fillStyle = `rgba(255,246,225,${.5 * f})`; ctx.fillRect(0, 0, W, H); }
+}
+// the projectionist's cue marks: a burnt circle in the top right corner, twice, just before the change
+function drawCueMarks(T, at) {
+  for (const a of [at, at + .8]) {
+    if (T < a || T > a + .12) continue;
+    const x = W - 46, y = 46;
+    ctx.fillStyle = 'rgba(10,8,8,.92)'; ctx.beginPath();
+    for (let i = 0; i <= 18; i++) { const ang = i / 18 * PI2, r = 15 + Math.sin(i * 2.7) * 2.2; ctx.lineTo(x + Math.cos(ang) * r, y + Math.sin(ang) * r); }
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,220,170,.5)'; ctx.lineWidth = 1.5; ctx.stroke();
+  }
+}
+
+// ===== the marathon: every film back to back on one clock =====
+function startMarathon() {
+  RUN = freshRun('marathon');
+  if (CHEAT.on) RUN.cheat = true;
+  reelChange(() => startLevel(0, 'intro'));
+}
+function marathonStep() {
+  S.mode = 'clear'; S.modeT = 0; S.gag = makeGag();
+  [523.3, 659.3, 784].forEach((f, i) => tone(f, 1.6, .08, i * .1));
+  if (!LV.final) { RUN.li = S.li + 1; return; }
+  const r = RUN.res.filter(Boolean), M = S.mdone = {
+    time: r.reduce((s, x) => s + x.t, 0), deaths: r.reduce((s, x) => s + x.takes - 1, 0),
+    got: r.reduce((s, x) => s + x.got, 0), total: r.reduce((s, x) => s + x.total, 0), best: +store.get('gtte-marathon-best') || 0,
+  };
+  if (!RUN.cheat && (!M.best || M.time < M.best)) { store.set('gtte-marathon-best', M.time.toFixed(2)); M.record = true; }
+}
+// the clock the marathon runs on: every finished film plus the one on screen
+function marathonTime() { let s = S.time; for (let i = 0; i < S.li; i++) if (RUN.res[i]) s += RUN.res[i].t; return s; }
+function nextFilm() { reelChange(() => startLevel(RUN.li, 'intro')); }
+
+// ===== cards drawn over a finished film in the special modes =====
+function drawMarathonClear() {
+  const T = S.modeT;
+  if (S.mdone) {
+    const M = S.mdone, k = clamp((T - 1.2) / .8, 0, 1);
+    if (k <= 0) return;
+    ctx.fillStyle = `rgba(6,5,8,${.88 * k})`; rr(28, H * .12, W - 56, 230, 10); ctx.fill();
+    caption('МАРАФОН ОКОНЧЕН', `500 12px ${MONO}`, H * .12 + 36, '#a59d92', k);
+    caption(fmt(M.time), `600 64px ${SERIF}`, H * .12 + 104, M.time <= EVENING * GUEST_PAR ? '#b9f27c' : CUT, k);
+    caption(M.record ? 'НОВЫЙ РЕКОРД' : M.best ? `РЕКОРД ${fmt(M.best)}` : '', `500 12px ${MONO}`, H * .12 + 132, '#ffd23f', k);
+    caption(`${EVENING} ФИЛЬМОВ · ${M.deaths} ${plural(M.deaths, 'ДУБЛЬ', 'ДУБЛЯ', 'ДУБЛЕЙ')} · ★ ${M.got} / ${M.total}`, `500 12px ${MONO}`, H * .12 + 166, '#efe8dc', k);
+    if (T > 2.4) caption('ПРОБЕЛ — В МЕНЮ', `500 11px ${MONO}`, H * .12 + 206, '#a59d92', k);
+    return;
+  }
+  // between films: one line under the gag, then the cue marks and the change
+  const r = RUN.res[S.li], k = clamp((T - .6) / .5, 0, 1);
+  if (r) caption(`${S.li + 1} / ${EVENING} · ${fmt(r.t)} · ★ ${r.got}/${r.total} · ДАЛЬШЕ: ${LEVELS[S.li + 1].name.toUpperCase()}`, `500 11px ${MONO}`, H - 30, LV.pal.light ? '#1b1b3a' : '#d8d0c4', k);
+  drawCueMarks(T, 1.5);
+}
 
 // ===== src/js/23-boot.js =====
 // ---------- boot: re-measure the words once the typefaces arrive ----------

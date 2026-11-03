@@ -34,7 +34,7 @@ function render(t) {
   const P = LV.pal;
   ctx.fillStyle = P.bg;
   ctx.fillRect(0, 0, W, H);
-  if (S.mode === 'menu') { drawMenu(t); finish(t); return; }
+  if (S.mode === 'menu') { drawMenu(t); finish(t); drawReel(t); return; }
   const p = S.p, cam = S.camY;
   const still = S.mode === 'pause';
   const flick = REDUCED || still ? 1 : .95 + .05 * Math.random();
@@ -183,7 +183,7 @@ function render(t) {
   }
 
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-  if (S.mode === 'ending') { drawEnding(t); finish(t, true); return; }
+  if (S.mode === 'ending') { drawEnding(t); finish(t, true); drawReel(t); return; }
   finish(t, P.light);
   if (S.mode === 'intro') drawIntro();
   if (S.mode === 'cut') drawCut();
@@ -192,7 +192,9 @@ function render(t) {
     ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(0, 0, W, H);
     caption('Пауза', `italic 500 44px ${SERIF}`, H / 2 - 6, '#efe8dc');
     caption('ПЛЁНКА ОСТАНОВЛЕНА · P — ПРОДОЛЖИТЬ', `500 12px ${MONO}`, H / 2 + 24, '#8e877c');
+    if (RUN.kind === 'marathon') caption('Q — ВЫЙТИ ИЗ МАРАФОНА', `500 12px ${MONO}`, H / 2 + 48, '#8e877c');
   }
+  drawReel(t);
 }
 
 // film grain, a stray scratch and the vignette

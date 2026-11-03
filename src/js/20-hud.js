@@ -10,6 +10,8 @@ function hud() {
 }
 function timer() {
   const el = $('time');
-  el.textContent = `${fmt(S.time)} / ${fmt(S.par)}`;
-  el.classList.toggle('late', S.time > S.par);
+  // the marathon runs on one clock for the whole evening
+  const m = RUN.kind === 'marathon', now = m ? marathonTime() : S.time, par = m ? EVENING * GUEST_PAR : S.par;
+  el.textContent = `${fmt(now)} / ${fmt(par)}`;
+  el.classList.toggle('late', now > par);
 }

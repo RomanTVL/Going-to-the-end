@@ -1,4 +1,4 @@
-// ---------- menus: the programme, the endings and the cheats ----------
+// ---------- menus: the programme, the marathon, the endings and the cheats ----------
 const ENDINGS = [
   { key: 'full', name: 'The Beginning', how: 'Успей на всех сеансах и собери все звёзды' },
   { key: 'almost', name: 'Свет в зале', how: 'Успей везде и собери больше половины звёзд, но не все' },
@@ -6,7 +6,7 @@ const ENDINGS = [
   { key: 'late', name: 'Пустой зал', how: 'Опоздай хоть раз, но собери половину звёзд или больше' },
   { key: 'truck', name: 'Грузовик', how: 'Опоздай хоть раз и собери меньше половины звёзд' },
 ];
-const DEMO = { truck: [612, 5, 31], late: [640, 9, 70], blind: [380, 14, 29], almost: [470, 14, 88], full: [505, 14, 103] };
+const DEMO = { truck: [1120, 9, 31], late: [1180, 17, 70], blind: [690, 25, 29], almost: [760, 25, 88], full: [820, 25, 103] };
 const CHEAT = { on: store.get('gtte-cheat') === '1', god: store.get('gtte-god') !== '0' };
 const cheatGod = () => CHEAT.on && CHEAT.god;
 const menu = { screen: 'main', sel: 0, rows: [] };
@@ -30,17 +30,19 @@ function menuItems() {
     { label: 'Назад', act: () => go('main') },
   ];
   if (menu.screen === 'levels') return [
-    ...LEVELS.map((L, i) => ({ label: L.name, lv: L, n: i + 1, act: () => { RUN = { li: i, res: [], v: 4, cheat: true }; saveRun(); startLevel(i); } })),
+    ...LEVELS.map((L, i) => ({ label: L.name, lv: L, n: i + 1, act: () => { RUN = Object.assign(freshRun(), { li: i, cheat: true }); saveRun(); reelChange(() => startLevel(i)); } })),
     { label: 'Назад', act: () => go('cheats') },
   ];
   return [
-    { label: RUN.li > 0 ? `Продолжить вечер · сеанс ${RUN.li + 1}` : 'Начать вечер', act: () => { if (CHEAT.on) RUN.cheat = true; startLevel(RUN.li); } },
+    { label: RUN.li > 0 ? `Продолжить вечер · сеанс ${RUN.li + 1}` : 'Начать вечер', act: () => { if (CHEAT.on) RUN.cheat = true; reelChange(() => startLevel(RUN.li)); } },
+    { label: 'Марафон', note: marathonBest() ? `рекорд ${fmt(marathonBest())}` : `все ${EVENING} подряд`, act: startMarathon },
     { label: 'Концовки', note: `${seen.length} / 5`, act: () => go('endings') },
     { label: 'Читы', note: CHEAT.on ? 'вкл' : 'выкл', act: () => go('cheats') },
     { label: 'Полный экран', note: 'F', act: toggleFullscreen },
     ...(RUN.li > 0 ? [{ label: 'Новый забег', act: newRun }] : []),
   ];
 }
+const marathonBest = () => +store.get('gtte-marathon-best') || 0;
 function go(screen) { menu.screen = screen; menu.sel = 0; tone(660, .12, .05); }
 function setCheat(k, v) {
   CHEAT[k] = v; store.set(k === 'on' ? 'gtte-cheat' : 'gtte-god', v ? '1' : '0');
@@ -49,7 +51,7 @@ function setCheat(k, v) {
 }
 function menuMove(d) {
   const items = menuItems();
-  if (menu.screen === 'levels' && Math.abs(d) === 10) { menu.sel = clamp(menu.sel + d, 0, items.length - 1); tone(520, .06, .04); return; }
+  if (menu.screen === 'levels' && Math.abs(d) === 9) { menu.sel = clamp(menu.sel + d, 0, items.length - 1); tone(520, .06, .04); return; }
   let i = menu.sel;
   for (let n = 0; n < items.length; n++) { i = (i + d + items.length) % items.length; if (items[i].act) break; }
   menu.sel = i; tone(520, .06, .04);
@@ -68,7 +70,7 @@ function replayEnding(key) {
   S.ending = key; S.modeT = 0; S.replay = true;
   const d = DEMO[key];
   const total = LEVELS.reduce((n, L) => n + L.credits.filter(c => c[0] === '*').length, 0);
-  S.summary = store.json('gtte-summary-' + key) || { time: d[0], inTime: d[1], got: Math.round(d[2] / 103 * total), total, fast: d[1] === LEVELS.length };
+  S.summary = store.json('gtte-summary-' + key) || { time: d[0], inTime: d[1], got: Math.round(d[2] / 103 * total), total, fast: d[1] === EVENING };
   S.endDot = { x: S.p.x + PW / 2, y: S.p.y + PH / 2 - S.camY };
 }
 
@@ -93,16 +95,16 @@ function drawMenu(t) {
   menu.rows = [];
   items.forEach((it, i) => {
     if (levels) {
-      // twenty sessions in two columns with the film's own token
-      const col = it.lv ? Math.floor(i / 10) : 0, row = it.lv ? i % 10 : 10, x = 48 + col * 226, y = y0 + row * rowH;
+      // the sessions in three columns of nine, each with the film's own token
+      const col = it.lv ? Math.floor(i / 9) : 0, row = it.lv ? i % 9 : 9, x = 30 + col * 166, y = y0 + row * rowH;
       const sel = i === menu.sel;
-      menu.rows.push({ x0: x - 8, x1: x + 218, y0: y - 22, y1: y + 22, i });
-      if (sel) { ctx.fillStyle = 'rgba(255,74,61,.14)'; ctx.fillRect(x - 8, y - 20, 222, 38); ctx.fillStyle = CUT; ctx.fillRect(x - 8, y - 20, 3, 38); }
+      menu.rows.push({ x0: x - 8, x1: x + 158, y0: y - 22, y1: y + 22, i });
+      if (sel) { ctx.fillStyle = 'rgba(255,74,61,.14)'; ctx.fillRect(x - 8, y - 20, 162, 38); ctx.fillStyle = CUT; ctx.fillRect(x - 8, y - 20, 3, 38); }
       ctx.textAlign = 'left';
       if (it.lv) {
         ctx.save(); ctx.globalAlpha = .95; drawCollectible(x + 10, y - 2, t, it.lv); ctx.restore();
         ctx.font = `500 10px ${MONO}`; ctx.fillStyle = dim; ctx.fillText(String(it.n).padStart(2, '0'), x + 26, y - 6);
-        ctx.font = `500 16px ${SERIF}`; ctx.fillStyle = sel ? '#ffffff' : film; ctx.fillText(it.label, x + 26, y + 10);
+        ctx.font = `500 14px ${SERIF}`; ctx.fillStyle = sel ? '#ffffff' : film; ctx.fillText(it.label, x + 26, y + 10);
       } else { ctx.font = `500 21px ${SERIF}`; ctx.fillStyle = sel ? '#ffffff' : film; ctx.fillText(it.label, x + 8, y + 6); }
       return;
     }
@@ -120,15 +122,15 @@ function drawMenu(t) {
   });
 
   if (menu.screen === 'main') {
-    // the evening's programme in two columns, with each film's token and this run's results
-    ctx.textAlign = 'center'; ctx.font = `500 10px ${MONO}`; ctx.fillStyle = dim; ctx.fillText('ПРОГРАММА ВЕЧЕРА', CX, 334);
+    // the evening's programme in three columns, with each film's token and this run's results
+    ctx.textAlign = 'center'; ctx.font = `500 10px ${MONO}`; ctx.fillStyle = dim; ctx.fillText('ПРОГРАММА ВЕЧЕРА', CX, 358);
     LEVELS.forEach((L, i) => {
-      const col = Math.floor(i / 10), x = 52 + col * 226, y = 360 + (i % 10) * 26, r = RUN.res[i], cur = i === RUN.li;
+      const col = Math.floor(i / 9), x = 30 + col * 166, y = 384 + (i % 9) * 24, r = RUN.res[i], cur = i === RUN.li;
       ctx.globalAlpha = r || cur ? 1 : .5;
       ctx.save(); drawCollectible(x + 6, y - 5, t, L); ctx.restore();
       ctx.globalAlpha = r || cur ? 1 : .5;
-      ctx.textAlign = 'left'; ctx.font = `500 15px ${SERIF}`; ctx.fillStyle = cur ? CUT : r || cur ? film : dim; ctx.fillText(L.name, x + 20, y);
-      if (r) { circle(x + 208, y - 5, 3.5, r.t <= r.par ? '#b9f27c' : CUT); }
+      ctx.textAlign = 'left'; ctx.font = `500 14px ${SERIF}`; ctx.fillStyle = cur ? CUT : r || cur ? film : dim; ctx.fillText(L.name, x + 20, y);
+      if (r) { circle(x + 156, y - 5, 3, r.t <= r.par ? '#b9f27c' : CUT); }
     });
     ctx.globalAlpha = 1;
   }
