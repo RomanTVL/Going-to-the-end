@@ -1,0 +1,31 @@
+const W = 540, H = 675, CX = W / 2;
+const LINE = 74;                       // distance between credit lines
+const PW = 10, PH = 10;                // the dot
+const GRAV = 1500, JUMP = 520, SPEED = 255, ACC = 2200, MAXFALL = 780;
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const CUT = '#ff4a3d';
+const PI2 = Math.PI * 2;
+const SERIF = '"Cormorant Garamond", Georgia, "Times New Roman", serif';
+const SC = '"Cormorant SC", "Cormorant Garamond", Georgia, serif';
+const COND = '"Oswald", "Arial Narrow", Arial, sans-serif';
+const WIDE = '"Russo One", "Arial Black", Arial, sans-serif';
+const MONO = '"IBM Plex Mono", ui-monospace, monospace';
+const CHUNK = '"Rubik Mono One", "Arial Black", Arial, sans-serif';
+const UNB = '"Unbounded", "Arial Black", Arial, sans-serif';
+const PIX = '"Pixelify Sans", "Courier New", monospace';
+const P2P = '"Press Start 2P", "Courier New", monospace';
+const PLAY = '"Playfair Display", Georgia, serif';
+const RUSLAN = '"Ruslan Display", Georgia, serif';
+const PHIL = '"Philosopher", Georgia, serif';
+const MARCK = '"Marck Script", Georgia, cursive';
+const SLAB = '"Kelly Slab", Georgia, serif';
+const AMATIC = '"Amatic SC", "Arial Narrow", sans-serif';
+const EXO = '"Exo 2", "Arial", sans-serif';
+const ROUND = '"Comfortaa", "Arial Rounded MT Bold", sans-serif';
+const JURA = '"Jura", "Arial", sans-serif';
+const YESEVA = '"Yeseva One", Georgia, serif';
+const RUBIK = '"Rubik", "Arial", sans-serif';
+const UMONO = '"Ubuntu Mono", ui-monospace, monospace';
+const ALUMNI = '"Alumni Sans", "Arial Narrow", sans-serif';
+const REC_HZ = 30;
+const GUEST_PAR = 40, FINAL_PAR = 40;
