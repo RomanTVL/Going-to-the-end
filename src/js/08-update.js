@@ -24,7 +24,7 @@ function update(dt) {
   if (S.mode === 'play') {
     S.time += dt;
     // credits roll faster the closer you get to the end, and stop once THE END is in the frame
-    S.camY = Math.min(S.camY + (44 + 52 * progress()) * (LV.speed || 1) * dt, endTop - H * .6);
+    if (!mech('frozen')) S.camY = Math.min(S.camY + (44 + 52 * progress()) * (LV.speed || 1) * dt, endTop - H * .6);
   }
 
   const dir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
@@ -65,14 +65,16 @@ function update(dt) {
         p.squash = .3 + .7 * k;
         landNote(best, k);
         S.ripples.push({ x: p.x + PW / 2, y: best.top, t: 0, k });
+        mech('land', best);
         if (k > .45) burst(p.x + PW / 2, p.y + PH, 5, LV.pal.dim, 60);
       }
     }
   }
+  mech('constrain', p);
   p.squash = Math.max(0, p.squash - dt * 6);
 
   // in the doll's game everything freezes on red, the crumbling names too
-  const frozen = LV.hazard === 'redlight' && S.rl.phase === 'red';
+  const frozen = LV.hazard === 'redlight' && S.rl.phase === 'red' || mech('frozen');
   if (p.ground && p.ground.fragile && !frozen) {
     p.ground.hold += dt;
     if (p.ground.hold > .5) { p.ground.gone = true; p.ground = null; noise(.18, .18, 1800); }
@@ -92,6 +94,7 @@ function update(dt) {
       s.got = true;
       burst(s.x, s.y, 12, LV.pal.star, 150);
       S.floaters.push({ x: s.x, y: s.y, t: 0, text: '+1' });
+      mech('collect', s);
       tone(1318.5, .5, .06); tone(1975.5, .7, .05, .08);
       hud();
     }

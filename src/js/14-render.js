@@ -11,7 +11,10 @@ const grainPat = ctx.createPattern(grain, 'repeat');
 function drawText(pl, alpha, dy = 0, jitter = 0) {
   ctx.globalAlpha = alpha;
   ctx.font = pl.font;
+  // cartoon films wobble like rubber, the neon film splits its colours like a worn tape
+  if (LV.wobble) dy += Math.sin(performance.now() * .004 + pl.x * .05) * 1.6;
   if (LV.pal.shadow) { ctx.fillStyle = LV.pal.shadow; ctx.fillText(pl.text, pl.x + jitter + 2, pl.base + dy + 2); }
+  if (LV.chroma) { const a0 = ctx.globalAlpha; ctx.globalAlpha = a0 * .55; ctx.fillStyle = '#ff2ad8'; ctx.fillText(pl.text, pl.x + jitter - 1.6, pl.base + dy); ctx.fillStyle = '#00f0ff'; ctx.fillText(pl.text, pl.x + jitter + 1.6, pl.base + dy); ctx.globalAlpha = a0; }
   if (LV.pal.outline && (pl.glow || pl.size >= 26)) {
     // red outlined titles, the way that show sets its name
     ctx.shadowColor = LV.pal.outline; ctx.shadowBlur = 12; ctx.strokeStyle = LV.pal.outline; ctx.lineWidth = 1.6;
@@ -145,14 +148,16 @@ function render(t) {
       ctx.beginPath(); ctx.arc(q.x, q.y, Math.max(1, 4 - i * .15), 0, PI2); ctx.fill();
     });
     ctx.globalAlpha = 1;
-    // the dot: a soft halo tinted by the film, a hot core
+    // the dot: a soft halo tinted by the film, a hot core; a red heart in the film about mercy
     const sq = p.squash, cx = p.x + PW / 2, cy = p.y + PH / 2 + sq * 2;
+    if (LV.soulHeart) drawSoul(cx, cy); else {
     const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, 24);
     halo.addColorStop(0, P.light ? 'rgba(255,255,255,.55)' : 'rgba(255,246,225,.42)'); halo.addColorStop(.45, hexA(P.accent, .14)); halo.addColorStop(1, hexA(P.accent, 0));
     ctx.fillStyle = halo; ctx.fillRect(cx - 24, cy - 24, 48, 48);
     ctx.shadowColor = P.light ? 'rgba(0,0,0,.5)' : '#fff3d6'; ctx.shadowBlur = 16; ctx.fillStyle = '#fffaf0';
     ctx.beginPath(); ctx.ellipse(cx, cy, 5 * (1 + .45 * sq), 5 * (1 - .4 * sq), 0, 0, PI2); ctx.fill();
     ctx.shadowBlur = 0; ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(cx - 1.2, cy - 1.4, 1.6, 0, PI2); ctx.fill();
+    }
   }
   ctx.restore();
 
@@ -164,8 +169,10 @@ function render(t) {
   if (LV.hazard === 'rex' && live) drawRex(t);
   if (LV.hazard === 'dark' && live) drawNight(t);
   if (LV.hazard === 'snap' && live) drawGauntlet(t);
+  if (S.mode !== 'ending') mech('draw', t);
   if (S.mode === 'clear' && S.gag) drawGagScreen(t);
   drawGrade();
+  if (LV.sepia) { ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = 'rgba(190,140,80,.35)'; ctx.fillRect(0, 0, W, H); ctx.restore(); }
 
   // frame edges warm up red as you drift towards them
   if (S.mode === 'play') {

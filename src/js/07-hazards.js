@@ -414,6 +414,7 @@ function updateHazards(dt) {
   if ((S.mode === 'play' || S.mode === 'clear') && type === 'dark') { updateNight(dt); if (S.mode === 'cut') return; }
   if (S.mode === 'play' && type === 'snap') updateSnap(dt);
   if (type === 'snap') for (const q of plats) if (q.dust > 0) { q.dust -= dt; if (q.dust <= 0) { q.dust = 0; q.back = .5; } } else if (q.back > 0) q.back -= dt;
+  if (S.mode === 'play') { mech('update', dt); if (S.mode !== 'play') return; }
   if (!H_ || !H_.spawn) return;
   if (S.mode === 'play') {
     S.hzT -= dt;

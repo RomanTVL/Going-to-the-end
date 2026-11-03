@@ -112,6 +112,7 @@ function drawHazards(t, cam) {
     const w = clamp(h.t / (h.warn || 1), 0, 1);
     ctx.save();
     if (h.screen) ctx.translate(0, cam);
+    if (HZDRAW[h.type]) { HZDRAW[h.type](h, t, cam, w); ctx.restore(); continue; }
     if (h.type === 'bullet') {
       if (!h.live) {
         // laser sight across the frame, then a crosshair where the shot comes from

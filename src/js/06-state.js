@@ -15,8 +15,11 @@ function startLevel(i, mode = 'intro') {
     world: 'a', flipT: 3.4, rex: { next: 2.6, n: 0, warn: 0, lungeAt: 0, lunge: 0 }, night: freshNight(), snapT: 4, ripples: [], floaters: [], gag: null,
     p: { x: cp.x - PW / 2, y: cp.top - PH, vx: 0, vy: 0, ground: null, coyote: 0, buffer: 0, trail: [], squash: 0 },
   };
+  mech('reset');
   hud();
 }
+// a film's own mechanic, if it has one: mech('update', dt), mech('draw', t) and so on
+function mech(hook, ...args) { const M = MECH[LV.hazard]; return M && M[hook] ? M[hook](...args) : undefined; }
 
 function makeAmbient() {
   const A = {};
@@ -39,6 +42,7 @@ function makeAmbient() {
   if (LV.back === 'rain') A.cols = many(36, (_, i) => ({ x: i * 15 + 4, y: rand(-H, H), sp: rand(60, 180), len: Math.floor(rand(8, 20)), seed: Math.floor(rand(0, 999)) }));
   if (LV.back === 'aurora') A.field = many(110, () => ({ x: rand(0, W), y: rand(0, H), d: rand(.03, .15), r: Math.random() < .08 ? 1.6 : .8 }));
   if (LV.back === 'maze') A.seed = Math.floor(rand(0, 1000));
+  if (AMB[LV.back]) AMB[LV.back](A, many);
   if (LV.back === 'ship') A.windows = [{ x: 30, y: 140 }, { x: 440, y: 420 }];
   if (LV.back === 'well') A.pieces = many(6, () => ({ x: rand(30, W - 90), y: rand(0, H), k: pick(Object.keys(TETRO)), s: rand(.6, 1.4) }));
   if (LV.back === 'spores') A.spores = many(60, () => ({ x: rand(0, W), y: rand(0, H), s: rand(.4, 1.4) }));
@@ -73,6 +77,7 @@ function respawn() {
   Object.assign(S.p, { x: cp.x - PW / 2, y: cp.top - PH, vx: 0, vy: 0, ground: null, coyote: 0, buffer: 0, trail: [], squash: 0 });
   S.mode = 'play';
   if (LV.hazard === 'redlight') greenLight();
+  mech('reset');
   hud();
 }
 

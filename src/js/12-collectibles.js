@@ -3,7 +3,9 @@ function drawCollectible(x, y, t, L = LV) {
   const kind = L.starKind || 'star', c = L.pal.star;
   ctx.save(); ctx.translate(x, y);
   ctx.shadowColor = c; ctx.shadowBlur = 14;
-  if (kind === 'coin') {
+  if (TOKENS[kind]) {
+    TOKENS[kind](t, c, x, y);
+  } else if (kind === 'coin') {
     const sx = Math.abs(Math.cos(t * .005 + x));
     ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.ellipse(0, 0, 8 * sx + 1, 10, 0, 0, PI2); ctx.fill();
     ctx.shadowBlur = 0; ctx.fillStyle = '#c98a00'; ctx.fillRect(-1 * sx, -6, 2 * sx + .5, 12);

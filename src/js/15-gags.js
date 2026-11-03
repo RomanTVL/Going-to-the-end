@@ -6,7 +6,7 @@ function makeGag() {
     // place each letter by the width of the text before it, so kerning and spacing stay as set
     [...pl.text].forEach((ch, i) => {
       const x = pl.x + ctx.measureText(pl.text.slice(0, i)).width, w = ctx.measureText(pl.text.slice(0, i + 1)).width - (x - pl.x);
-      letters.push({ ch, x, w, base: pl.base, font: pl.font, color: pl.color, dx: 0, dy: 0, vx: 0, vy: 0, a: 1, rot: 0, sc: 1, tint: null, word: ends.indexOf(pl) });
+      letters.push({ ch, x, w, base: pl.base, font: pl.font, color: pl.color, dx: 0, dy: 0, vx: 0, vy: 0, a: 1, rot: 0, sc: 1, tint: null, word: ends.indexOf(pl), h: pl.size });
     });
   }
   const g = { letters, x0: Math.min(...letters.map(l => l.x)), x1: Math.max(...letters.map(l => l.x + l.w)), base: ends[0].base, top: Math.min(...ends.map(q => q.top)), size: ends[0].size, cues: new Set(), say: '', sayCol: null, fx: [] };
@@ -30,7 +30,12 @@ function drawLetters(g) {
     else { ctx.shadowColor = LV.pal.light ? 'rgba(0,0,0,.3)' : 'rgba(255,240,210,.55)'; ctx.shadowBlur = 18; }
     if (LV.pal.shadow) { ctx.fillStyle = LV.pal.shadow; ctx.fillText(l.ch, 2, 2); }
     ctx.fillStyle = l.tint || (LV.pal.outline ? 'rgba(10,6,10,.9)' : l.color);
-    ctx.fillText(l.ch, 0, 0);
+    if (l.split > 0) {
+      // a letter cut in two: the top half slides away, the bottom half stays
+      const cutY = -l.h * .5, k = l.split;
+      ctx.save(); ctx.beginPath(); ctx.rect(-l.w, cutY, l.w * 2, l.h); ctx.clip(); ctx.fillText(l.ch, 0, 0); ctx.restore();
+      ctx.save(); ctx.beginPath(); ctx.rect(-l.w, -l.h * 1.4, l.w * 2, l.h * .9); ctx.clip(); ctx.translate(k * 40, -k * 30); ctx.rotate(-k * .5); ctx.fillText(l.ch, 0, 0); ctx.restore();
+    } else ctx.fillText(l.ch, 0, 0);
     ctx.restore();
   }
   ctx.textAlign = 'left';
@@ -48,7 +53,7 @@ function drawGagScreen(t) {
   if (g.say && S.modeT > (g.sayAt || 1.6)) {
     const k = clamp((S.modeT - (g.sayAt || 1.6)) / .6, 0, 1);
     ctx.shadowColor = '#000'; ctx.shadowBlur = 10;
-    caption(g.say, `italic 600 26px ${SERIF}`, g.top - S.camY - 46, g.sayCol || (LV.pal.light ? '#ffffff' : LV.pal.film), k);
+    caption(g.say, g.sayFont || `italic 600 26px ${SERIF}`, g.top - S.camY - 46, g.sayCol || (LV.pal.light ? '#ffffff' : LV.pal.film), k);
     ctx.shadowBlur = 0;
   }
 }

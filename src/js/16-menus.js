@@ -30,7 +30,7 @@ function menuItems() {
     { label: 'Назад', act: () => go('main') },
   ];
   if (menu.screen === 'levels') return [
-    ...LEVELS.map((L, i) => ({ label: L.name, lv: L, n: i + 1, act: () => { RUN = { li: i, res: [], v: 3, cheat: true }; saveRun(); startLevel(i); } })),
+    ...LEVELS.map((L, i) => ({ label: L.name, lv: L, n: i + 1, act: () => { RUN = { li: i, res: [], v: 4, cheat: true }; saveRun(); startLevel(i); } })),
     { label: 'Назад', act: () => go('cheats') },
   ];
   return [

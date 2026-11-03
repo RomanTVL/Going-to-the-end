@@ -29,7 +29,7 @@ function introHint() {
     bludger: 'бладжеры отскакивают от краёв', chaser: 'не дай себя догнать', code: 'красный код падает столбами сверху', water: 'вода поднимается снизу',
     double: 'не стой на месте: ты догонишь себя', crew: 'предатель вспыхивает красным, прыжок сверху выкидывает', tetro: 'упавшая фигура становится платформой',
     flip: 'гирлянда мигает — сейчас перевернётся', rex: 'стакан дрожит — сейчас подбросит', dark: 'на свету они замирают', snap: 'перчатка светится — половина слов исчезнет', host: 'черепа плюются слезами крестом', leviathan: 'хватай пузыри, в воде можно грести прыжком',
-  }[LV.hazard] || 'дойди до конца';
+  }[LV.hazard] || (MECH[LV.hazard] && MECH[LV.hazard].hint) || 'дойди до конца';
 }
 
 // a frame stuck in the gate melts from the dot outward, then the slate
@@ -52,7 +52,8 @@ function drawCut() {
   }
   const k = clamp((T - .45) / .2, 0, 1);
   if (k <= 0) return;
-  caption('Стоп. Снято.', `italic 600 64px ${SERIF}`, H / 2 - 10, '#efe8dc', k);
+  // some films end a take their own way
+  caption(LV.deathTitle || 'Стоп. Снято.', LV.deathFont ? `400 46px ${LV.deathFont}` : `italic 600 64px ${SERIF}`, H / 2 - 10, LV.deathCol || '#efe8dc', k);
   caption(S.cutWhy.toUpperCase(), `500 13px ${MONO}`, H / 2 + 26, '#8e877c', k);
   caption(`ДУБЛЬ ${S.take}`, `500 13px ${MONO}`, H / 2 + 52, CUT, k);
 }
