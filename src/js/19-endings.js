@@ -42,6 +42,7 @@ function updateEnding(dt) {
   if (e === 'life') updateLifeEnding();
   if (e === 'rise') updateRiseEnding();
   cue('message', ENDING_LEN[e] - 2.6, () => tone(523.3, 2.2, .1));
+  cue('narr', ENDING_LEN[e] - 1.4, () => say('end.' + e, { force: true }));
 }
 
 function lines(T, rows, color, glow) {

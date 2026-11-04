@@ -56,7 +56,9 @@ function musicTheme() {
 // how loud the music sits under the game, by what is on screen
 function musicLevel() {
   if (!MUS.on || !S) return 0;
-  return { play: .5, intro: .32, clear: .4, cut: .1, pause: 0, menu: .34, ending: 0, over: 0 }[S.mode] ?? .3;
+  // the music steps back while the projectionist speaks
+  const duck = NAR.cur && NAR.cur.audio ? .4 : 1;
+  return ({ play: .5, intro: .32, clear: .4, cut: .1, pause: 0, menu: .34, ending: 0, over: 0 }[S.mode] ?? .3) * duck;
 }
 function musicTick() {
   const c = AU.c;

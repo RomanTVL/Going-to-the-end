@@ -3,6 +3,7 @@ let S;
 const keys = { left: false, right: false, jump: false };
 
 function startLevel(i, mode = 'intro') {
+  const fromMenu = !!S && S.mode === 'menu';
   LV = LEVELS[i];
   // the secret session changes its own look as it goes; start it from the top
   if (LV.base) Object.assign(LV, LV.base);
@@ -19,6 +20,7 @@ function startLevel(i, mode = 'intro') {
   };
   if (LV.sections) { S.sec = null; sectionTick(0); }
   mech('reset');
+  if (mode === 'intro') narrStart(fromMenu);
   hud();
 }
 // a film's own mechanic, if it has one: mech('update', dt), mech('draw', t) and so on
@@ -93,6 +95,7 @@ function cut(why) {
   // where and why: for the evening's statistics and the death map
   if (RUN.deaths) RUN.deaths.push([S.li, +dotFrac().toFixed(3), why]);
   onDeath();
+  narrDeath(why);
   S.burn = { x: S.p.x + PW / 2, y: clamp(S.p.y - S.camY, 0, H) };
   noise(.5, .45, 900, 'lowpass');
   noise(.05, .3, 3000);
@@ -110,6 +113,7 @@ function finishLevel() {
   }
   RUN.res[S.li] = r;
   onFilmDone(r, best);
+  narrClear(r);
   if (LV.extra) { finishSpecial(r); hud(); return; }
   if (RUN.kind === 'marathon') { marathonStep(); hud(); return; }
   if (LV.final) {

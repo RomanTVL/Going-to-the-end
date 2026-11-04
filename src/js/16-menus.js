@@ -35,6 +35,15 @@ function menuItems() {
     ];
   }
   if (menu.screen === 'ach' || menu.screen === 'stats') return [back];
+  if (menu.screen === 'options') return [
+    { label: 'Полный экран', note: 'F', act: toggleFullscreen },
+    { label: 'Звук', note: AU.muted ? 'выкл' : 'вкл', act: () => setMute(!AU.muted) },
+    { label: 'Музыка', note: MUS.on ? 'вкл' : 'выкл', act: () => setMusic(!MUS.on) },
+    { label: 'Рассказчик', note: NAR.on ? 'вкл' : 'выкл', act: () => { NAR.on = !NAR.on; store.set('gtte-narrator', NAR.on ? '1' : '0'); if (NAR.on) say('hello', { force: true }); else narrStop(); } },
+    { label: 'Субтитры к голосу', note: NAR.subs ? 'вкл' : 'выкл', act: () => { NAR.subs = !NAR.subs; store.set('gtte-subs', NAR.subs ? '1' : '0'); }, dim: !hasVoice() },
+    { label: hasVoice() ? 'Голос рассказчика записан' : 'Голос ещё не записан: рассказчик говорит субтитрами', info: true, dim: true },
+    back,
+  ];
   if (menu.screen === 'cheats') return [
     { label: 'Чит-режим', note: CHEAT.on ? 'вкл' : 'выкл', act: () => setCheat('on', !CHEAT.on) },
     { label: 'Снаряды не убивают', note: CHEAT.god ? 'да' : 'нет', act: () => setCheat('god', !CHEAT.god), dim: !CHEAT.on },
@@ -59,7 +68,7 @@ function menuItems() {
     { label: 'Концовки', note: `${seen.length} / 5`, act: () => go('endings') },
     { label: 'Статистика вечера', note: '→', act: () => go('stats') },
     { label: 'Читы', note: CHEAT.on ? 'вкл' : 'выкл', act: () => go('cheats') },
-    { label: 'Полный экран', note: 'F', act: toggleFullscreen },
+    { label: 'Настройки', note: '→', act: () => go('options') },
     ...(RUN.li > 0 ? [{ label: 'Новый забег', act: newRun }] : []),
   ];
 }
@@ -110,12 +119,12 @@ function drawMenu(t) {
   // the sprockets turn gold once one life has been lived
   const gold = lifeDone();
   for (const x of [8, W - 20]) for (let y = ((t * .03) % 34) - 34; y < H && gold; y += 34) { ctx.fillStyle = 'rgba(255,210,63,.35)'; rr(x, y, 12, 18, 3); ctx.fill(); }
-  const titles = { main: 'GOING TO THE END', endings: 'Концовки', cheats: 'Читы', levels: 'С какого сеанса', modes: 'Режимы', ach: 'Достижения', stats: 'Статистика вечера' };
+  const titles = { main: 'GOING TO THE END', endings: 'Концовки', cheats: 'Читы', levels: 'С какого сеанса', modes: 'Режимы', ach: 'Достижения', stats: 'Статистика вечера', options: 'Настройки' };
   caption(titles[menu.screen], `600 ${menu.screen === 'main' ? 40 : 34}px ${SERIF}`, 74, film);
   ctx.shadowBlur = 0;
   const st = menu.screen === 'stats' && store.json('gtte-laststats'), en = st && ENDINGS.find(e => e.key === st.ending);
   const subs = { main: `${EVENING} сеансов. Один вечер. Одна жизнь.`, endings: 'Открытые можно пересмотреть. Под каждой — как её открыть.', cheats: 'Для тестов и просмотра концовок', levels: 'Тестовый забег, в рекорды не идёт',
-    modes: 'Другие способы провести вечер', ach: `Открыто ${Object.keys(achGot()).length} из ${ACH.length}`, stats: st ? `Последний вечер · ${en ? en.name : 'Одна жизнь'}` : 'Вечер ещё идёт' };
+    modes: 'Другие способы провести вечер', options: 'F — экран · M — звук · N — музыка', ach: `Открыто ${Object.keys(achGot()).length} из ${ACH.length}`, stats: st ? `Последний вечер · ${en ? en.name : 'Одна жизнь'}` : 'Вечер ещё идёт' };
   caption(subs[menu.screen], `italic 500 ${menu.screen === 'main' ? 20 : 17}px ${SERIF}`, 104, dim);
 
   const items = menuItems(), endings = menu.screen === 'endings' || menu.screen === 'modes', levels = menu.screen === 'levels';

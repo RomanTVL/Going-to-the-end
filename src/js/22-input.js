@@ -1,7 +1,7 @@
 // ---------- input ----------
 function togglePause(force) {
   if (S.mode === 'pause' && force !== true) { S.mode = S.pauseFrom; S.pauseFrom = null; }
-  else if (S.mode === 'play' || S.mode === 'cut') { S.pauseFrom = S.mode; S.mode = 'pause'; keys.left = keys.right = keys.jump = false; }
+  else if (S.mode === 'play' || S.mode === 'cut') { S.pauseFrom = S.mode; S.mode = 'pause'; keys.left = keys.right = keys.jump = false; say('pause', { chance: .35, cool: 90 }); }
   hud();
 }
 function newRun() {

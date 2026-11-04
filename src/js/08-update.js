@@ -99,6 +99,7 @@ function update(dt) {
       burst(s.x, s.y, 12, LV.pal.star, 150);
       S.floaters.push({ x: s.x, y: s.y, t: 0, text: '+1' });
       mech('collect', s);
+      if (!store.get('gtte-narr-star')) { store.set('gtte-narr-star', '1'); say('star.first', { force: true }); }
       tone(1318.5, .5, .06); tone(1975.5, .7, .05, .08);
       hud();
     }
@@ -109,6 +110,9 @@ function update(dt) {
 
   updateHazards(dt);
   if (S.mode !== 'play') return;
+  // standing still for a while gets a word from the booth
+  S.idleT = p.ground && Math.abs(p.vx) < 5 && LV.hazard !== 'redlight' ? (S.idleT || 0) + dt : 0;
+  if (S.idleT > 6) { S.idleT = 0; say('idle', { cool: 45 }); }
 
   while (S.recT <= S.time) { S.rec.push(Math.round(p.x), Math.round(p.y)); S.recT += 1 / REC_HZ; }
   // the camera chases a falling dot, but slower than it falls: a short slip is forgiven, a long drop is not

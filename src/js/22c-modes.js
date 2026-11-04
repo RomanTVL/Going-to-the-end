@@ -80,6 +80,7 @@ function startLife() {
 function lifeOver() {
   S.mode = 'over'; S.modeT = 0; S.lostAt = S.li;
   RUN = freshRun('life'); saveRun();
+  say('life.over', { force: true });
   [392, 330, 262, 196].forEach((f, i) => tone(f, 1.6, .08, i * .35));
   hud();
 }

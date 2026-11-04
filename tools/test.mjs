@@ -140,7 +140,7 @@ for (const l of layout.filter(l => l.rise && (!wanted || wanted.split(',').map(N
 
 // 3. menus
 await page.evaluate(() => { __G.startLevel(0, 'menu'); });
-for (const screen of ['endings', 'cheats', 'levels', 'modes', 'ach', 'stats', 'main']) {
+for (const screen of ['endings', 'cheats', 'levels', 'modes', 'ach', 'stats', 'options', 'main']) {
   await page.evaluate(s => { __G.menu.screen = s; __G.menu.sel = 0; }, screen);
   await page.waitForTimeout(150);
 }
