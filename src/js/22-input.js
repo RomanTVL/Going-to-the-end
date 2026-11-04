@@ -40,12 +40,12 @@ addEventListener('keydown', e => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   const ch = e.key.length === 1 ? e.key.toLowerCase() : e.key;
   if (ch === 'm' || ch === 'ь') { setMute(!AU.muted); return; }
+  if (ch === 'n' || ch === 'т') { setMusic(!MUS.on); return; }
   if (ch === 'f' || ch === 'а' || ch === 'F11') { e.preventDefault(); toggleFullscreen(); return; }
   if (S.mode === 'menu') {
     if (ch === 'ArrowUp' || ch === 'w' || ch === 'ц') { e.preventDefault(); menuMove(-1); return; }
     if (ch === 'ArrowDown' || ch === 's' || ch === 'ы') { e.preventDefault(); menuMove(1); return; }
     if (ch === 'Escape' || ch === 'Backspace') { e.preventDefault(); menuBack(); return; }
-    if (ch === 'n' || ch === 'т') { newRun(); return; }
   }
   if (S.mode === 'ending' && S.replay && ch === 'Escape') { toMenu('endings'); return; }
   // leaving the marathon halfway: back to the menu from the pause
