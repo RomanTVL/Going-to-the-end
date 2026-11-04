@@ -88,7 +88,7 @@ function drawSoul(x, y) {
 // ===== the boss cloud: rains on you, and its pink drops can be parried with a jump =====
 MECH.boss = {
   hint: 'розовые капли можно отбить прыжком',
-  reset() { S.bossC = { x: CX, vx: 70, next: 1.6, inhale: 0, dead: 0 }; },
+  reset() { S.bossC = { x: CX, vx: 70, next: 1.6, inhale: 0, dead: 0 }; S.parries = 0; },
   update(dt) {
     const C = S.bossC;
     C.x += C.vx * dt;
@@ -124,7 +124,7 @@ MECH.boss = {
 function addWantedStar() {
   const Wd = S.wanted;
   if (Wd.stars >= 5) return;
-  Wd.stars++; Wd.flash = 1.2;
+  Wd.stars++; Wd.flash = 1.2; feat('wanted', Wd.stars);
   sweep(700, 1100, .25, .06, 'square'); sweep(1100, 700, .25, .06, 'square');
 }
 MECH.police = {
@@ -202,7 +202,7 @@ Object.assign(HZ, {
         h.gone = true; S.p.vy = -JUMP * .75; S.p.coyote = 0;
         S.floaters.push({ x: S.p.x, y: S.p.y, t: 0, text: 'ПАРИРОВАНО!', col: '#ff8ab8' });
         tone(1046, .2, .1, 0, 'triangle'); tone(1568, .3, .08, .08, 'triangle');
-        S.parries = (S.parries || 0) + 1;
+        S.parries = (S.parries || 0) + 1; feat('parry', S.parries);
         return false;
       }
       return true;
@@ -254,7 +254,7 @@ Object.assign(HZ, {
       for (const b of S.hz) {
         if (b.type !== 'barrel' || b.boom) continue;
         const bx = b.pl.x + b.rx + 8, by = b.pl.top - 12 - S.camY;
-        if (Math.hypot(bx - h.x, by - h.y) < 20) { b.boom = true; h.gone = true; }
+        if (Math.hypot(bx - h.x, by - h.y) < 20) { b.boom = true; h.gone = true; feat('chain'); }
       }
     },
     hit: (h, d) => Math.hypot(d.x - h.x, d.y - h.y) < 12,
@@ -307,7 +307,7 @@ Object.assign(HZ, {
       if (p.x + PW < wx + 1 || p.x > wx + 13 || p.y + PH < wt || p.y > h.pl.top) return false;
       if (p.vy > 0 && S.prevBottom <= wt + 12) {
         h.alive = false; p.vy = -JUMP * .65; p.ground = null; p.coyote = 0;
-        S.combo = (S.combo || 0) + 1; S.score = (S.score || 0) + 100 * S.combo;
+        S.combo = (S.combo || 0) + 1; S.score = (S.score || 0) + 100 * S.combo; feat('combo', S.combo);
         S.floaters.push({ x: wx + 7, y: wt - 4, t: 0, text: S.combo > 1 ? `x${S.combo}` : '+100', col: '#ff2ad8' });
         noise(.12, .5, 1500); burst(wx + 7, wt + 8, 10, '#c8102e', 140, 3);
         return false;

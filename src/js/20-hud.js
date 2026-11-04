@@ -1,6 +1,6 @@
 // ---------- hud ----------
 function hud() {
-  $('lvl').textContent = `${S.li + 1} / ${LEVELS.length} · ${checkpoints[S.cp] ? checkpoints[S.cp].name : ''}`;
+  $('lvl').textContent = `${LV.extra ? LV.name.toUpperCase() : `${S.li + 1} / ${EVENING}`} · ${checkpoints[S.cp] ? checkpoints[S.cp].name : ''}`;
   $('take').textContent = S.take;
   $('stars').textContent = `${stars.filter(s => s.got).length} / ${stars.length}`;
   $('fresh').hidden = !(S.mode === 'menu' && RUN.li > 0);

@@ -39,6 +39,8 @@ function updateEnding(dt) {
     [0, 4, 7, 12].forEach((s, i) => cue('dawn' + i, 3.4 + i * .5, () => tone(196 * Math.pow(2, s / 12), 3.5, .07)));
     cue('begin', 8.6, () => [0, 4, 7, 11, 14].forEach((s, i) => tone(392 * Math.pow(2, s / 12), 3, .06, i * .09)));
   }
+  if (e === 'life') updateLifeEnding();
+  if (e === 'rise') updateRiseEnding();
   cue('message', ENDING_LEN[e] - 2.6, () => tone(523.3, 2.2, .1));
 }
 
@@ -54,7 +56,7 @@ function lines(T, rows, color, glow) {
 function endingStats(T, at, color, y = H - 92) {
   const s = S.summary;
   if (T > at) caption(`ВРЕМЯ ${fmt(s.time)} · В ГРАФИКЕ ${s.inTime}/${EVENING} · ★ ${s.got}/${s.total}`, `500 12px ${MONO}`, y, color, clamp((T - at) / .8, 0, 1));
-  if (T > at + 1) caption('ПРОБЕЛ — ПРОЖИТЬ ЕЩЁ РАЗ', `500 12px ${MONO}`, y + 30, color, clamp((T - at - 1) / .8, 0, 1));
+  if (T > at + 1) caption(S.replay ? 'ПРОБЕЛ — НАЗАД' : 'ПРОБЕЛ — СТАТИСТИКА ВЕЧЕРА', `500 12px ${MONO}`, y + 30, color, clamp((T - at - 1) / .8, 0, 1));
 }
 const MOTTO = 'ТОРОПИСЬ ЖИТЬ. ЖИЗНЬ ОДНА.';
 
@@ -156,6 +158,10 @@ function drawEnding(t) {
     endingStats(T, 7.6, '#7a7166');
   } else if (e === 'full') {
     drawFull(t, T);
+  } else if (e === 'life') {
+    drawLifeEnding(t, T);
+  } else if (e === 'rise') {
+    drawRiseEnding(t, T);
   }
 }
 

@@ -11,15 +11,21 @@ function newRun() {
 function press(k) {
   audioInit();
   if (S.mode === 'pause') { togglePause(); return; }
-  if (S.mode === 'menu') { if (k === 'left') menuMove(menu.screen === 'levels' ? -9 : -1); else if (k === 'right') menuMove(menu.screen === 'levels' ? 9 : 1); else menuActivate(); return; }
+  if (S.mode === 'menu') {
+    if (menu.screen === 'ach' && (k === 'left' || k === 'right')) { achFlip(k === 'left' ? -1 : 1); return; }
+    if (k === 'left') menuMove(menu.screen === 'levels' ? -9 : -1); else if (k === 'right') menuMove(menu.screen === 'levels' ? 9 : 1); else menuActivate();
+    return;
+  }
   if (S.mode === 'intro') { if (S.modeT > .6) play(); return; }
+  if (S.mode === 'over') { if (S.modeT > 2.5) toMenu('modes'); return; }
   if (S.mode === 'clear') {
     if (S.mdone) { if (S.modeT > 2.4) toMenu(); }
+    else if (LV.extra) { if (S.modeT > 5.4) toMenu('modes'); }
     else if (RUN.kind !== 'marathon' && S.modeT > 2.2) reelChange(() => startLevel(RUN.li));
     return;
   }
   if (S.mode === 'ending') {
-    if (S.modeT > ENDING_LEN[S.ending] || S.replay && S.modeT > 1) toMenu(S.replay ? 'endings' : 'main');
+    if (S.modeT > ENDING_LEN[S.ending] || S.replay && S.modeT > 1) toMenu(S.replay ? 'endings' : S.ending === 'rise' ? 'modes' : 'stats');
     return;
   }
   if (k === 'jump') S.p.buffer = .12;
@@ -68,7 +74,7 @@ cv.addEventListener('pointerdown', e => {
     const r = cv.getBoundingClientRect(), y = (e.clientY - r.top) / r.height * H;
     const x = (e.clientX - r.left) / r.width * W;
     const row = menu.rows.find(q => y >= q.y0 && y <= q.y1 && x >= q.x0 && x <= q.x1);
-    if (row) { audioInit(); menuActivate(row.i); }
+    if (row) { audioInit(); if (row.i < 0) achFlip(row.i === -1 ? -1 : 1); else menuActivate(row.i); }
     return;
   }
   if (S.mode !== 'play' && S.mode !== 'cut') press('jump');

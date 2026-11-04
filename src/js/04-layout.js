@@ -1,6 +1,8 @@
 // ---------- layout: every word on screen is a platform ----------
 let LV = LEVELS[0];
 let plats = [], deco = [], stars = [], checkpoints = [], props = [], endTop = 0;
+// the secret films switch film every few lines: each section has its own type, colours and danger
+let sections = [], curSec = -1;
 
 function platform(text, font, size, x, base, color, extra = {}) {
   ctx.font = font;
@@ -9,7 +11,7 @@ function platform(text, font, size, x, base, color, extra = {}) {
   const m = ctx.measureText(text);
   // stand on the real tops of the letters, whatever the typeface
   const asc = m.actualBoundingBoxAscent || size * .66;
-  const p = { text, font, size, x, bx: x, dx: 0, w: m.width, base, top: base - asc, color, fragile, hold: 0, gone: false, goneT: 0, off: false, ...extra };
+  const p = { text, font, size, x, bx: x, dx: 0, w: m.width, base, top: base - asc, color, fragile, hold: 0, gone: false, goneT: 0, off: false, sec: curSec, ...extra };
   if (SOLFEGE[text]) p.note = SOLFEGE[text];
   plats.push(p);
   return p;
@@ -24,8 +26,8 @@ function row(words, [font, size, sep], y, color, extra) {
 }
 
 function layout() {
-  plats = []; deco = []; stars = []; checkpoints = []; props = [];
-  const f = LV.fonts, P = LV.pal;
+  plats = []; deco = []; stars = []; checkpoints = []; props = []; sections = []; curSec = -1;
+  let f = LV.fonts, P = LV.base ? LV.base.pal : LV.pal, film = null;
   let y = H * .42;
   for (const entry of LV.credits) {
     const [type, ...a] = entry;
@@ -33,8 +35,12 @@ function layout() {
     const extra = {};
     if (opt.blink) Object.assign(extra, { blink: opt.blink, phase: opt.phase || 0 });
     if (opt.sway) Object.assign(extra, { sway: opt.sway, phase: opt.phase || 0 });
-    if (type === '*') {
-      stars.push({ x: CX + a[0], y: y + a[1], got: false, banked: false });
+    if (type === 'film') {
+      // from here on the lines belong to another film
+      film = LEVELS.find(L => L.key === a[0]); f = film.fonts; P = film.pal;
+      curSec = sections.length; sections.push({ L: film, top: y + LINE * .45 - 60 });
+    } else if (type === '*') {
+      stars.push({ x: CX + a[0], y: y + a[1], got: false, banked: false, L: film });
     } else if (type === 'title') {
       // the title is separate words, the gaps between them are the first way down
       const { out, x0, ws } = row(a[0].split(' '), f.title, y, P.film, { glow: true });
@@ -61,22 +67,26 @@ function layout() {
       out.slice(0, -1).forEach(p => deco.push({ text: '·', font: p.font, x: p.x + p.w + f.list[2] / 2 - 3, base: y, color: P.dim }));
       y += LINE;
     } else if (type === 'end') {
-      // THE END stands apart from the rest of the credits
-      y += LINE * 2.6;
+      // THE END stands apart from the rest of the credits; in the ascent it is the first step up
+      y += LINE * (LV.rise ? 1 : 2.6);
       const { out } = row(a[0].split(' '), [f.end[0], f.end[1], 20 + f.end[1] * .3], y, P.film, { end: true, glow: true });
       endTop = Math.min(...out.map(p => p.top));
     }
   }
   // in the upside-down session the words of each line alternate between the two worlds
-  if (LV.hazard === 'flip') {
+  if (LV.hazard === 'flip' || LV.sections) {
     const rows = new Map();
-    for (const q of plats) if (!q.glow && !q.end) (rows.get(q.base) || rows.set(q.base, []).get(q.base)).push(q);
+    for (const q of plats) if (!q.glow && !q.end && (!LV.sections || sections[q.sec] && sections[q.sec].L.hazard === 'flip')) (rows.get(q.base) || rows.set(q.base, []).get(q.base)).push(q);
     for (const row of rows.values()) if (row.length > 1) row.sort((a, b) => a.x - b.x).forEach((q, i) => { q.world = i % 2 ? 'b' : 'a'; });
   }
   // decorations live in the margins, alternating sides
   let side = Math.random() < .5 ? 0 : 1;
-  for (let py = H * .42 + 170, i = 0; py < endTop - 60 && LV.props.length; py += 200 + Math.random() * 160, i++) {
+  const kindsAt = py => { if (!LV.sections) return LV.props; let k = []; for (const s of sections) if (py >= s.top) k = s.L.props; return k; };
+  for (let py = H * .42 + 170, i = 0; py < endTop - 60; py += 200 + Math.random() * 160, i++) {
+    const kinds = kindsAt(py);
+    if (!kinds.length) continue;
     side ^= 1;
-    props.push({ kind: LV.props[i % LV.props.length], x: side ? 482 + Math.random() * 28 : 30 + Math.random() * 28, y: py, s: .85 + Math.random() * .35, ph: Math.random() * 6, n: i, side });
+    props.push({ kind: kinds[i % kinds.length], x: side ? 482 + Math.random() * 28 : 30 + Math.random() * 28, y: py, s: .85 + Math.random() * .35, ph: Math.random() * 6, n: i, side });
   }
+  if (LV.rise) riseLayout();
 }

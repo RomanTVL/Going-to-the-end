@@ -1,7 +1,7 @@
 // ---------- the run: every session in a row, judged at the very end ----------
 const EVENING = LEVELS.filter(L => !L.extra).length;
-// kinds: evening (saved between visits) and marathon (one sitting)
-const RUN_KEY = { evening: 'gtte-run' };
+// kinds: evening and life (saved between visits), marathon and special (one sitting)
+const RUN_KEY = { evening: 'gtte-run', life: 'gtte-life' };
 const freshRun = (kind = 'evening') => ({ li: 0, res: [], v: 4, kind, deaths: [] });
 function loadRun(kind = 'evening') {
   const r = RUN_KEY[kind] && store.json(RUN_KEY[kind]);

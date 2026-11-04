@@ -10,8 +10,9 @@ function update(dt) {
   if (S.mode === 'clear' && S.gag) updateGag(dt);
   S.parts = S.parts.filter(q => (q.t += dt) < q.life);
   for (const q of S.parts) { q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 500 * dt; }
-  if (S.mode === 'cut') { S.cutT += dt; if (S.cutT > 1.45) respawn(); return; }
+  if (S.mode === 'cut') { S.cutT += dt; if (S.cutT > 1.45) { if (RUN.kind === 'life') lifeOver(); else respawn(); } return; }
   if (S.mode === 'intro') { if (S.modeT > (S.quick ? 1.6 : 3)) play(); return; }
+  if (S.mode === 'over') return;
   // in the marathon the next reel is threaded on its own
   if (S.mode === 'clear' && RUN.kind === 'marathon' && !S.mdone && S.modeT > 2.6) { nextFilm(); return; }
   if (S.mode === 'ending') { updateEnding(dt); return; }
@@ -83,7 +84,8 @@ function update(dt) {
   }
   if (p.ground && p.ground.end && S.mode === 'play') { finishLevel(); return; }
 
-  for (let i = S.cp + 1; i < checkpoints.length; i++) if (p.y > checkpoints[i].top) {
+  // checkpoints are passed going down; in the ascent, going up
+  for (let i = S.cp + 1; i < checkpoints.length; i++) if (LV.rise ? p.ground && p.y + PH <= checkpoints[i].top + 1 : p.y > checkpoints[i].top) {
     S.cp = i;
     for (const s of stars) if (s.got) s.banked = true;
     tone(523.3, 1.2, .1);
@@ -113,7 +115,7 @@ function update(dt) {
   const floor = H - (LV.hazard === 'water' ? S.water : 0);
   const chaseLine = Math.min(H * .68, floor - 120);
   const low = p.y - S.camY - chaseLine;
-  if (low > 0) S.camY = Math.min(S.camY + Math.min(low, 250 * dt), endTop - H * .6);
+  if (low > 0 && !LV.rise) S.camY = Math.min(S.camY + Math.min(low, 250 * dt), endTop - H * .6);
   const sy = p.y - S.camY;
   if (LV.hazard === 'rex' && S.rex.lunge > 0 && sy < jawDepth()) cut('Тебя съел тираннозавр');
   else if (sy + PH < -2) cut('Тебя унесло за верх кадра');

@@ -4,7 +4,7 @@ const CREW_COLORS = ['#c51111', '#132ed1', '#117f2d', '#ed54ba', '#ef7d0d', '#f5
 const TETRO = { I: [[0, 0], [1, 0], [2, 0], [3, 0]], O: [[0, 0], [1, 0], [0, 1], [1, 1]], T: [[0, 0], [1, 0], [2, 0], [1, 1]], S: [[1, 0], [2, 0], [0, 1], [1, 1]], Z: [[0, 0], [1, 0], [1, 1], [2, 1]], J: [[0, 0], [0, 1], [1, 1], [2, 1]], L: [[2, 0], [0, 1], [1, 1], [2, 1]] };
 const TCOL = { I: '#00e5ff', O: '#ffd400', T: '#b44cff', S: '#3ddc4a', Z: '#ff3b3b', J: '#2f6bff', L: '#ff9a1f' };
 const CELL = 18;
-const progress = () => clamp(S.camY / (endTop || 1), 0, 1);
+const progress = () => LV.rise ? riseProgress() : clamp(S.camY / (endTop || 1), 0, 1);
 const solid = q => !q.gone && !q.off && !(q.dust > 0) && (!q.world || q.world === S.world);
 const dotWorld = () => ({ x: S.p.x + PW / 2, y: S.p.y + PH / 2 });
 const dotScreen = () => ({ x: S.p.x + PW / 2, y: S.p.y + PH / 2 - S.camY });
@@ -79,7 +79,7 @@ const HZ = {
       if (p.x + PW < wx + 2 || p.x > wx + 18 || p.y + PH < wt || p.y > h.pl.top) return false;
       if (p.vy > 0 && S.prevBottom <= wt + 8) {
         h.alive = false; p.vy = -JUMP * .62; p.ground = null; p.coyote = 0;
-        sweep(400, 900, .15, .08); burst(wx + 10, wt + 6, 8, '#8b4a22', 110, 3);
+        sweep(400, 900, .15, .08); burst(wx + 10, wt + 6, 8, '#8b4a22', 110, 3); feat('stomp');
         return false;
       }
       return true;
@@ -189,6 +189,7 @@ const HZ = {
         h.alive = false; p.vy = -JUMP * .62; p.ground = null; p.coyote = 0;
         sweep(600, 200, .3, .08, 'triangle');
         S.floaters.push({ x: wx + 8, y: wt - 6, t: 0, text: h.imp ? 'был предателем' : 'не был предателем', col: h.imp ? CUT : '#9fe3ff' });
+        feat('eject', h.imp);
         return false;
       }
       return h.imp;
@@ -404,6 +405,7 @@ function updateSnap(dt) {
 }
 
 function updateHazards(dt) {
+  if (LV.sections && S.mode === 'play') sectionTick(dt);
   const type = LV.hazard, H_ = HZ[type];
   if (S.mode === 'play' && type === 'redlight') updateRedLight(dt);
   if (S.mode === 'play' && type === 'water') S.water = Math.min(330, S.water + (7 + 11 * progress()) * dt);

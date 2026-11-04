@@ -17,7 +17,7 @@ for (const f of list('src/js')) {
   if (f.endsWith('01-programme.js')) files.push(...list('src/levels'));
 }
 
-const HOOK = `window.__G = { S: () => S, keys, plats: () => plats, stars: () => stars, LEVELS, startLevel, RUN: () => RUN, menu, CHEAT,
+const HOOK = `window.__G = { S: () => S, keys, plats: () => plats, stars: () => stars, checkpoints: () => checkpoints, award, LEVELS, startLevel, RUN: () => RUN, menu, CHEAT,
   setTimeScale: v => { timeScale = v; }, noHaz: () => LEVELS.forEach(L => { L.hazard = null; L.oxygen = false; }) };`;
 
 let js = files.map(f => `// ===== ${f} =====\n${read(f)}`).join('\n');

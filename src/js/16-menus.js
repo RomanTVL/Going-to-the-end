@@ -1,4 +1,4 @@
-// ---------- menus: the programme, the marathon, the endings and the cheats ----------
+// ---------- menus: the programme, the modes, achievements, statistics, endings and cheats ----------
 const ENDINGS = [
   { key: 'full', name: 'The Beginning', how: 'Успей на всех сеансах и собери все звёзды' },
   { key: 'almost', name: 'Свет в зале', how: 'Успей везде и собери больше половины звёзд, но не все' },
@@ -12,14 +12,29 @@ const cheatGod = () => CHEAT.on && CHEAT.god;
 const menu = { screen: 'main', sel: 0, rows: [] };
 
 function menuItems() {
-  const seen = seenEndings();
+  const seen = seenEndings(), back = { label: 'Назад', act: () => go('main') };
   if (menu.screen === 'endings') return [
     ...ENDINGS.map(e => {
       const open = seen.includes(e.key);
       return { label: e.name, note: open ? 'смотреть' : CHEAT.on ? 'смотреть (читы)' : 'закрыта', sub: e.how, open, act: open || CHEAT.on ? () => replayEnding(e.key) : null };
     }),
-    { label: 'Назад', act: () => go('main') },
+    back,
   ];
+  if (menu.screen === 'modes') {
+    const life = loadRun('life'), lock = (open, how) => open ? null : how;
+    return [
+      { label: 'Марафон', sub: `Все ${EVENING} фильмов подряд на одних часах`, open: true, note: marathonBest() ? `рекорд ${fmt(marathonBest())}` : 'смотреть', act: startMarathon },
+      { label: 'Одна жизнь', sub: lock(lifeOpen(), 'Откроется после всех пяти концовок') || 'Весь вечер без единого дубля. Ошибся — всё сначала', open: lifeOpen(),
+        note: lifeDone() ? 'прожита' : life.li > 0 ? `сеанс ${life.li + 1}` : lifeOpen() ? 'смотреть' : 'закрыто', act: lifeOpen() ? startLife : null },
+      { label: `Сеанс ${EVENING + 1} · Все титры сразу`, sub: lock(mixOpen(), 'Откроется после первой концовки') || 'Секретный сеанс: титры всех фильмов вперемешку', open: mixOpen(),
+        note: store.get('gtte-mix-done') ? 'пройден' : mixOpen() ? 'смотреть' : 'закрыт', act: mixOpen() ? () => startExtra('mix') : null },
+      { label: 'Восхождение', sub: lock(riseOpen(), 'Откроется после секретного сеанса') || 'Вверх по титрам, пока снизу поднимается лава', open: riseOpen(),
+        note: store.get('gtte-rise-done') ? 'пройдено' : riseOpen() ? 'смотреть' : 'закрыто', act: riseOpen() ? () => startExtra('rise') : null },
+      ...(lifeDone() ? [{ label: 'Золотая точка', sub: 'Награда за прожитую одну жизнь', open: true, note: golden() ? 'вкл' : 'выкл', act: () => { store.set('gtte-gold', golden() ? '0' : '1'); GOLD = null; } }] : []),
+      back,
+    ];
+  }
+  if (menu.screen === 'ach' || menu.screen === 'stats') return [back];
   if (menu.screen === 'cheats') return [
     { label: 'Чит-режим', note: CHEAT.on ? 'вкл' : 'выкл', act: () => setCheat('on', !CHEAT.on) },
     { label: 'Снаряды не убивают', note: CHEAT.god ? 'да' : 'нет', act: () => setCheat('god', !CHEAT.god), dim: !CHEAT.on },
@@ -27,16 +42,22 @@ function menuItems() {
     { label: 'Любая концовка', note: '→', act: CHEAT.on ? () => go('endings') : null, dim: !CHEAT.on },
     { label: 'K во время сеанса — пропустить его', info: true, dim: !CHEAT.on },
     { label: 'Забег с читами не открывает концовки и рекорды', info: true, dim: true },
-    { label: 'Назад', act: () => go('main') },
+    back,
   ];
   if (menu.screen === 'levels') return [
-    ...LEVELS.map((L, i) => ({ label: L.name, lv: L, n: i + 1, act: () => { RUN = Object.assign(freshRun(), { li: i, cheat: true }); saveRun(); reelChange(() => startLevel(i)); } })),
+    ...LEVELS.map((L, i) => ({ label: L.name, lv: L, n: i + 1, act: () => {
+      if (L.extra) { startExtra(L.key); return; }
+      RUN = Object.assign(freshRun(), { li: i, cheat: true }); saveRun(); reelChange(() => startLevel(i));
+    } })),
     { label: 'Назад', act: () => go('cheats') },
   ];
+  const modesOpen = 1 + [lifeOpen(), mixOpen(), riseOpen()].filter(Boolean).length, gotAch = Object.keys(achGot()).length;
   return [
     { label: RUN.li > 0 ? `Продолжить вечер · сеанс ${RUN.li + 1}` : 'Начать вечер', act: () => { if (CHEAT.on) RUN.cheat = true; reelChange(() => startLevel(RUN.li)); } },
-    { label: 'Марафон', note: marathonBest() ? `рекорд ${fmt(marathonBest())}` : `все ${EVENING} подряд`, act: startMarathon },
+    { label: 'Режимы', note: `${modesOpen} / 4`, act: () => go('modes') },
+    { label: 'Достижения', note: `${gotAch} / ${ACH.length}`, act: () => { menu.page = 0; go('ach'); } },
     { label: 'Концовки', note: `${seen.length} / 5`, act: () => go('endings') },
+    { label: 'Статистика вечера', note: '→', act: () => go('stats') },
     { label: 'Читы', note: CHEAT.on ? 'вкл' : 'выкл', act: () => go('cheats') },
     { label: 'Полный экран', note: 'F', act: toggleFullscreen },
     ...(RUN.li > 0 ? [{ label: 'Новый забег', act: newRun }] : []),
@@ -61,9 +82,11 @@ function menuActivate(i = menu.sel) {
   if (it && it.act) { menu.sel = i; it.act(); }
 }
 function menuBack() { if (menu.screen === 'levels') go('cheats'); else if (menu.screen !== 'main') go('main'); }
+const mixOpen = () => seenEndings().length > 0 || CHEAT.on;
+const riseOpen = () => store.get('gtte-mix-done') === '1' || CHEAT.on;
 
 function replayEnding(key) {
-  startLevel(LEVELS.length - 1, 'ending');
+  startLevel(LEVELS.findIndex(L => L.final), 'ending');
   const e = plats.find(q => q.end);
   S.camY = endTop - H * .6;
   S.p.x = e.x + 30; S.p.y = e.top - PH; S.p.vy = 0;
@@ -84,16 +107,30 @@ function drawMenu(t) {
   ctx.shadowColor = 'rgba(255,240,210,.55)'; ctx.shadowBlur = 18;
   drawBeam(t, 1);
   for (const x of [8, W - 20]) { ctx.fillStyle = '#0d0b0c'; ctx.fillRect(x - 6, 0, 24, H); for (let y = ((t * .03) % 34) - 34; y < H; y += 34) { ctx.fillStyle = '#1e1a1b'; rr(x, y, 12, 18, 3); ctx.fill(); } }
-  const titles = { main: 'GOING TO THE END', endings: 'Концовки', cheats: 'Читы', levels: 'С какого сеанса' };
+  // the sprockets turn gold once one life has been lived
+  const gold = lifeDone();
+  for (const x of [8, W - 20]) for (let y = ((t * .03) % 34) - 34; y < H && gold; y += 34) { ctx.fillStyle = 'rgba(255,210,63,.35)'; rr(x, y, 12, 18, 3); ctx.fill(); }
+  const titles = { main: 'GOING TO THE END', endings: 'Концовки', cheats: 'Читы', levels: 'С какого сеанса', modes: 'Режимы', ach: 'Достижения', stats: 'Статистика вечера' };
   caption(titles[menu.screen], `600 ${menu.screen === 'main' ? 40 : 34}px ${SERIF}`, 74, film);
   ctx.shadowBlur = 0;
-  const subs = { main: `${LEVELS.length} сеансов. Один вечер. Одна жизнь.`, endings: 'Открытые можно пересмотреть. Под каждой — как её открыть.', cheats: 'Для тестов и просмотра концовок', levels: 'Тестовый забег, в рекорды не идёт' };
+  const st = menu.screen === 'stats' && store.json('gtte-laststats'), en = st && ENDINGS.find(e => e.key === st.ending);
+  const subs = { main: `${EVENING} сеансов. Один вечер. Одна жизнь.`, endings: 'Открытые можно пересмотреть. Под каждой — как её открыть.', cheats: 'Для тестов и просмотра концовок', levels: 'Тестовый забег, в рекорды не идёт',
+    modes: 'Другие способы провести вечер', ach: `Открыто ${Object.keys(achGot()).length} из ${ACH.length}`, stats: st ? `Последний вечер · ${en ? en.name : 'Одна жизнь'}` : 'Вечер ещё идёт' };
   caption(subs[menu.screen], `italic 500 ${menu.screen === 'main' ? 20 : 17}px ${SERIF}`, 104, dim);
 
-  const items = menuItems(), endings = menu.screen === 'endings', levels = menu.screen === 'levels';
+  const items = menuItems(), endings = menu.screen === 'endings' || menu.screen === 'modes', levels = menu.screen === 'levels';
   const rowH = endings ? 64 : levels ? 46 : 34, y0 = endings ? 140 : levels ? 140 : 146;
   menu.rows = [];
-  items.forEach((it, i) => {
+  // achievements and statistics draw their own page, with only the way back below it
+  const page = menu.screen === 'ach' || menu.screen === 'stats';
+  if (page) {
+    if (menu.screen === 'ach') drawAchievements(t); else drawStats(t);
+    const y = H - 52, sel = menu.sel === 0;
+    menu.rows.push({ x0: CX - 80, x1: CX + 80, y0: y - 22, y1: y + 8, i: 0 });
+    ctx.font = `500 21px ${SERIF}`; ctx.fillStyle = sel ? '#ffffff' : film; ctx.textAlign = 'center'; ctx.fillText('Назад', CX, y);
+    if (sel) { ctx.fillStyle = CUT; ctx.fillRect(CX - 44, y + 6, 88, 2); }
+  }
+  if (!page) items.forEach((it, i) => {
     if (levels) {
       // the sessions in three columns of nine, each with the film's own token
       const col = it.lv ? Math.floor(i / 9) : 0, row = it.lv ? i % 9 : 9, x = 30 + col * 166, y = y0 + row * rowH;
@@ -123,18 +160,19 @@ function drawMenu(t) {
 
   if (menu.screen === 'main') {
     // the evening's programme in three columns, with each film's token and this run's results
-    ctx.textAlign = 'center'; ctx.font = `500 10px ${MONO}`; ctx.fillStyle = dim; ctx.fillText('ПРОГРАММА ВЕЧЕРА', CX, 358);
-    LEVELS.forEach((L, i) => {
-      const col = Math.floor(i / 9), x = 30 + col * 166, y = 384 + (i % 9) * 24, r = RUN.res[i], cur = i === RUN.li;
+    const py = 146 + items.length * 34 + 4;
+    ctx.textAlign = 'center'; ctx.font = `500 10px ${MONO}`; ctx.fillStyle = dim; ctx.fillText('ПРОГРАММА ВЕЧЕРА', CX, py);
+    LEVELS.slice(0, EVENING).forEach((L, i) => {
+      const col = Math.floor(i / 9), x = 30 + col * 166, y = py + 22 + (i % 9) * 21, r = RUN.res[i], cur = i === RUN.li;
       ctx.globalAlpha = r || cur ? 1 : .5;
       ctx.save(); drawCollectible(x + 6, y - 5, t, L); ctx.restore();
       ctx.globalAlpha = r || cur ? 1 : .5;
-      ctx.textAlign = 'left'; ctx.font = `500 14px ${SERIF}`; ctx.fillStyle = cur ? CUT : r || cur ? film : dim; ctx.fillText(L.name, x + 20, y);
+      ctx.textAlign = 'left'; ctx.font = `500 13px ${SERIF}`; ctx.fillStyle = cur ? CUT : r || cur ? film : dim; ctx.fillText(L.name, x + 20, y);
       if (r) { circle(x + 156, y - 5, 3, r.t <= r.par ? '#b9f27c' : CUT); }
     });
     ctx.globalAlpha = 1;
   }
   ctx.textAlign = 'center';
-  caption('↑ ↓ — выбрать · ПРОБЕЛ или касание — открыть · ESC — назад', `500 10px ${MONO}`, H - 22, dim, .7);
+  caption(menu.screen === 'ach' ? '← → — листать · ESC — назад' : '↑ ↓ — выбрать · ПРОБЕЛ или касание — открыть · ESC — назад', `500 10px ${MONO}`, H - 22, dim, .7);
   if (CHEAT.on) caption('ЧИТ-РЕЖИМ', `500 10px ${MONO}`, 24, CUT, .9);
 }

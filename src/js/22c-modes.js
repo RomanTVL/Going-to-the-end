@@ -1,4 +1,4 @@
-// ---------- modes: reel changes between films and the marathon ----------
+// ---------- modes: reel changes between films, the marathon and one life ----------
 
 // ===== a reel change: the last frame is pulled up through the gate and the next reel runs in =====
 const reelShot = document.createElement('canvas');
@@ -61,10 +61,70 @@ function marathonStep() {
     got: r.reduce((s, x) => s + x.got, 0), total: r.reduce((s, x) => s + x.total, 0), best: +store.get('gtte-marathon-best') || 0,
   };
   if (!RUN.cheat && (!M.best || M.time < M.best)) { store.set('gtte-marathon-best', M.time.toFixed(2)); M.record = true; }
+  onMarathon(M);
 }
 // the clock the marathon runs on: every finished film plus the one on screen
 function marathonTime() { let s = S.time; for (let i = 0; i < S.li; i++) if (RUN.res[i]) s += RUN.res[i].t; return s; }
 function nextFilm() { reelChange(() => startLevel(RUN.li, 'intro')); }
+
+// ===== one life: a single retake ends the evening =====
+const lifeOpen = () => seenEndings().length >= ENDINGS.length || CHEAT.on;
+const lifeDone = () => store.get('gtte-life-done') === '1';
+let GOLD = null;
+const golden = () => GOLD !== null ? GOLD : (GOLD = lifeDone() && store.get('gtte-gold') !== '0');
+function startLife() {
+  RUN = loadRun('life');
+  if (CHEAT.on) RUN.cheat = true;
+  reelChange(() => startLevel(RUN.li, 'intro'));
+}
+function lifeOver() {
+  S.mode = 'over'; S.modeT = 0; S.lostAt = S.li;
+  RUN = freshRun('life'); saveRun();
+  [392, 330, 262, 196].forEach((f, i) => tone(f, 1.6, .08, i * .35));
+  hud();
+}
+function drawOver() {
+  const T = S.modeT, k = clamp(T / 1.2, 0, 1);
+  ctx.globalAlpha = 1; ctx.fillStyle = `rgba(0,0,0,${.95 * k})`; ctx.fillRect(0, 0, W, H);
+  lines(T, [
+    [.6, 'Одна жизнь.', `italic 600 40px ${SERIF}`, H * .34],
+    [1.6, `Она оборвалась на сеансе ${S.lostAt + 1}:`, `italic 500 21px ${SERIF}`, H * .34 + 46],
+    [2.0, `«${LEVELS[S.lostAt].name}».`, `italic 500 21px ${SERIF}`, H * .34 + 74],
+    [2.6, S.cutWhy.toUpperCase(), `500 12px ${MONO}`, H * .34 + 112, '#8e877c'],
+    [3.6, MOTTO, `600 22px ${MONO}`, H * .34 + 180, CUT],
+    [4.6, 'ПРОБЕЛ — В МЕНЮ', `500 12px ${MONO}`, H - 60, '#8e877c'],
+  ], '#efe8dc');
+}
+
+// the ending for a whole evening lived without a single retake
+Object.assign(ENDING_LEN, { life: 12 });
+function updateLifeEnding() {
+  [0, 4, 7, 11, 14, 19].forEach((s, i) => cue('gold' + i, .4 + i * .35, () => tone(293.7 * Math.pow(2, s / 12), 2.4, .07)));
+  cue('bell', 3.2, () => [0, 7, 12, 16].forEach((s, i) => tone(146.8 * Math.pow(2, s / 12), 4, .06, i * .12)));
+}
+function drawLifeEnding(t, T) {
+  const d = S.endDot, k = ease(clamp(T / 3, 0, 1));
+  // the frame turns to gold and the dot rises into the light it came from
+  ctx.fillStyle = `rgba(0,0,0,${.6 * clamp(T, 0, 1)})`; ctx.fillRect(0, 0, W, H);
+  const g = ctx.createRadialGradient(CX, H * .3, 10, CX, H * .3, H);
+  g.addColorStop(0, `rgba(255,236,170,${k})`); g.addColorStop(.5, `rgba(200,140,40,${.9 * k})`); g.addColorStop(1, `rgba(40,22,6,${k})`);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  if (!REDUCED) for (let i = 0; i < 70; i++) {
+    const x = (i * 97.3) % W, y = H - ((t * (.03 + (i % 5) * .012) + i * 61) % (H + 40));
+    ctx.globalAlpha = .25 + .5 * k * ((i % 3) / 3); circle(x, y, 1 + (i % 3), '#fff2c4');
+  }
+  ctx.globalAlpha = 1;
+  const r = ease(clamp((T - 1) / 4, 0, 1)), x = d.x + (CX - d.x) * r, y = d.y + (H * .3 - d.y) * r;
+  ctx.shadowColor = '#ffd76a'; ctx.shadowBlur = 20 + 40 * r; circle(x, y, 6 + 10 * r, '#fff8e0'); ctx.shadowBlur = 0;
+  lines(T, [
+    [4.2, 'Одна жизнь.', `italic 600 40px ${SERIF}`, H * .5],
+    [5.4, 'Ты её прожил.', `italic 600 34px ${SERIF}`, H * .5 + 44],
+    [6.8, 'Ни одного дубля. Ни одного «ещё раз».', `italic 500 20px ${SERIF}`, H * .5 + 86],
+    [8.2, MOTTO, `600 22px ${MONO}`, H * .5 + 140, '#7a3a06'],
+    [9.2, 'ТВОЯ ТОЧКА ТЕПЕРЬ ЗОЛОТАЯ', `500 12px ${MONO}`, H * .5 + 172, '#7a3a06'],
+  ], '#2a1606');
+  endingStats(T, 10, '#5a3a16');
+}
 
 // ===== cards drawn over a finished film in the special modes =====
 function drawMarathonClear() {

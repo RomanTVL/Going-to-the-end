@@ -15,7 +15,8 @@ function drawIntro() {
   ctx.fillStyle = '#efe8dc'; ctx.globalAlpha = .06 * k;
   ctx.beginPath(); ctx.moveTo(CX, cy); ctx.arc(CX, cy, 170, -Math.PI / 2, -Math.PI / 2 + sw * PI2); ctx.closePath(); ctx.fill();
   ctx.globalAlpha = .1 * k; ctx.font = `600 220px ${SERIF}`; ctx.textBaseline = 'middle'; ctx.fillText(String(n), CX, cy + 10); ctx.textBaseline = 'alphabetic';
-  caption(`${RUN.kind === 'marathon' ? `МАРАФОН · ${fmt(marathonTime())} · ` : ''}СЕАНС ${S.li + 1} ИЗ ${EVENING}`, `500 12px ${MONO}`, H * .33, RUN.kind === 'marathon' ? '#ffd23f' : '#8e877c', k);
+  const tag = RUN.kind === 'marathon' ? `МАРАФОН · ${fmt(marathonTime())} · ` : RUN.kind === 'life' ? 'ОДНА ЖИЗНЬ · ' : '';
+  caption(LV.extra ? LV.tag : `${tag}СЕАНС ${S.li + 1} ИЗ ${EVENING}`, `500 12px ${MONO}`, H * .33, tag || LV.extra ? '#ffd23f' : '#8e877c', k);
   ctx.shadowColor = LV.pal.accent; ctx.shadowBlur = 20;
   caption(LV.name, LV.fonts.head[0], H * .33 + 50, LV.pal.light ? '#ffffff' : LV.pal.film, k);
   ctx.shadowBlur = 0;
@@ -30,7 +31,7 @@ function introHint() {
     bludger: 'бладжеры отскакивают от краёв', chaser: 'не дай себя догнать', code: 'красный код падает столбами сверху', water: 'вода поднимается снизу',
     double: 'не стой на месте: ты догонишь себя', crew: 'предатель вспыхивает красным, прыжок сверху выкидывает', tetro: 'упавшая фигура становится платформой',
     flip: 'гирлянда мигает — сейчас перевернётся', rex: 'стакан дрожит — сейчас подбросит', dark: 'на свету они замирают', snap: 'перчатка светится — половина слов исчезнет', host: 'черепа плюются слезами крестом', leviathan: 'хватай пузыри, в воде можно грести прыжком',
-  }[LV.hazard] || (MECH[LV.hazard] && MECH[LV.hazard].hint) || 'дойди до конца';
+  }[LV.hazard] || LV.hint || (MECH[LV.hazard] && MECH[LV.hazard].hint) || 'дойди до конца';
 }
 
 // a frame stuck in the gate melts from the dot outward, then the slate
@@ -61,6 +62,7 @@ function drawCut() {
 
 function drawClear() {
   if (RUN.kind === 'marathon') { drawMarathonClear(); return; }
+  if (LV.extra) { drawExtraClear(); return; }
   const T = S.modeT, r = RUN.res[S.li];
   if (T < 1.1 || !r) return;
   const k = clamp((T - 1.1) / .8, 0, 1), ok = r.t <= r.par;

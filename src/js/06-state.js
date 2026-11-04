@@ -4,6 +4,8 @@ const keys = { left: false, right: false, jump: false };
 
 function startLevel(i, mode = 'intro') {
   LV = LEVELS[i];
+  // the secret session changes its own look as it goes; start it from the top
+  if (LV.base) Object.assign(LV, LV.base);
   layout();
   const cp = checkpoints[0];
   S = {
@@ -15,6 +17,7 @@ function startLevel(i, mode = 'intro') {
     world: 'a', flipT: 3.4, rex: { next: 2.6, n: 0, warn: 0, lungeAt: 0, lunge: 0 }, night: freshNight(), snapT: 4, ripples: [], floaters: [], gag: null,
     p: { x: cp.x - PW / 2, y: cp.top - PH, vx: 0, vy: 0, ground: null, coyote: 0, buffer: 0, trail: [], squash: 0 },
   };
+  if (LV.sections) { S.sec = null; sectionTick(0); }
   mech('reset');
   hud();
 }
@@ -76,6 +79,7 @@ function respawn() {
   S.camY = Math.max(0, cp.top - H * .4);
   Object.assign(S.p, { x: cp.x - PW / 2, y: cp.top - PH, vx: 0, vy: 0, ground: null, coyote: 0, buffer: 0, trail: [], squash: 0 });
   S.mode = 'play';
+  if (LV.sections) { S.sec = null; sectionTick(0); }
   if (LV.hazard === 'redlight') greenLight();
   mech('reset');
   hud();
@@ -88,6 +92,7 @@ function cut(why) {
   S.mode = 'cut'; S.cutT = 0; S.cutWhy = why; S.take++;
   // where and why: for the evening's statistics and the death map
   if (RUN.deaths) RUN.deaths.push([S.li, +dotFrac().toFixed(3), why]);
+  onDeath();
   S.burn = { x: S.p.x + PW / 2, y: clamp(S.p.y - S.camY, 0, H) };
   noise(.5, .45, 900, 'lowpass');
   noise(.05, .3, 3000);
@@ -104,16 +109,25 @@ function finishLevel() {
     store.set('gtte-ghost-' + LV.key, JSON.stringify(S.rec));
   }
   RUN.res[S.li] = r;
+  onFilmDone(r, best);
+  if (LV.extra) { finishSpecial(r); hud(); return; }
   if (RUN.kind === 'marathon') { marathonStep(); hud(); return; }
   if (LV.final) {
     S.mode = 'ending'; S.modeT = 0; S.ending = judge();
+    // a whole evening without a single retake is its own ending
+    if (RUN.kind === 'life') S.ending = 'life';
     S.endDot = { x: S.p.x + PW / 2, y: S.p.y + PH / 2 - S.camY };
     // a run with cheats does not open endings, so the list in the menu stays honest
     if (!RUN.cheat) {
-      const seen = seenEndings();
-      if (!seen.includes(S.ending)) store.set('gtte-endings', JSON.stringify([...seen, S.ending]));
-      store.set('gtte-summary-' + S.ending, JSON.stringify(S.summary));
+      if (S.ending === 'life') { store.set('gtte-life-done', '1'); GOLD = null; }
+      else {
+        const seen = seenEndings();
+        if (!seen.includes(S.ending)) store.set('gtte-endings', JSON.stringify([...seen, S.ending]));
+        store.set('gtte-summary-' + S.ending, JSON.stringify(S.summary));
+      }
+      store.set('gtte-laststats', JSON.stringify({ res: RUN.res, deaths: RUN.deaths, ending: S.ending }));
     }
+    onEnding(S.ending);
     RUN = freshRun(RUN.kind);
   } else {
     S.mode = 'clear'; S.modeT = 0;

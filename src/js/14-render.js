@@ -96,7 +96,7 @@ function render(t) {
   for (const s of stars) {
     if (s.got || s.y - cam < -30 || s.y - cam > H + 30) continue;
     ctx.globalAlpha = (.8 + .2 * Math.sin(t * .006 + s.y)) * (1 - fade);
-    drawCollectible(s.x, s.y + (REDUCED ? 0 : Math.sin(t * .003 + s.x) * 2.5), t);
+    drawCollectible(s.x, s.y + (REDUCED ? 0 : Math.sin(t * .003 + s.x) * 2.5), t, s.L || LV);
   }
   ctx.globalAlpha = 1;
 
@@ -151,10 +151,12 @@ function render(t) {
     // the dot: a soft halo tinted by the film, a hot core; a red heart in the film about mercy
     const sq = p.squash, cx = p.x + PW / 2, cy = p.y + PH / 2 + sq * 2;
     if (LV.soulHeart) drawSoul(cx, cy); else {
-    const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, 24);
-    halo.addColorStop(0, P.light ? 'rgba(255,255,255,.55)' : 'rgba(255,246,225,.42)'); halo.addColorStop(.45, hexA(P.accent, .14)); halo.addColorStop(1, hexA(P.accent, 0));
-    ctx.fillStyle = halo; ctx.fillRect(cx - 24, cy - 24, 48, 48);
-    ctx.shadowColor = P.light ? 'rgba(0,0,0,.5)' : '#fff3d6'; ctx.shadowBlur = 16; ctx.fillStyle = '#fffaf0';
+    // after one life has been lived, the dot is gold
+    const gold = golden(), tint = gold ? '#ffc93a' : P.accent;
+    const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, gold ? 30 : 24);
+    halo.addColorStop(0, gold ? 'rgba(255,214,100,.6)' : P.light ? 'rgba(255,255,255,.55)' : 'rgba(255,246,225,.42)'); halo.addColorStop(.45, hexA(tint, gold ? .25 : .14)); halo.addColorStop(1, hexA(tint, 0));
+    ctx.fillStyle = halo; ctx.fillRect(cx - 30, cy - 30, 60, 60);
+    ctx.shadowColor = gold ? '#ffb300' : P.light ? 'rgba(0,0,0,.5)' : '#fff3d6'; ctx.shadowBlur = 16; ctx.fillStyle = gold ? '#ffd23f' : '#fffaf0';
     ctx.beginPath(); ctx.ellipse(cx, cy, 5 * (1 + .45 * sq), 5 * (1 - .4 * sq), 0, 0, PI2); ctx.fill();
     ctx.shadowBlur = 0; ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(cx - 1.2, cy - 1.4, 1.6, 0, PI2); ctx.fill();
     }
@@ -172,6 +174,7 @@ function render(t) {
   if (S.mode !== 'ending') mech('draw', t);
   if (S.mode === 'clear' && S.gag) drawGagScreen(t);
   drawGrade();
+  if (S.splice > 0) drawSplice();
   if (LV.sepia) { ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = 'rgba(190,140,80,.35)'; ctx.fillRect(0, 0, W, H); ctx.restore(); }
 
   // frame edges warm up red as you drift towards them
@@ -187,6 +190,7 @@ function render(t) {
   finish(t, P.light);
   if (S.mode === 'intro') drawIntro();
   if (S.mode === 'cut') drawCut();
+  if (S.mode === 'over') drawOver();
   if (S.mode === 'clear') drawClear();
   if (S.mode === 'pause') {
     ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(0, 0, W, H);

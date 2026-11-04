@@ -6,6 +6,7 @@ function frame(t) {
   acc = Math.min(acc + Math.max(0, (t - last) / 1000) * timeScale, .1); last = t;
   while (acc >= STEP) { update(STEP); acc -= STEP; }
   render(t);
+  drawToasts(t);
   const sec = Math.floor(S.time);
   if (sec !== lastSec) { lastSec = sec; timer(); }
   requestAnimationFrame(frame);
