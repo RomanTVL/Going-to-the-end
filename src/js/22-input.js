@@ -49,7 +49,7 @@ addEventListener('keydown', e => {
   }
   if (S.mode === 'ending' && S.replay && ch === 'Escape') { toMenu('endings'); return; }
   // leaving the marathon halfway: back to the menu from the pause
-  if (S.mode === 'pause' && RUN.kind === 'marathon' && (ch === 'q' || ch === 'й')) { toMenu(); return; }
+  if (S.mode === 'pause' && (ch === 'q' || ch === 'й')) { leaveFilm(); return; }
   if ((ch === 'k' || ch === 'л') && CHEAT.on && S.mode === 'play') { RUN.cheat = true; finishLevel(); return; }
   if (ch === 'p' || ch === 'з' || ch === 'Escape') { e.preventDefault(); togglePause(); return; }
   const k = keyOf(e);
@@ -77,8 +77,18 @@ cv.addEventListener('pointerdown', e => {
     if (row) { audioInit(); if (row.i < 0) achFlip(row.i === -1 ? -1 : 1); else menuActivate(row.i); }
     return;
   }
+  if (S.mode === 'pause') {
+    const r = cv.getBoundingClientRect(), y = (e.clientY - r.top) / r.height * H, x = (e.clientX - r.left) / r.width * W, b = PAUSE_BTN;
+    if (x >= b.x0 && x <= b.x1 && y >= b.y0 && y <= b.y1) { leaveFilm(); return; }
+  }
   if (S.mode !== 'play' && S.mode !== 'cut') press('jump');
 });
+// leaving a film from the pause: the evening keeps its saved place and the film starts over next time;
+// in one life, walking out ends that life
+function leaveFilm() {
+  if (RUN.kind === 'life') { RUN = freshRun('life'); saveRun(); toMenu('modes'); return; }
+  toMenu(RUN.kind === 'special' ? 'modes' : 'main');
+}
 for (const b of $('pads').querySelectorAll('button')) {
   const k = b.dataset.k;
   const down = e => { e.preventDefault(); keys[k] = true; b.classList.add('on'); press(k); };

@@ -14,7 +14,7 @@ function drawText(pl, alpha, dy = 0, jitter = 0) {
   // cartoon films wobble like rubber, the neon film splits its colours like a worn tape
   if (LV.wobble) dy += Math.sin(performance.now() * .004 + pl.x * .05) * 1.6;
   if (LV.pal.shadow) { ctx.fillStyle = LV.pal.shadow; ctx.fillText(pl.text, pl.x + jitter + 2, pl.base + dy + 2); }
-  if (LV.chroma) { const a0 = ctx.globalAlpha; ctx.globalAlpha = a0 * .55; ctx.fillStyle = '#ff2ad8'; ctx.fillText(pl.text, pl.x + jitter - 1.6, pl.base + dy); ctx.fillStyle = '#00f0ff'; ctx.fillText(pl.text, pl.x + jitter + 1.6, pl.base + dy); ctx.globalAlpha = a0; }
+  if (LV.chroma) { const a0 = ctx.globalAlpha; ctx.globalAlpha = a0 * .55; ctx.fillStyle = '#ff2ad8'; ctx.fillText(pl.text, pl.x + jitter - 1, pl.base + dy); ctx.fillStyle = '#00f0ff'; ctx.fillText(pl.text, pl.x + jitter + 1, pl.base + dy); ctx.globalAlpha = a0; }
   if (LV.pal.outline && (pl.glow || pl.size >= 26)) {
     // red outlined titles, the way that show sets its name
     ctx.shadowColor = LV.pal.outline; ctx.shadowBlur = 12; ctx.strokeStyle = LV.pal.outline; ctx.lineWidth = 1.6;
@@ -23,6 +23,15 @@ function drawText(pl, alpha, dy = 0, jitter = 0) {
   }
   ctx.fillStyle = pl.color;
   ctx.fillText(pl.text, pl.x + jitter, pl.base + dy);
+}
+// lines of text centred on the frame; a fifth item draws a button frame around the line
+const PAUSE_BTN = { x0: CX - 150, x1: CX + 150, y0: H / 2 + 42, y1: H / 2 + 78 };
+function drawWords(c, words) {
+  c.textAlign = 'center'; c.textBaseline = 'alphabetic'; c.globalAlpha = 1;
+  for (const [text, font, y, color, box] of words) {
+    c.font = font; c.fillStyle = color; c.fillText(text, CX, y);
+    if (box) { c.strokeStyle = 'rgba(239,232,220,.55)'; c.lineWidth = 1.2; c.strokeRect(PAUSE_BTN.x0 + .5, PAUSE_BTN.y0 + .5, PAUSE_BTN.x1 - PAUSE_BTN.x0, PAUSE_BTN.y1 - PAUSE_BTN.y0); }
+  }
 }
 function caption(text, font, y, color, alpha = 1) {
   ctx.globalAlpha = alpha; ctx.font = font; ctx.fillStyle = color; ctx.fillText(text, CX, y); ctx.globalAlpha = 1;
@@ -194,10 +203,10 @@ function render(t) {
   if (S.mode === 'clear') drawClear();
   if (S.mode === 'pause') {
     ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(0, 0, W, H);
-    const words = [['Пауза', `italic 500 44px ${SERIF}`, H / 2 - 6, '#efe8dc'], ['ПЛЁНКА ОСТАНОВЛЕНА · P — ПРОДОЛЖИТЬ', `500 12px ${MONO}`, H / 2 + 24, '#8e877c']];
-    if (RUN.kind === 'marathon') words.push(['Q — ВЫЙТИ ИЗ МАРАФОНА', `500 12px ${MONO}`, H / 2 + 48, '#8e877c']);
+    const words = [['Пауза', `italic 500 44px ${SERIF}`, H / 2 - 16, '#efe8dc'], ['ПЛЁНКА ОСТАНОВЛЕНА · P — ПРОДОЛЖИТЬ', `500 12px ${MONO}`, H / 2 + 14, '#8e877c'],
+      [RUN.kind === 'life' ? 'В МЕНЮ · Q · ЖИЗНЬ ЗАКОНЧИТСЯ' : 'В МЕНЮ · Q', `500 13px ${MONO}`, PAUSE_BTN.y1 - 12, '#efe8dc', true]];
     // with the blur on, the words go on a layer above it, so they stay sharp
-    if (!fxPauseWords(words)) for (const w of words) caption(...w);
+    if (!fxPauseWords(words)) drawWords(ctx, words);
   }
   drawReel(t);
 }

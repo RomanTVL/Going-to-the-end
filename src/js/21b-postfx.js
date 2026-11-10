@@ -13,7 +13,7 @@ const FX_PRESETS = {
   wizard: { bloom: .7, thresh: .5 }, wanted: { bloom: .7, thresh: .5, aberr: .3 }, dino: { bloom: .4, thresh: .7 },
   deep: { bloom: .65, thresh: .5 }, basement: { aberr: .35 }, hell: { bloom: .95, thresh: .48, aberr: .3 },
   night: { bloom: .55, aberr: .35 }, chomp: { bloom: .75, thresh: .5, crt: .6 }, snap: { bloom: .65, thresh: .5 },
-  neon: { bloom: 1.05, thresh: .42, aberr: 1, vhs: 1 }, code: { bloom: .8, thresh: .48, aberr: .55, vhs: .45 },
+  neon: { bloom: .75, thresh: .5, aberr: .3, vhs: .45 }, code: { bloom: .7, thresh: .5, aberr: .3, vhs: .3 },
   liner: { bloom: .5, thresh: .6 }, end: { bloom: .55, thresh: .55 }, rise: { bloom: .95, thresh: .5, aberr: .35 },
 };
 const FX = {
@@ -29,7 +29,7 @@ function fxPauseWords(words) {
   const c = fxUiCtx;
   c.setTransform(DPR, 0, 0, DPR, 0, 0); c.clearRect(0, 0, W, H);
   c.textAlign = 'center'; c.textBaseline = 'alphabetic';
-  for (const [text, font, y, color] of words) { c.font = font; c.fillStyle = color; c.fillText(text, CX, y); }
+  drawWords(c, words);
   FX.uiFresh = true;
   return true;
 }
@@ -64,12 +64,12 @@ void main() {
   if (uVhs > 0.) {
     // the tape wanders a little line by line, and a thin glitch band rolls down the frame
     float line = floor(uv.y * uLines);
-    uv.x += (rnd(vec2(line, floor(uTime * 24.))) - .5) * .003 * uVhs * uJitter;
+    uv.x += (rnd(vec2(line, floor(uTime * 24.))) - .5) * .0015 * uVhs * uJitter;
     float band = 1. - smoothstep(0., .012, abs(uv.y - fract(uTime * .11)));
-    uv.x += band * .018 * uVhs * uJitter * sin(uTime * 37. + uv.y * 90.);
+    uv.x += band * .012 * uVhs * uJitter * sin(uTime * 37. + uv.y * 90.);
   }
   vec2 c = uv - .5;
-  vec2 off = c * dot(c, c) * uAberr * .07 + vec2(uVhs * .0018, 0.);
+  vec2 off = c * dot(c, c) * uAberr * .07 + vec2(uVhs * .001, 0.);
   vec3 col = vec3(texture2D(uSrc, uv + off).r, texture2D(uSrc, uv).g, texture2D(uSrc, uv - off).b);
   vec3 blur = texture2D(uBloom, vFb).rgb;
   col = mix(col, blur * .85 + .015, uPause * .9);
