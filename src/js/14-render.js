@@ -194,9 +194,10 @@ function render(t) {
   if (S.mode === 'clear') drawClear();
   if (S.mode === 'pause') {
     ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(0, 0, W, H);
-    caption('Пауза', `italic 500 44px ${SERIF}`, H / 2 - 6, '#efe8dc');
-    caption('ПЛЁНКА ОСТАНОВЛЕНА · P — ПРОДОЛЖИТЬ', `500 12px ${MONO}`, H / 2 + 24, '#8e877c');
-    if (RUN.kind === 'marathon') caption('Q — ВЫЙТИ ИЗ МАРАФОНА', `500 12px ${MONO}`, H / 2 + 48, '#8e877c');
+    const words = [['Пауза', `italic 500 44px ${SERIF}`, H / 2 - 6, '#efe8dc'], ['ПЛЁНКА ОСТАНОВЛЕНА · P — ПРОДОЛЖИТЬ', `500 12px ${MONO}`, H / 2 + 24, '#8e877c']];
+    if (RUN.kind === 'marathon') words.push(['Q — ВЫЙТИ ИЗ МАРАФОНА', `500 12px ${MONO}`, H / 2 + 48, '#8e877c']);
+    // with the blur on, the words go on a layer above it, so they stay sharp
+    if (!fxPauseWords(words)) for (const w of words) caption(...w);
   }
   drawReel(t);
 }

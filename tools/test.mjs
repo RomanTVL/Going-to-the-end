@@ -3,7 +3,8 @@
 // 1. every film fits the frame and has stars and THE END;
 // 2. a bot plays every film (hazards off unless --hazards) and must reach THE END;
 //    in the ascent a second bot climbs up to the title instead;
-// 3. the menus open.
+// 3. the WebGL effects start and draw;
+// 4. the menus open.
 // Exits with code 1 if anything fails.
 import { createRequire } from 'node:module';
 import { join, dirname } from 'node:path';
@@ -63,8 +64,11 @@ function climber() {
   }, 16);
 }
 
-async function openGame(browser) {
+// the bots play with the WebGL effects off: they change nothing in the game, and software GL in
+// several windows at once slows the frames enough to throw the bots off; the menu page keeps them on
+async function openGame(browser, fx = false) {
   const page = await browser.newPage();
+  if (!fx) await page.addInitScript(() => localStorage.setItem('gtte-fx', 'off'));
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   await page.goto(url);
@@ -74,7 +78,7 @@ async function openGame(browser) {
 }
 
 const browser = await chromium.launch();
-const { page, errors } = await openGame(browser);
+const { page, errors } = await openGame(browser, true);
 
 // 1. layout
 const layout = await page.evaluate(() => __G.LEVELS.map((L, i) => {
@@ -138,7 +142,20 @@ for (const l of layout.filter(l => l.rise && (!wanted || wanted.split(',').map(N
   await game.page.close();
 }
 
-// 3. menus
+// 3. the effects: WebGL starts and draws a few films in every quality without errors
+const fx = await page.evaluate(async () => {
+  const seen = [];
+  for (const m of ['high', 'low', 'off', 'high']) for (const i of [0, 21, 22]) {
+    __G.setFxMode(m); __G.startLevel(i, 'intro');
+    await new Promise(r => setTimeout(r, 150));
+    seen.push(__G.FX.mode);
+  }
+  return { ok: __G.FX.ok, mode: __G.FX.mode, frames: seen.length };
+});
+console.log(`effects: WebGL ${fx.ok ? 'on' : 'unavailable'}, ${fx.frames} films drawn`);
+if (!fx.ok) console.log('  (no WebGL in this browser: the game falls back to the plain canvas)');
+
+// 4. menus
 await page.evaluate(() => { __G.startLevel(0, 'menu'); });
 for (const screen of ['endings', 'cheats', 'levels', 'modes', 'ach', 'stats', 'options', 'main']) {
   await page.evaluate(s => { __G.menu.screen = s; __G.menu.sel = 0; }, screen);

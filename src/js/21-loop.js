@@ -7,6 +7,7 @@ function frame(t) {
   while (acc >= STEP) { update(STEP); acc -= STEP; }
   render(t);
   drawToasts(t);
+  postfx(t);
   const sec = Math.floor(S.time);
   if (sec !== lastSec) { lastSec = sec; timer(); }
   requestAnimationFrame(frame);

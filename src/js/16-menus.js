@@ -39,6 +39,8 @@ function menuItems() {
     { label: 'Полный экран', note: 'F', act: toggleFullscreen },
     { label: 'Звук', note: AU.muted ? 'выкл' : 'вкл', act: () => setMute(!AU.muted) },
     { label: 'Музыка', note: MUS.on ? 'вкл' : 'выкл', act: () => setMusic(!MUS.on) },
+    { label: 'Эффекты', note: FX.ok ? FX_NAMES[FX.mode] : 'нет WebGL', act: FX.ok ? () => setFxMode({ high: 'low', low: 'off', off: 'high' }[FX.mode]) : null },
+    { label: 'Свечение, разводы цвета, плёнка VHS. Низкие — без свечения', info: true, dim: true },
     back,
   ];
   if (menu.screen === 'cheats') return [
