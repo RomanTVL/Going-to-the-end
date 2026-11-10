@@ -39,8 +39,6 @@ function menuItems() {
     { label: 'Полный экран', note: 'F', act: toggleFullscreen },
     { label: 'Звук', note: AU.muted ? 'выкл' : 'вкл', act: () => setMute(!AU.muted) },
     { label: 'Музыка', note: MUS.on ? 'вкл' : 'выкл', act: () => setMusic(!MUS.on) },
-    { label: 'Рассказчик', note: NAR.on ? 'вкл' : 'выкл', act: () => { NAR.on = !NAR.on; store.set('gtte-narrator', NAR.on ? '1' : '0'); if (NAR.on) say('hello', { force: true }); else narrStop(); } },
-    { label: hasVoice() ? 'Рассказчик говорит голосом, без субтитров' : 'Голос ещё не записан: пока рассказчик молчит', info: true, dim: true },
     back,
   ];
   if (menu.screen === 'cheats') return [

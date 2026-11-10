@@ -130,7 +130,6 @@ MECH.rise = {
     const gap = S.lava - (p.y + PH);
     S.lava -= (24 + 22 * prog) * (gap > H * .36 ? 3 : 1) * dt;
     if (p.y + PH > S.lava - 2) { cut('Тебя догнала лава'); return; }
-    if (gap < 80) say('rise.lava', { cool: 16 });
     // everything you stand on gives way
     const g = p.ground;
     if (g && !g.start && !g.end) {
