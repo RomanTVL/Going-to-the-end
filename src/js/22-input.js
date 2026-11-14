@@ -39,6 +39,8 @@ const keyOf = e => MAP[e.key.length === 1 ? e.key.toLowerCase() : e.key];
 addEventListener('keydown', e => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   const ch = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+  // the save code dialog takes the keyboard while it is open
+  if (saveBoxOpen()) { if (ch === 'Escape') closeSaveBox(); return; }
   if (ch === 'm' || ch === 'ь') { setMute(!AU.muted); return; }
   if (ch === 'n' || ch === 'т') { setMusic(!MUS.on); return; }
   if (ch === 'f' || ch === 'а' || ch === 'F11') { e.preventDefault(); toggleFullscreen(); return; }

@@ -51,6 +51,15 @@ body {
 canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 /* the WebGL copy of the frame sits on top; taps go through to the game canvas below */
 canvas.fx { position: absolute; inset: 0; pointer-events: none; visibility: hidden; }
+/* the save code dialog, over the screen */
+.savebox { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; justify-content: center; gap: 12px; padding: 8%; background: rgba(5,4,5,.94); }
+.savebox[hidden] { display: none; }
+.savetitle { margin: 0; font: 600 28px "Cormorant Garamond", Georgia, serif; color: var(--film); text-align: center; }
+.savebox textarea { height: 34%; resize: none; padding: 10px; background: #0d0b0c; color: var(--film); border: 1px solid #3a3234; font: 12px/1.4 "IBM Plex Mono", ui-monospace, monospace; word-break: break-all; }
+#savemsg { margin: 0; min-height: 2.8em; color: var(--dim); font-size: 12px; text-align: center; }
+.saverow { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.saverow button { font: 500 11px "IBM Plex Mono", ui-monospace, monospace; letter-spacing: .16em; text-transform: uppercase; color: var(--film); background: none; border: 1px solid #4a4144; padding: 9px 14px; cursor: pointer; }
+.saverow button:hover, .saverow button:focus-visible { border-color: var(--film); }
 .slate {
   width: var(--screen-w);
   margin: 0;
@@ -89,7 +98,13 @@ button:focus-visible { outline: 2px solid var(--film); outline-offset: 2px; }
 </head>
 <body>
 <main class="hall">
-  <div class="screen"><canvas id="cv" aria-label="Экран с титрами"></canvas></div>
+  <div class="screen"><canvas id="cv" aria-label="Экран с титрами"></canvas>
+    <div class="savebox" id="savebox" hidden>
+      <p class="savetitle" data-t>Код сохранения</p>
+      <textarea id="savecode" spellcheck="false" autocomplete="off" aria-label="Код сохранения"></textarea>
+      <p id="savemsg"></p>
+      <div class="saverow"><button id="savecopy">Скопировать</button><button id="saveload">Загрузить</button><button id="saveclose">Закрыть</button></div>
+    </div></div>
   <div class="slate">
     <span><span data-t>Сеанс</span> <b id="lvl">1 / 11</b></span>
     <span><span data-t>Дубль</span> <b id="take">1</b></span>
@@ -1982,6 +1997,13 @@ const EN = {
   // the page around the screen
   'Сеанс': 'Session', 'Дубль': 'Take', 'Таймер': 'Timer', 'Экран с титрами': 'The screen with the credits', 'Вправо': 'Right',
   '← → или A D — идти · Пробел или ↑ — прыжок · P — пауза · M — звук · N — музыка · F — полный экран': '← → or A D — move · Space or ↑ — jump · P — pause · M — sound · N — music · F — fullscreen',
+  // saves
+  'Код сохранения': 'Save code', 'Облако': 'Cloud', 'синхронизировано': 'synced', 'проверяю…': 'checking…', 'нет связи': 'offline',
+  'только на claude.ai': 'claude.ai only', 'Скопировать': 'Copy', 'Загрузить': 'Load', 'Закрыть': 'Close',
+  'Скопируй код, чтобы перенести прогресс, или вставь свой и нажми «Загрузить».': 'Copy the code to carry your progress, or paste yours and press “Load”.',
+  'Скопировано.': 'Copied.', 'Выдели код и скопируй вручную.': 'Select the code and copy it by hand.',
+  'Нажми «Загрузить» ещё раз: прогресс на этом устройстве заменится.': 'Press “Load” again: the progress on this device will be replaced.',
+  'Этот код не подошёл.': "That code didn't work.",
 };
 
 // ===== src/js/02b-i18n.js =====
@@ -2036,6 +2058,117 @@ if (LANG === 'en') {
   for (const el of document.querySelectorAll('[data-t]')) el.textContent = tr(el.dataset.t || el.textContent.trim());
   for (const el of document.querySelectorAll('[aria-label]')) el.setAttribute('aria-label', tr(el.getAttribute('aria-label')));
 }
+
+// ===== src/js/02c-save.js =====
+// ---------- saves: a save code that carries progress anywhere, and a cloud copy on claude.ai ----------
+// Progress is everything in localStorage under gtte-, except this device's own settings and the ghost
+// recordings (large, and only worth having where they were made). Every change stamps the time; the
+// newer copy wins.
+const SAVE_LOCAL = new Set(['gtte-fx', 'gtte-lang', 'gtte-mute', 'gtte-music', 'gtte-stamp', 'gtte-cheat', 'gtte-god']);
+const synced = k => k.startsWith('gtte-') && !SAVE_LOCAL.has(k) && !k.startsWith('gtte-ghost-');
+function saveSnapshot() {
+  const o = {};
+  try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (synced(k)) o[k] = localStorage.getItem(k); } } catch (e) { /* storage blocked */ }
+  return o;
+}
+function applySnapshot(o) {
+  try {
+    for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (synced(k)) localStorage.removeItem(k); }
+    for (const k in o) if (synced(k) && typeof o[k] === 'string') localStorage.setItem(k, o[k]);
+  } catch (e) { /* storage blocked */ }
+}
+const rawSet = store.set;
+store.set = (k, v) => { rawSet(k, v); if (synced(k)) { rawSet('gtte-stamp', String(Date.now())); cloudPush(); } };
+// progress from before stamps existed counts as the oldest possible
+if (!store.get('gtte-stamp') && Object.keys(saveSnapshot()).length) rawSet('gtte-stamp', '1');
+
+// ===== the save code: gzip + base64, prefixed so a wrong paste is caught =====
+const b64url = bytes => { let s = ''; for (const b of bytes) s += String.fromCharCode(b); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+const gz = (bytes, dir) => new Response(new Blob([bytes]).stream().pipeThrough(new (dir ? CompressionStream : DecompressionStream)('gzip'))).arrayBuffer().then(b => new Uint8Array(b));
+async function saveCode() {
+  let bytes = new TextEncoder().encode(JSON.stringify({ v: 1, d: saveSnapshot() })), tag = 'J';
+  if (window.CompressionStream) { bytes = await gz(bytes, true); tag = 'Z'; }
+  return 'GTTE1' + tag + b64url(bytes);
+}
+async function readCode(code) {
+  const m = code.replace(/\s+/g, '').match(/^GTTE1([JZ])([A-Za-z0-9_-]+)$/);
+  if (!m) throw new Error('format');
+  let b = m[2].replace(/-/g, '+').replace(/_/g, '/');
+  while (b.length % 4) b += '=';
+  let bytes = Uint8Array.from(atob(b), c => c.charCodeAt(0));
+  if (m[1] === 'Z') bytes = await gz(bytes, false);
+  const o = JSON.parse(new TextDecoder().decode(bytes));
+  if (!o || o.v !== 1 || !o.d || typeof o.d !== 'object') throw new Error('format');
+  return o.d;
+}
+
+// ===== the cloud: the viewer's own private record in the claude.ai page; elsewhere it stays off =====
+const CLOUD = { ref: null, state: 'off', busy: false, again: false, timer: 0 };
+function cloudPush(delay = 3000) {
+  if (!CLOUD.ref) return;
+  clearTimeout(CLOUD.timer);
+  CLOUD.timer = setTimeout(async () => {
+    if (CLOUD.busy) { CLOUD.again = true; return; }
+    CLOUD.busy = true;
+    try {
+      await CLOUD.ref.set({ stamp: +store.get('gtte-stamp') || Date.now(), data: JSON.stringify(saveSnapshot()) });
+      CLOUD.state = 'on';
+    } catch (e) { CLOUD.state = 'error'; }
+    CLOUD.busy = false;
+    if (CLOUD.again) { CLOUD.again = false; cloudPush(500); }
+  }, delay);
+}
+(async () => {
+  try {
+    if (!window.claude || typeof window.claude.use !== 'function') return;
+    const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+    const id = db && user && await user.id();
+    if (!id) return;
+    CLOUD.state = 'sync';
+    const ref = db.doc('data/users/' + id + '/save');
+    const snap = await Promise.race([ref.get(), new Promise((_, no) => setTimeout(() => no(new Error('timeout')), 10000))]);
+    const cloud = snap.exists ? snap.data() : null, local = +store.get('gtte-stamp') || 0;
+    // the copy in the cloud is newer (played on another device): take it and start from it
+    if (cloud && +cloud.stamp > local && typeof cloud.data === 'string') {
+      applySnapshot(JSON.parse(cloud.data));
+      rawSet('gtte-stamp', String(cloud.stamp));
+      location.reload();
+      return;
+    }
+    CLOUD.ref = ref; CLOUD.state = 'on';
+    if (local > (cloud ? +cloud.stamp : 0)) cloudPush(0);
+  } catch (e) { CLOUD.state = 'error'; }
+})();
+
+// ===== the save code dialog over the screen =====
+function openSaveBox() {
+  const box = $('savebox'), area = $('savecode'), msg = $('savemsg');
+  box.hidden = false; box.dataset.armed = '';
+  msg.textContent = tr('Скопируй код, чтобы перенести прогресс, или вставь свой и нажми «Загрузить».');
+  area.value = '…';
+  saveCode().then(c => { area.value = c; area.select(); }).catch(() => { area.value = ''; });
+}
+function closeSaveBox() { $('savebox').hidden = true; }
+const saveBoxOpen = () => !$('savebox').hidden;
+$('savecopy').addEventListener('click', () => {
+  const area = $('savecode'), msg = $('savemsg');
+  area.select();
+  const ok = () => { msg.textContent = tr('Скопировано.'); };
+  if (navigator.clipboard) navigator.clipboard.writeText(area.value).then(ok, () => { msg.textContent = tr('Выдели код и скопируй вручную.'); });
+  else msg.textContent = tr('Выдели код и скопируй вручную.');
+});
+$('saveload').addEventListener('click', () => {
+  const box = $('savebox'), msg = $('savemsg');
+  readCode($('savecode').value).then(d => {
+    // loading replaces everything here, so it takes a second press
+    if (!box.dataset.armed) { box.dataset.armed = '1'; msg.textContent = tr('Нажми «Загрузить» ещё раз: прогресс на этом устройстве заменится.'); return; }
+    applySnapshot(d);
+    rawSet('gtte-stamp', String(Date.now()));
+    location.reload();
+  }).catch(() => { msg.textContent = tr('Этот код не подошёл.'); box.dataset.armed = ''; });
+});
+$('saveclose').addEventListener('click', closeSaveBox);
+for (const id of ['savecopy', 'saveload', 'saveclose']) $(id).textContent = tr($(id).textContent);
 
 // ===== src/js/03-sound.js =====
 // ---------- sound: a projector hum, and every word you land on plays a note ----------
@@ -4955,6 +5088,8 @@ function menuItems() {
   if (menu.screen === 'options') return [
     { label: 'Полный экран', note: 'F', act: toggleFullscreen },
     { label: 'Звук', note: AU.muted ? 'выкл' : 'вкл', act: () => setMute(!AU.muted) },
+    { label: 'Код сохранения', note: '→', act: openSaveBox },
+    { label: 'Облако', note: { on: 'синхронизировано', sync: 'проверяю…', error: 'нет связи', off: 'только на claude.ai' }[CLOUD.state], info: true },
     { label: 'Язык · Language', note: LANG === 'en' ? 'English' : 'Русский', act: () => setLang(LANG === 'en' ? 'ru' : 'en') },
     { label: 'Музыка', note: MUS.on ? 'вкл' : 'выкл', act: () => setMusic(!MUS.on) },
     { label: 'Эффекты', note: FX.ok ? FX_NAMES[FX.mode] : 'нет WebGL', act: FX.ok ? () => setFxMode({ high: 'low', low: 'off', off: 'high' }[FX.mode]) : null },
@@ -5712,6 +5847,8 @@ const keyOf = e => MAP[e.key.length === 1 ? e.key.toLowerCase() : e.key];
 addEventListener('keydown', e => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   const ch = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+  // the save code dialog takes the keyboard while it is open
+  if (saveBoxOpen()) { if (ch === 'Escape') closeSaveBox(); return; }
   if (ch === 'm' || ch === 'ь') { setMute(!AU.muted); return; }
   if (ch === 'n' || ch === 'т') { setMusic(!MUS.on); return; }
   if (ch === 'f' || ch === 'а' || ch === 'F11') { e.preventDefault(); toggleFullscreen(); return; }

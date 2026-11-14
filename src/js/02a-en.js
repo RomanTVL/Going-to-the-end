@@ -431,4 +431,11 @@ const EN = {
   // the page around the screen
   'Сеанс': 'Session', 'Дубль': 'Take', 'Таймер': 'Timer', 'Экран с титрами': 'The screen with the credits', 'Вправо': 'Right',
   '← → или A D — идти · Пробел или ↑ — прыжок · P — пауза · M — звук · N — музыка · F — полный экран': '← → or A D — move · Space or ↑ — jump · P — pause · M — sound · N — music · F — fullscreen',
+  // saves
+  'Код сохранения': 'Save code', 'Облако': 'Cloud', 'синхронизировано': 'synced', 'проверяю…': 'checking…', 'нет связи': 'offline',
+  'только на claude.ai': 'claude.ai only', 'Скопировать': 'Copy', 'Загрузить': 'Load', 'Закрыть': 'Close',
+  'Скопируй код, чтобы перенести прогресс, или вставь свой и нажми «Загрузить».': 'Copy the code to carry your progress, or paste yours and press “Load”.',
+  'Скопировано.': 'Copied.', 'Выдели код и скопируй вручную.': 'Select the code and copy it by hand.',
+  'Нажми «Загрузить» ещё раз: прогресс на этом устройстве заменится.': 'Press “Load” again: the progress on this device will be replaced.',
+  'Этот код не подошёл.': "That code didn't work.",
 };

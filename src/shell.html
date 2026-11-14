@@ -51,6 +51,15 @@ body {
 canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 /* the WebGL copy of the frame sits on top; taps go through to the game canvas below */
 canvas.fx { position: absolute; inset: 0; pointer-events: none; visibility: hidden; }
+/* the save code dialog, over the screen */
+.savebox { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; justify-content: center; gap: 12px; padding: 8%; background: rgba(5,4,5,.94); }
+.savebox[hidden] { display: none; }
+.savetitle { margin: 0; font: 600 28px "Cormorant Garamond", Georgia, serif; color: var(--film); text-align: center; }
+.savebox textarea { height: 34%; resize: none; padding: 10px; background: #0d0b0c; color: var(--film); border: 1px solid #3a3234; font: 12px/1.4 "IBM Plex Mono", ui-monospace, monospace; word-break: break-all; }
+#savemsg { margin: 0; min-height: 2.8em; color: var(--dim); font-size: 12px; text-align: center; }
+.saverow { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.saverow button { font: 500 11px "IBM Plex Mono", ui-monospace, monospace; letter-spacing: .16em; text-transform: uppercase; color: var(--film); background: none; border: 1px solid #4a4144; padding: 9px 14px; cursor: pointer; }
+.saverow button:hover, .saverow button:focus-visible { border-color: var(--film); }
 .slate {
   width: var(--screen-w);
   margin: 0;
@@ -89,7 +98,13 @@ button:focus-visible { outline: 2px solid var(--film); outline-offset: 2px; }
 </head>
 <body>
 <main class="hall">
-  <div class="screen"><canvas id="cv" aria-label="Экран с титрами"></canvas></div>
+  <div class="screen"><canvas id="cv" aria-label="Экран с титрами"></canvas>
+    <div class="savebox" id="savebox" hidden>
+      <p class="savetitle" data-t>Код сохранения</p>
+      <textarea id="savecode" spellcheck="false" autocomplete="off" aria-label="Код сохранения"></textarea>
+      <p id="savemsg"></p>
+      <div class="saverow"><button id="savecopy">Скопировать</button><button id="saveload">Загрузить</button><button id="saveclose">Закрыть</button></div>
+    </div></div>
   <div class="slate">
     <span><span data-t>Сеанс</span> <b id="lvl">1 / 11</b></span>
     <span><span data-t>Дубль</span> <b id="take">1</b></span>

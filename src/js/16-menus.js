@@ -38,6 +38,8 @@ function menuItems() {
   if (menu.screen === 'options') return [
     { label: 'Полный экран', note: 'F', act: toggleFullscreen },
     { label: 'Звук', note: AU.muted ? 'выкл' : 'вкл', act: () => setMute(!AU.muted) },
+    { label: 'Код сохранения', note: '→', act: openSaveBox },
+    { label: 'Облако', note: { on: 'синхронизировано', sync: 'проверяю…', error: 'нет связи', off: 'только на claude.ai' }[CLOUD.state], info: true },
     { label: 'Язык · Language', note: LANG === 'en' ? 'English' : 'Русский', act: () => setLang(LANG === 'en' ? 'ru' : 'en') },
     { label: 'Музыка', note: MUS.on ? 'вкл' : 'выкл', act: () => setMusic(!MUS.on) },
     { label: 'Эффекты', note: FX.ok ? FX_NAMES[FX.mode] : 'нет WebGL', act: FX.ok ? () => setFxMode({ high: 'low', low: 'off', off: 'high' }[FX.mode]) : null },
