@@ -17,7 +17,17 @@ function platform(text, font, size, x, base, color, extra = {}) {
   return p;
 }
 function measure(text, font) { ctx.font = font; return ctx.measureText(text.replace('~', '')).width; }
-function row(words, [font, size, sep], y, color, extra) {
+// a line that is too wide for the frame (a longer translation, say) gets a slightly smaller type
+function fit(font, size, width, room) {
+  if (width <= room) return [font, size];
+  const k = room / width, px = Math.floor(size * k);
+  return [font.replace(/(\d+(?:\.\d+)?)px/, px + 'px'), px];
+}
+const ROOM = W - 28, HALF = W / 2 - 18 - 12;
+function row(words, [font0, size0, sep], y, color, extra) {
+  const total = words.reduce((s, t) => s + measure(t, font0), 0) + sep * (words.length - 1);
+  const [font, size] = fit(font0, size0, total, ROOM);
+  if (size !== size0) sep *= size / size0;
   const ws = words.map(t => measure(t, font));
   const x0 = CX - (ws.reduce((s, v) => s + v, 0) + sep * (words.length - 1)) / 2;
   let x = x0;
@@ -43,27 +53,29 @@ function layout() {
       stars.push({ x: CX + a[0], y: y + a[1], got: false, banked: false, L: film });
     } else if (type === 'title') {
       // the title is separate words, the gaps between them are the first way down
-      const { out, x0, ws } = row(a[0].split(' '), f.title, y, P.film, { glow: true });
-      checkpoints.push({ name: 'Начало', top: out[0].top, x: x0 + ws[0] / 2 });
+      const { out, x0, ws } = row(tr(a[0]).split(' '), f.title, y, P.film, { glow: true });
+      checkpoints.push({ name: tr('Начало'), top: out[0].top, x: x0 + ws[0] / 2 });
       y += LINE * 1.6;
     } else if (type === 'h') {
       y += LINE * .45;
-      const text = a[0].toUpperCase();
-      const p = platform(text, f.head[0], f.head[1], CX - measure(text, f.head[0]) / 2, y, P.film);
-      checkpoints.push({ name: a[0], top: p.top, x: CX });
+      const text = tr(a[0]).toUpperCase(), [hf, hs] = fit(f.head[0], f.head[1], measure(text, f.head[0]), ROOM);
+      const p = platform(text, hf, hs, CX - measure(text, hf) / 2, y, P.film);
+      checkpoints.push({ name: tr(a[0]), top: p.top, x: CX });
       y += LINE * 1.15;
     } else if (type === 'r') {
-      const role = a[0].toUpperCase();
-      platform(role, f.role[0], f.role[1], CX - 18 - measure(role, f.role[0]), y, P.dim, extra);
-      platform(a[1], f.name[0], f.name[1], CX + 18, y, P.film, extra);
+      // the role ends left of the centre and the name starts right of it; each keeps to its half
+      const role = tr(a[0]).toUpperCase(), name = tr(a[1]);
+      const [rf, rs] = fit(f.role[0], f.role[1], measure(role, f.role[0]), HALF), [nf, ns] = fit(f.name[0], f.name[1], measure(name, f.name[0]), HALF);
+      platform(role, rf, rs, CX - 18 - measure(role, rf), y, P.dim, extra);
+      platform(name, nf, ns, CX + 18, y, P.film, extra);
       y += LINE;
     } else if (type === 'c') {
       // a sentence: every word stands apart, so there is always a gap to drop through
       const fragile = a[0].startsWith('~');
-      row(a[0].replace('~', '').split(' ').map(t => (fragile ? '~' : '') + t), f.sent, y, P.film, extra);
+      row(tr(a[0].replace('~', '')).split(' ').map(t => (fragile ? '~' : '') + t), f.sent, y, P.film, extra);
       y += LINE;
     } else if (type === 'w') {
-      const { out } = row(a, f.list, y, P.film, extra);
+      const { out } = row(a.map(tr), f.list, y, P.film, extra);
       out.slice(0, -1).forEach(p => deco.push({ text: '·', font: p.font, x: p.x + p.w + f.list[2] / 2 - 3, base: y, color: P.dim }));
       y += LINE;
     } else if (type === 'end') {

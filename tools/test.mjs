@@ -1,10 +1,11 @@
 // Automated checks for the game, run against build/debug.html:
-//   node tools/build.mjs --debug && node tools/test.mjs [--hazards] [--levels 3,6,9] [--jobs 4]
+//   node tools/build.mjs --debug && node tools/test.mjs [--hazards] [--levels 3,6,9] [--jobs 4] [--lang en]
 // 1. every film fits the frame and has stars and THE END;
 // 2. a bot plays every film (hazards off unless --hazards) and must reach THE END;
 //    in the ascent a second bot climbs up to the title instead;
 // 3. the WebGL effects start and draw;
-// 4. the menus open.
+// 4. the menus open;
+// 5. with --lang en: every screen and ending is drawn and no Russian text is left on the canvas.
 // Exits with code 1 if anything fails.
 import { createRequire } from 'node:module';
 import { join, dirname } from 'node:path';
@@ -17,6 +18,7 @@ const url = 'file://' + join(root, 'build/debug.html');
 const arg = (name, def) => { const i = process.argv.indexOf(name); return i < 0 ? def : process.argv[i + 1]; };
 const hazards = process.argv.includes('--hazards');
 const jobs = Number(arg('--jobs', 4));
+const lang = arg('--lang', 'ru');
 const failures = [];
 
 // The bot: drop towards the nearest word below that is not covered by the one it stands on,
@@ -68,6 +70,7 @@ function climber() {
 // several windows at once slows the frames enough to throw the bots off; the menu page keeps them on
 async function openGame(browser, fx = false) {
   const page = await browser.newPage();
+  await page.addInitScript(l => localStorage.setItem('gtte-lang', l), lang);
   if (!fx) await page.addInitScript(() => localStorage.setItem('gtte-fx', 'off'));
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
@@ -160,6 +163,24 @@ await page.evaluate(() => { __G.startLevel(0, 'menu'); });
 for (const screen of ['endings', 'cheats', 'levels', 'modes', 'ach', 'stats', 'options', 'main']) {
   await page.evaluate(s => { __G.menu.screen = s; __G.menu.sel = 0; }, screen);
   await page.waitForTimeout(150);
+}
+
+// 5. English: walk every screen and ending, then nothing Russian may have been drawn
+if (lang === 'en') {
+  await page.evaluate(() => { __G.CHEAT.on = true; __G.setTimeScale(4); });
+  for (const screen of ['main', 'modes', 'ach', 'stats', 'endings', 'cheats', 'levels', 'options']) {
+    await page.evaluate(s => { __G.startLevel(0, 'menu'); __G.menu.screen = s; __G.menu.page = 0; }, screen);
+    await page.waitForTimeout(150);
+    if (screen === 'ach') for (const p of [1, 2]) { await page.evaluate(p => { __G.menu.page = p; }, p); await page.waitForTimeout(120); }
+  }
+  for (const e of ['truck', 'late', 'blind', 'almost', 'full', 'life', 'rise']) {
+    await page.evaluate(e => { __G.replayEnding(e); }, e);
+    await page.waitForTimeout(4200);
+  }
+  await page.evaluate(() => __G.setTimeScale(1));
+  const miss = await page.evaluate(() => [...__G.I18N_MISS]);
+  console.log(`english: ${miss.length} untranslated strings on screen`);
+  for (const m of miss.slice(0, 30)) failures.push('untranslated: ' + m);
 }
 
 for (const e of new Set(errors)) failures.push('page error: ' + e);

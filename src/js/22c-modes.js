@@ -88,8 +88,8 @@ function drawOver() {
   ctx.globalAlpha = 1; ctx.fillStyle = `rgba(0,0,0,${.95 * k})`; ctx.fillRect(0, 0, W, H);
   lines(T, [
     [.6, 'Одна жизнь.', `italic 600 40px ${SERIF}`, H * .34],
-    [1.6, `Она оборвалась на сеансе ${S.lostAt + 1}:`, `italic 500 21px ${SERIF}`, H * .34 + 46],
-    [2.0, `«${LEVELS[S.lostAt].name}».`, `italic 500 21px ${SERIF}`, H * .34 + 74],
+    [1.6, Tf('Она оборвалась на сеансе {0}:', S.lostAt + 1), `italic 500 21px ${SERIF}`, H * .34 + 46],
+    [2.0, Tf('«{0}».', LEVELS[S.lostAt].name), `italic 500 21px ${SERIF}`, H * .34 + 74],
     [2.6, S.cutWhy.toUpperCase(), `500 12px ${MONO}`, H * .34 + 112, '#8e877c'],
     [3.6, MOTTO, `600 22px ${MONO}`, H * .34 + 180, CUT],
     [4.6, 'ПРОБЕЛ — В МЕНЮ', `500 12px ${MONO}`, H - 60, '#8e877c'],
@@ -135,13 +135,13 @@ function drawMarathonClear() {
     ctx.fillStyle = `rgba(6,5,8,${.88 * k})`; rr(28, H * .12, W - 56, 230, 10); ctx.fill();
     caption('МАРАФОН ОКОНЧЕН', `500 12px ${MONO}`, H * .12 + 36, '#a59d92', k);
     caption(fmt(M.time), `600 64px ${SERIF}`, H * .12 + 104, M.time <= EVENING * GUEST_PAR ? '#b9f27c' : CUT, k);
-    caption(M.record ? 'НОВЫЙ РЕКОРД' : M.best ? `РЕКОРД ${fmt(M.best)}` : '', `500 12px ${MONO}`, H * .12 + 132, '#ffd23f', k);
-    caption(`${EVENING} ФИЛЬМОВ · ${M.deaths} ${plural(M.deaths, 'ДУБЛЬ', 'ДУБЛЯ', 'ДУБЛЕЙ')} · ★ ${M.got} / ${M.total}`, `500 12px ${MONO}`, H * .12 + 166, '#efe8dc', k);
+    caption(M.record ? 'НОВЫЙ РЕКОРД' : M.best ? Tf('РЕКОРД {0}', fmt(M.best)) : '', `500 12px ${MONO}`, H * .12 + 132, '#ffd23f', k);
+    caption(Tf('{0} ФИЛЬМОВ · {1} {2} · ★ {3} / {4}', EVENING, M.deaths, plural(M.deaths, 'ДУБЛЬ', 'ДУБЛЯ', 'ДУБЛЕЙ'), M.got, M.total), `500 12px ${MONO}`, H * .12 + 166, '#efe8dc', k);
     if (T > 2.4) caption('ПРОБЕЛ — В МЕНЮ', `500 11px ${MONO}`, H * .12 + 206, '#a59d92', k);
     return;
   }
   // between films: one line under the gag, then the cue marks and the change
   const r = RUN.res[S.li], k = clamp((T - .6) / .5, 0, 1);
-  if (r) caption(`${S.li + 1} / ${EVENING} · ${fmt(r.t)} · ★ ${r.got}/${r.total} · ДАЛЬШЕ: ${LEVELS[S.li + 1].name.toUpperCase()}`, `500 11px ${MONO}`, H - 30, LV.pal.light ? '#1b1b3a' : '#d8d0c4', k);
+  if (r) caption(`${S.li + 1} / ${EVENING} · ${fmt(r.t)} · ★ ${r.got}/${r.total} · ` + Tf('ДАЛЬШЕ: {0}', tr(LEVELS[S.li + 1].name).toUpperCase()), `500 11px ${MONO}`, H - 30, LV.pal.light ? '#1b1b3a' : '#d8d0c4', k);
   drawCueMarks(T, 1.5);
 }

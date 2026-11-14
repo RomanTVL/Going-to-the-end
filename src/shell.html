@@ -91,11 +91,11 @@ button:focus-visible { outline: 2px solid var(--film); outline-offset: 2px; }
 <main class="hall">
   <div class="screen"><canvas id="cv" aria-label="Экран с титрами"></canvas></div>
   <div class="slate">
-    <span>Сеанс <b id="lvl">1 / 11</b></span>
-    <span>Дубль <b id="take">1</b></span>
+    <span><span data-t>Сеанс</span> <b id="lvl">1 / 11</b></span>
+    <span><span data-t>Дубль</span> <b id="take">1</b></span>
     <span>★ <b id="stars">0</b></span>
-    <span>Таймер <b id="time">00:00</b></span>
-    <span class="cheat" id="cheatTag" hidden>Читы</span>
+    <span><span data-t>Таймер</span> <b id="time">00:00</b></span>
+    <span class="cheat" id="cheatTag" data-t hidden>Читы</span>
   </div>
   <div class="pads" id="pads">
     <button data-k="left" aria-label="Влево">◀</button>
@@ -103,12 +103,12 @@ button:focus-visible { outline: 2px solid var(--film); outline-offset: 2px; }
     <button data-k="right" aria-label="Вправо">▶</button>
   </div>
   <div class="slate toggles">
-    <button class="toggle" id="snd" aria-pressed="true">Звук</button>
-    <button class="toggle" id="pause" aria-pressed="false">Пауза</button>
-    <button class="toggle" id="fresh" hidden>Новый забег</button>
-    <button class="toggle" id="full" aria-pressed="false">Полный экран</button>
+    <button class="toggle" id="snd" aria-pressed="true" data-t>Звук</button>
+    <button class="toggle" id="pause" aria-pressed="false" data-t="Пауза (кнопка)">Пауза</button>
+    <button class="toggle" id="fresh" data-t hidden>Новый забег</button>
+    <button class="toggle" id="full" aria-pressed="false" data-t>Полный экран</button>
   </div>
-  <p class="slate hint">← → или A D — идти · Пробел или ↑ — прыжок · P — пауза · M — звук · N — музыка · F — полный экран</p>
+  <p class="slate hint" data-t>← → или A D — идти · Пробел или ↑ — прыжок · P — пауза · M — звук · N — музыка · F — полный экран</p>
 </main>
 
 <!-- @script -->

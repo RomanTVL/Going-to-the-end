@@ -23,10 +23,10 @@ function menuItems() {
   if (menu.screen === 'modes') {
     const life = loadRun('life'), lock = (open, how) => open ? null : how;
     return [
-      { label: 'Марафон', sub: `Все ${EVENING} фильмов подряд на одних часах`, open: true, note: marathonBest() ? `рекорд ${fmt(marathonBest())}` : 'смотреть', act: startMarathon },
+      { label: 'Марафон', sub: Tf('Все {0} фильмов подряд на одних часах', EVENING), open: true, note: marathonBest() ? Tf('рекорд {0}', fmt(marathonBest())) : 'смотреть', act: startMarathon },
       { label: 'Одна жизнь', sub: lock(lifeOpen(), 'Откроется после всех пяти концовок') || 'Весь вечер без единого дубля. Ошибся — всё сначала', open: lifeOpen(),
-        note: lifeDone() ? 'прожита' : life.li > 0 ? `сеанс ${life.li + 1}` : lifeOpen() ? 'смотреть' : 'закрыто', act: lifeOpen() ? startLife : null },
-      { label: `Сеанс ${EVENING + 1} · Все титры сразу`, sub: lock(mixOpen(), 'Откроется после первой концовки') || 'Секретный сеанс: титры всех фильмов вперемешку', open: mixOpen(),
+        note: lifeDone() ? 'прожита' : life.li > 0 ? Tf('сеанс {0}', life.li + 1) : lifeOpen() ? 'смотреть' : 'закрыто', act: lifeOpen() ? startLife : null },
+      { label: Tf('Сеанс {0} · Все титры сразу', EVENING + 1), sub: lock(mixOpen(), 'Откроется после первой концовки') || 'Секретный сеанс: титры всех фильмов вперемешку', open: mixOpen(),
         note: store.get('gtte-mix-done') ? 'пройден' : mixOpen() ? 'смотреть' : 'закрыт', act: mixOpen() ? () => startExtra('mix') : null },
       { label: 'Восхождение', sub: lock(riseOpen(), 'Откроется после секретного сеанса') || 'Вверх по титрам, пока снизу поднимается лава', open: riseOpen(),
         note: store.get('gtte-rise-done') ? 'пройдено' : riseOpen() ? 'смотреть' : 'закрыто', act: riseOpen() ? () => startExtra('rise') : null },
@@ -38,6 +38,7 @@ function menuItems() {
   if (menu.screen === 'options') return [
     { label: 'Полный экран', note: 'F', act: toggleFullscreen },
     { label: 'Звук', note: AU.muted ? 'выкл' : 'вкл', act: () => setMute(!AU.muted) },
+    { label: 'Язык · Language', note: LANG === 'en' ? 'English' : 'Русский', act: () => setLang(LANG === 'en' ? 'ru' : 'en') },
     { label: 'Музыка', note: MUS.on ? 'вкл' : 'выкл', act: () => setMusic(!MUS.on) },
     { label: 'Эффекты', note: FX.ok ? FX_NAMES[FX.mode] : 'нет WebGL', act: FX.ok ? () => setFxMode({ high: 'low', low: 'off', off: 'high' }[FX.mode]) : null },
     { label: 'Свечение, разводы цвета, плёнка VHS. Низкие — без свечения', info: true, dim: true },
@@ -61,7 +62,7 @@ function menuItems() {
   ];
   const modesOpen = 1 + [lifeOpen(), mixOpen(), riseOpen()].filter(Boolean).length, gotAch = Object.keys(achGot()).length;
   return [
-    { label: RUN.li > 0 ? `Продолжить вечер · сеанс ${RUN.li + 1}` : 'Начать вечер', act: () => { if (CHEAT.on) RUN.cheat = true; reelChange(() => startLevel(RUN.li)); } },
+    { label: RUN.li > 0 ? Tf('Продолжить вечер · сеанс {0}', RUN.li + 1) : 'Начать вечер', act: () => { if (CHEAT.on) RUN.cheat = true; reelChange(() => startLevel(RUN.li)); } },
     { label: 'Режимы', note: `${modesOpen} / 4`, act: () => go('modes') },
     { label: 'Достижения', note: `${gotAch} / ${ACH.length}`, act: () => { menu.page = 0; go('ach'); } },
     { label: 'Концовки', note: `${seen.length} / 5`, act: () => go('endings') },
@@ -99,7 +100,7 @@ function replayEnding(key) {
   S.camY = endTop - H * .6;
   S.p.x = e.x + 30; S.p.y = e.top - PH; S.p.vy = 0;
   S.ending = key; S.modeT = 0; S.replay = true;
-  const d = DEMO[key];
+  const d = DEMO[key] || DEMO.full;
   const total = LEVELS.reduce((n, L) => n + L.credits.filter(c => c[0] === '*').length, 0);
   S.summary = store.json('gtte-summary-' + key) || { time: d[0], inTime: d[1], got: Math.round(d[2] / 103 * total), total, fast: d[1] === EVENING };
   S.endDot = { x: S.p.x + PW / 2, y: S.p.y + PH / 2 - S.camY };
@@ -122,8 +123,8 @@ function drawMenu(t) {
   caption(titles[menu.screen], `600 ${menu.screen === 'main' ? 40 : 34}px ${SERIF}`, 74, film);
   ctx.shadowBlur = 0;
   const st = menu.screen === 'stats' && store.json('gtte-laststats'), en = st && ENDINGS.find(e => e.key === st.ending);
-  const subs = { main: `${EVENING} сеансов. Один вечер. Одна жизнь.`, endings: 'Открытые можно пересмотреть. Под каждой — как её открыть.', cheats: 'Для тестов и просмотра концовок', levels: 'Тестовый забег, в рекорды не идёт',
-    modes: 'Другие способы провести вечер', options: 'F — экран · M — звук · N — музыка', ach: `Открыто ${Object.keys(achGot()).length} из ${ACH.length}`, stats: st ? `Последний вечер · ${en ? en.name : 'Одна жизнь'}` : 'Вечер ещё идёт' };
+  const subs = { main: Tf('{0} сеансов. Один вечер. Одна жизнь.', EVENING), endings: 'Открытые можно пересмотреть. Под каждой — как её открыть.', cheats: 'Для тестов и просмотра концовок', levels: 'Тестовый забег, в рекорды не идёт',
+    modes: 'Другие способы провести вечер', options: 'F — экран · M — звук · N — музыка', ach: Tf('Открыто {0} из {1}', Object.keys(achGot()).length, ACH.length), stats: st ? `Последний вечер · ${en ? en.name : 'Одна жизнь'}` : 'Вечер ещё идёт' };
   caption(subs[menu.screen], `italic 500 ${menu.screen === 'main' ? 20 : 17}px ${SERIF}`, 104, dim);
 
   const items = menuItems(), endings = menu.screen === 'endings' || menu.screen === 'modes', levels = menu.screen === 'levels';
@@ -160,7 +161,7 @@ function drawMenu(t) {
     ctx.textAlign = 'left';
     ctx.font = it.info ? `italic 500 15px ${SERIF}` : `500 ${levels ? 18 : 21}px ${SERIF}`;
     ctx.fillStyle = sel ? '#ffffff' : it.info ? dim : film;
-    ctx.fillText((endings && !it.open && it.sub ? '🔒︎ ' : '') + it.label, 56, y - (endings && it.sub ? 8 : 0));
+    ctx.fillText((endings && !it.open && it.sub ? '🔒︎ ' : '') + tr(it.label), 56, y - (endings && it.sub ? 8 : 0));
     if (it.sub) { ctx.font = `500 11px ${MONO}`; ctx.fillStyle = it.open ? '#b9f27c' : dim; ctx.fillText(it.sub, 56, y + 14); }
     if (it.note) { ctx.textAlign = 'right'; ctx.font = `500 11px ${MONO}`; ctx.fillStyle = it.note === 'вкл' || it.note === 'да' ? CUT : dim; ctx.fillText(it.note.toUpperCase(), W - 56, y - (endings ? 8 : 0)); }
     ctx.globalAlpha = 1;

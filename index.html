@@ -91,11 +91,11 @@ button:focus-visible { outline: 2px solid var(--film); outline-offset: 2px; }
 <main class="hall">
   <div class="screen"><canvas id="cv" aria-label="Экран с титрами"></canvas></div>
   <div class="slate">
-    <span>Сеанс <b id="lvl">1 / 11</b></span>
-    <span>Дубль <b id="take">1</b></span>
+    <span><span data-t>Сеанс</span> <b id="lvl">1 / 11</b></span>
+    <span><span data-t>Дубль</span> <b id="take">1</b></span>
     <span>★ <b id="stars">0</b></span>
-    <span>Таймер <b id="time">00:00</b></span>
-    <span class="cheat" id="cheatTag" hidden>Читы</span>
+    <span><span data-t>Таймер</span> <b id="time">00:00</b></span>
+    <span class="cheat" id="cheatTag" data-t hidden>Читы</span>
   </div>
   <div class="pads" id="pads">
     <button data-k="left" aria-label="Влево">◀</button>
@@ -103,12 +103,12 @@ button:focus-visible { outline: 2px solid var(--film); outline-offset: 2px; }
     <button data-k="right" aria-label="Вправо">▶</button>
   </div>
   <div class="slate toggles">
-    <button class="toggle" id="snd" aria-pressed="true">Звук</button>
-    <button class="toggle" id="pause" aria-pressed="false">Пауза</button>
-    <button class="toggle" id="fresh" hidden>Новый забег</button>
-    <button class="toggle" id="full" aria-pressed="false">Полный экран</button>
+    <button class="toggle" id="snd" aria-pressed="true" data-t>Звук</button>
+    <button class="toggle" id="pause" aria-pressed="false" data-t="Пауза (кнопка)">Пауза</button>
+    <button class="toggle" id="fresh" data-t hidden>Новый забег</button>
+    <button class="toggle" id="full" aria-pressed="false" data-t>Полный экран</button>
   </div>
-  <p class="slate hint">← → или A D — идти · Пробел или ↑ — прыжок · P — пауза · M — звук · N — музыка · F — полный экран</p>
+  <p class="slate hint" data-t>← → или A D — идти · Пробел или ↑ — прыжок · P — пауза · M — звук · N — музыка · F — полный экран</p>
 </main>
 
 <script>
@@ -1548,6 +1548,495 @@ const cv = $('cv'), ctx = cv.getContext('2d');
 const DPR = Math.min(2, window.devicePixelRatio || 1);
 cv.width = W * DPR; cv.height = H * DPR;
 
+// ===== src/js/02a-en.js =====
+// ---------- English: the whole game, Russian text → English text ----------
+// Lookups ignore case; a line written in capitals in the game comes out in capitals.
+// {0}, {1}… in a key are the numbers and names filled into a line (see Tf in 02b-i18n.js).
+const EN = {
+  // ===== the films =====
+  // agent
+  'Агент без имени': 'Agent Without a Name', 'по мотивам игры о лысом убийце': 'after a game about a bald hitman',
+  'Цель устранена. Свидетелей нет.': 'Target down. No witnesses.', 'В ролях': 'Cast', 'Агент': 'Agent', 'Без имени': 'No name',
+  'Цель': 'Target', 'Уже нет': 'Not anymore', 'Охранник № 1': 'Guard No. 1', 'Отвлёкся': 'Distracted', 'Охранник № 2': 'Guard No. 2',
+  'Тоже': 'Him too', 'Официант': 'Waiter', 'Подозрительно лыс': 'Suspiciously bald', 'Штрихкод': 'Barcode', 'На затылке': 'On the neck',
+  'Галстук': 'Tie', 'Костюм': 'Suit', 'Перчатки': 'Gloves', 'Голос в наушнике': 'Voice in the earpiece', 'Куратор': 'Handler',
+  'Рояль': 'Piano', 'Падает в финале': 'Falls in the finale', 'Ни один костюм не помялся': 'Not one suit got creased',
+  'Снаряжение': 'Gear', 'Удавка': 'Garrote', 'Струна от рояля': 'A piano string', 'Глушитель': 'Silencer', 'Очень тихий': 'Very quiet',
+  'Маскировка': 'Disguise', 'Повар': 'Chef', 'Монета': 'Coin', 'Для отвлечения': 'For distraction', 'Банан': 'Banana',
+  'Для падения': 'For falling', 'Яд': 'Poison', 'Отмычка': 'Lockpick', 'Чемодан': 'Briefcase', 'Винтовка': 'Rifle',
+  'В разобранном виде': 'In pieces', 'Все выстрелы холостые. Кроме этих.': 'All shots are blanks. Except these.',
+  'Локации': 'Locations', 'Отель': 'Hotel', 'Ноль свидетелей': 'Zero witnesses', 'Казино': 'Casino', 'Ставки сделаны': 'Bets are placed',
+  'Яхта': 'Yacht', 'Без пассажиров': 'No passengers', 'Пентхаус': 'Penthouse', 'Последний этаж': 'Top floor', 'Париж': 'Paris',
+  'Венеция': 'Venice', 'Марракеш': 'Marrakesh', 'Ни один лифт не работал': 'Not one lift was working', 'Благодарности': 'Thanks',
+  'Отелю': 'The hotel', 'За тихие коридоры': 'For quiet corridors', 'Шкафу': 'The wardrobe', 'За укрытие': 'For cover',
+  'Мусорному баку': 'The bin', 'За молчание': 'For keeping quiet', 'Контракт закрыт': 'Contract closed',
+  // plumber
+  'Усатый водопроводчик': 'The Moustached Plumber', 'по мотивам восьмибитной игры': 'after an eight-bit game',
+  'Принцесса в другом замке': 'The princess is in another castle', 'Водопроводчик': 'Plumber', 'Ты': 'You', 'Брат': 'Brother',
+  'Вечно второй': 'Forever second', 'Принцесса': 'Princess', 'В другом замке': 'In another castle', 'Гриб': 'Mushroom',
+  'Ходит туда-сюда': 'Walks back and forth', 'Черепаха': 'Turtle', 'В панцире': 'In its shell', 'Король ящеров': 'Lizard king',
+  'Ждёт в замке': 'Waits in the castle', 'Труба': 'Pipe', 'Кирпич': 'Brick', 'Звезда': 'Star', 'Неуязвимость': 'Invincible',
+  'Цветок': 'Flower', 'Огонь': 'Fire', 'Прыгай на грибы сверху': 'Jump on mushrooms from above', 'Уровни': 'Levels',
+  'Мир 1-1': 'World 1-1', 'Классика': 'A classic', 'Подземелье': 'Underground', 'Темно': 'Dark', 'Облака': 'Clouds', 'Мягкие': 'Soft',
+  'Замок': 'Castle', 'Лава': 'Lava', 'Флагшток': 'Flagpole', 'В конце': 'At the end', 'Вверх': 'Up', 'Вниз': 'Down', 'Влево': 'Left',
+  'Скрытый блок': 'Hidden block', 'Не здесь': 'Not here', 'Ни один гриб не уцелел': 'Not one mushroom survived', 'Звук': 'Sound',
+  'Прыжок': 'Jump', 'Боинг': 'Boing', 'Динь': 'Ding', 'Ву-у-у': 'Woo-oo', 'До': 'Do', 'Ре': 'Re', 'Ми': 'Mi', 'Фа': 'Fa', 'Соль': 'Sol',
+  'Ля': 'La', 'Си': 'Ti', 'Восемь бит, одно сердце': 'Eight bits, one heart', 'Трубам': 'The pipes', 'За короткий путь': 'For the shortcut',
+  'Грибам': 'The mushrooms', 'За прыжки': 'For the jumps', 'Принцессе': 'The princess', 'За ожидание': 'For waiting',
+  'Принцесса в другом фильме': 'The princess is in another film',
+  // hollow
+  'Полый рыцарь': 'The Empty Knight', 'по мотивам игры о подземном королевстве': 'after a game about an underground kingdom',
+  'Королевство спит. Ты нет.': 'The kingdom sleeps. You do not.', 'Рыцарь': 'Knight', 'Пустой внутри': 'Empty inside', 'Гвоздь': 'Nail',
+  'Старый, но острый': 'Old but sharp', 'Бабочки': 'Butterflies', 'Синие, как память': 'Blue, like memory', 'Торговец': 'Merchant',
+  'Ушёл на обед': 'Out to lunch', 'Картограф': 'Mapmaker', 'Рисует молча': 'Draws in silence', 'Сестра': 'Sister',
+  'Где-то наверху': 'Somewhere above', 'Маска': 'Mask', 'Душа': 'Soul', 'Пыль': 'Dust', 'Мох': 'Moss', 'Мягкий': 'Soft',
+  'Слизень': 'Slug', 'Быстрее улитки': 'Faster than a snail', 'Ни одна маска не треснула': 'Not one mask cracked', 'Глубины': 'Depths',
+  'Тропа': 'Path', 'Вниз и только вниз': 'Down and only down', 'Шипы': 'Spikes', 'Под каждым словом': 'Under every word',
+  'Фонарь': 'Lantern', 'Светлячки': 'Fireflies', 'Колодец': 'Well', 'Без дна': 'Bottomless', 'Кислота': 'Acid', 'Не трогать': 'Do not touch',
+  'Тень': 'Shade', 'Эхо': 'Echo', 'Пустота': 'Void', 'Город': 'City', 'Под дождём': 'In the rain', 'Сон длиннее, чем жизнь': 'A dream longer than life',
+  'Песни': 'Songs', 'Колыбельная': 'Lullaby', 'Без слов': 'No words', 'Дождь': 'Rain', 'Всю дорогу': 'All the way', 'Тишина': 'Silence',
+  'Самая громкая': 'The loudest', 'Ни одна нота не утонула': 'Not one note drowned', 'Скамейке': 'The bench', 'За отдых': 'For the rest',
+  'Тем, кто': 'Those who', 'Не сдался': 'Never gave up', 'Свету': 'The light', 'В конце колодца': 'At the bottom of the well',
+  'Королевство отпускает тебя': 'The kingdom lets you go',
+  // crew
+  'Предатель среди нас': 'The Traitor on Board', 'по мотивам игры о космическом экипаже': 'after a game about a space crew',
+  'Один из нас — не из нас': 'One of us is not one of us', 'Экипаж': 'Crew', 'Красный': 'Red', 'Подозрительный': 'Suspicious',
+  'Синий': 'Blue', 'Делает задания': 'Does tasks', 'Зелёный': 'Green', 'Видел всё': 'Saw everything', 'Розовый': 'Pink',
+  'Был в медпункте': 'Was in medbay', 'Жёлтый': 'Yellow', 'Молчит': 'Says nothing', 'Просто точка': 'Just a dot', 'Провода': 'Wires',
+  'Мусор': 'Trash', 'Щиты': 'Shields', 'Капитан': 'Captain', 'Уже выброшен': 'Already ejected', 'Призрак': 'Ghost',
+  'Доделывает дела': 'Finishing tasks', 'Предатель вспыхивает красным': 'The traitor flashes red', 'Задания': 'Tasks',
+  'Электрика': 'Electrical', 'Провода по цветам': 'Wires by colour', 'Медпункт': 'Medbay', 'Сканирование': 'Scan', 'Реактор': 'Reactor',
+  'Плавится': 'Melting down', 'Навигация': 'Navigation', 'Курс неизвестен': 'Course unknown', 'Камеры': 'Cameras',
+  'Никто не смотрит': 'Nobody is watching', 'Вентиляция': 'Vents', 'Люк': 'Hatch', 'Кислород': 'Oxygen', 'Фильтр забит': 'Filter clogged',
+  'Прыгни сверху — и выкинешь': 'Jump from above to eject', 'Собрание': 'Meeting', 'Кнопка': 'Button', 'Красная': 'Red one',
+  'Голосование': 'Vote', 'Пропущено': 'Skipped', 'Скип': 'Skip', 'Как всегда': 'As always', 'Видел': 'Saw it', 'Подозреваю': 'Suspect',
+  'Верю': 'Trust', 'Красный был предателем': 'Red was the traitor', 'Вентиляции': 'The vents', 'Камерам': 'The cameras',
+  'За внимание': 'For watching', 'Экипажу': 'The crew', 'За доверие': 'For the trust', 'Победа экипажа': 'Crew wins',
+  // squid
+  'Игра на выживание': 'The Survival Game', 'по мотивам сериала о детских играх': "after a series about children's games",
+  'Шевелиться можно только на зелёный': 'Move only on green', 'Игрок 456': 'Player 456', 'Игрок 001': 'Player 001',
+  'Старичок': 'An old man', 'Кукла': 'The doll', 'Всё видит': 'Sees everything', 'Ведущий': 'Front man', 'В маске': 'In a mask',
+  'Охрана': 'Guards', 'Круг и квадрат': 'Circle and square', 'Спонсоры': 'Sponsors', 'Не показаны': 'Not shown', 'Круг': 'Circle',
+  'Треугольник': 'Triangle', 'Квадрат': 'Square', 'Сахарные соты': 'Honeycomb candy', 'Зонтик': 'Umbrella',
+  'Стеклянный мост': 'Glass bridge', 'Не наступай': "Don't step", 'Тише едешь — дальше будешь': 'Slow and steady gets further',
+  'Игры': 'Games', 'Первая': 'First', 'Тише едешь': 'Red light', 'Вторая': 'Second', 'Соты': 'Honeycomb', 'Третья': 'Third',
+  'Канат': 'Tug of war', 'Четвёртая': 'Fourth', 'Шарики': 'Marbles', 'Пятая': 'Fifth', 'Мост': 'Bridge', 'Раз': 'One', 'Два': 'Two',
+  'Три': 'Three', 'Шестая': 'Sixth', 'Кальмар': 'Squid', 'Ни одна кукла не моргнула': 'Not one doll blinked', 'Призы': 'Prizes',
+  'Копилка': 'Piggy bank', 'Над головой': 'Overhead', 'Розовый бант': 'Pink ribbon', 'На коробке': 'On the box', 'Деньги': 'Money',
+  'Не главное': 'Not the point', 'Жизнь': 'Life', 'Свобода': 'Freedom', 'Время': 'Time', 'Мы видели, как ты двигался': 'We saw you move',
+  'Кукле': 'The doll', 'За терпение': 'For patience', 'Игрокам': 'The players', 'Всем 455': 'All 455', 'Тебе': 'You',
+  'За неподвижность': 'For standing still', 'Игра окончена. Ты выжил.': 'Game over. You survived.',
+  // soul
+  'Решимость': 'Determination', 'по мотивам игры, где можно никого не убивать': 'after a game where nobody has to die',
+  'Не сдавайся…': 'Stay determined…', '* Ты упал под землю.': '* You fell underground.', 'Человек': 'Human', 'Скелет': 'Skeleton',
+  'Любит шутки': 'Loves jokes', 'Брат скелета': "Skeleton's brother", 'Любит пазлы': 'Loves puzzles', 'Козья мама': 'Goat mum',
+  'Печёт пирог': 'Bakes a pie', 'Улыбается': 'Smiles', 'Собака': 'Dog', 'Мешает': 'In the way', 'Кость': 'Bone', 'Сердце': 'Heart',
+  'Рыба-копьё': 'Spear fish', 'Очень злая': 'Very angry', 'Робот': 'Robot', 'Ведущий шоу': 'Show host',
+  '* Рамка появилась. Прыгай через кости.': '* A box appeared. Jump the bones.', 'Действия': 'Actions', 'Бить': 'Fight', 'Можно': 'You can',
+  'Говорить': 'Act', 'Лучше': 'Better', 'Вещи': 'Items', 'Пирог': 'Pie', 'Пощадить': 'Spare', 'Пощада': 'Mercy', 'Всегда': 'Always',
+  'Сбежать': 'Flee', 'Не выйдет': "Won't work", 'Руины': 'Ruins', 'Снег': 'Snow', 'Жара': 'Heat', 'Сохранение': 'Save',
+  'Звёздочка': 'A little star', '* Ты наполнен решимостью.': "* You're filled with determination.", 'Музыка': 'Music',
+  'Мегалования': 'Megalovania', 'Громко': 'Loud', 'Дождь в пещере': 'Rain in a cave', 'Тихо': 'Quiet', 'Финал': 'Finale',
+  'Никто не должен был умереть': 'Nobody had to die', 'Скелетам': 'The skeletons', 'За шутки': 'For the jokes', 'Собаке': 'The dog',
+  'За всё': 'For everything', 'За милосердие': 'For mercy', '* Это наполняет тебя решимостью.': '* It fills you with determination.',
+  '* Ты пощадил титры.': '* You spared the credits.',
+  // orbit
+  'Последняя орбита': 'The Last Orbit', 'космическая опера': 'a space opera', 'Давным-давно, в одном кинозале': 'A long time ago, in a cinema',
+  'Пилот': 'Pilot', 'Второй пилот': 'Co-pilot', 'Автопилот': 'Autopilot', 'Только пищит': 'Only beeps', 'Гравитация': 'Gravity',
+  'Почти нет': 'Barely any', 'Кот на борту': 'A cat on board', 'Без скафандра': 'No spacesuit', 'Улетел раньше': 'Left early',
+  'Меркурий': 'Mercury', 'Венера': 'Venus', 'Марс': 'Mars', 'Пришелец': 'Alien', 'Дружелюбный': 'Friendly', 'Второй пришелец': 'Second alien',
+  'Не очень': 'Less so', 'Ни один астероид не уклонился': 'Not one asteroid dodged', 'Курс': 'Heading', 'На край кадра': 'To the edge of the frame',
+  'Топливо': 'Fuel', 'На исходе': 'Running low', 'Маяк': 'Beacon', 'Мигает': 'Blinking', 'Карта': 'Map', 'Устарела': 'Out of date',
+  'Чёрная дыра': 'Black hole', 'Слева': 'On the left', 'Сатурн': 'Saturn', 'Уран': 'Uranus', 'Нептун': 'Neptune', 'Связь': 'Comms',
+  'Помехи': 'Static', 'В космосе никто не услышит титры': 'In space no one can hear the credits', 'Спецэффекты': 'Special effects',
+  'Взрывы': 'Explosions', 'Без звука': 'Silent', 'Звёзды': 'Stars', 'Настоящие': 'Real ones', 'Лазеры': 'Lasers', 'Пиу-пиу': 'Pew-pew',
+  'Альфа': 'Alpha', 'Бета': 'Beta', 'Гамма': 'Gamma', 'Ни одна планета не пострадала': 'No planets were harmed', 'Звёздам': 'The stars',
+  'За свет': 'For the light', 'Земле': 'Earth', 'Скафандру': 'The spacesuit', 'За воздух': 'For the air', 'Курс на дом': 'Heading home',
+  // blocks
+  'Падающие фигуры': 'Falling Shapes', 'по мотивам головоломки из восьмидесятых': 'after a puzzle from the eighties',
+  'Фигуры падают. Титры тоже.': 'Shapes fall. So do the credits.', 'Фигуры': 'Shapes', 'Палка': 'The stick', 'Наконец-то': 'Finally',
+  'Не крутится': "Won't turn", 'Буква Т': 'The T', 'Главная': 'The main one', 'Левый зигзаг': 'Left zigzag', 'Правый зигзаг': 'Right zigzag',
+  'Уголки': 'Corners', 'Два брата': 'Two brothers', 'Вправо': 'Right', 'Поворот': 'Rotate', 'Следующая': 'Next', 'Уже видна': 'Already in view',
+  'Падение': 'Drop', 'Ускоряется': 'Speeds up', 'Упавшая фигура держит, как слово': 'A landed shape holds you like a word', 'Стакан': 'The well',
+  'Ширина': 'Width', 'Десять клеток': 'Ten cells', 'Высота': 'Height', 'Двадцать': 'Twenty', 'Линия': 'Line', 'Исчезает': 'Vanishes',
+  'Четыре линии': 'Four lines', 'Сразу': 'At once', 'Дыра': 'The hole', 'Всегда одна': 'Always just one', 'Сто': 'A hundred',
+  'Тысяча': 'A thousand', 'Миллион': 'A million', 'Уровень': 'Level', 'Девятнадцатый': 'Nineteenth', 'Фигура убивает, пока падает': 'A shape kills while it falls',
+  'Мелодия': 'Tune', 'Народная': 'Folk', 'Тот самый': 'That one', 'Мотив': 'Motif', 'Темп': 'Tempo', 'Всё быстрее': 'Faster and faster',
+  'Ни одна линия не осталась': 'Not one line was left', 'Автору': 'The author', 'За вечер в 1984': 'For an evening in 1984', 'Палке': 'The stick',
+  'Стакану': 'The well', 'Счёт твой': 'The score is yours',
+  // cup
+  'Чашка в долгах': 'A Cup in Debt', 'по мотивам игры в стиле мультфильмов тридцатых': 'after a game drawn like a 1930s cartoon',
+  'Проиграл душу в кости. Бывает.': 'Lost a soul at dice. Happens.', 'Чашка': 'Cup', 'Кружка': 'Mug', 'Кости': 'Dice', 'Нечестные': 'Loaded',
+  'Облако': 'The cloud', 'Босс': 'Boss', 'Тоже босс': 'Also a boss', 'Старый чайник': 'Old kettle', 'Предупреждал': 'Warned you',
+  'Контракт': 'Contract', 'Пианист': 'Pianist', 'Играет рэгтайм': 'Plays ragtime', 'Всегда выигрывает': 'Always wins',
+  'Розовое отбивай прыжком': 'Parry the pink with a jump', 'Острова': 'Islands', 'Первый': 'First', 'Тыквенный': 'Pumpkin',
+  'Второй': 'Second', 'Облачный': 'Cloudy', 'Третий': 'Third', 'Карнавал': 'Carnival', 'Четвёртый': 'Fourth', 'Под землёй': 'Underground',
+  'Парирую': 'Parry', 'Стреляю': 'Shoot', 'Бегу': 'Run', 'Рисовка': 'Drawing', 'От руки': 'By hand', 'Каждый кадр нарисован вручную': 'Every frame drawn by hand',
+  'Оркестр': 'Orchestra', 'Трубы': 'Trumpets', 'Громкие': 'Loud', 'Банджо': 'Banjo', 'Расстроено': 'Out of tune', 'Барабаны': 'Drums',
+  'Весёлые': 'Cheerful', 'Свинг': 'Swing', 'Джаз': 'Jazz', 'Рэгтайм': 'Ragtime', 'Ни одна душа не была продана': 'No souls were sold',
+  'Чайнику': 'The kettle', 'За совет': 'For the advice', 'Кружке': 'The mug', 'За компанию': 'For the company', 'Аниматорам': 'The animators',
+  'За каждый кадр': 'For every frame', 'Долг погашен': 'Debt paid',
+  // cube
+  'Кубический мир': 'A World of Cubes', 'по мотивам игры из блоков': 'after a game made of blocks', 'Мир из блоков. Ночь близко.': 'A world of blocks. Night is near.',
+  'Шахтёр': 'Miner', 'Крипер': 'Creeper', 'Ш-ш-ш…': 'Sss…', 'Мажет': 'Misses', 'Зомби': 'Zombie', 'Горит днём': 'Burns by day',
+  'Эндермен': 'Enderman', 'Не смотри': "Don't look", 'Житель': 'Villager', 'Хм-м': 'Hmm', 'Дерево': 'Wood', 'Камень': 'Stone',
+  'Гравий': 'Gravel', 'Кирка': 'Pickaxe', 'Деревянная': 'Wooden', 'Факел': 'Torch', 'Один на всех': 'One for all',
+  'Крипер рядом — беги': 'Creeper near? Run', 'Ремесло': 'Crafting', 'Верстак': 'Workbench', 'Три на три': 'Three by three',
+  'Печь': 'Furnace', 'Без угля': 'No coal', 'Сундук': 'Chest', 'Пустой': 'Empty', 'Кровать': 'Bed', 'Пропусти ночь': 'Skip the night',
+  'Портал': 'Portal', 'Обсидиан': 'Obsidian', 'Алмаз': 'Diamond', 'Изумруд': 'Emerald', 'Редстоун': 'Redstone', 'Глубоко внизу': 'Deep down',
+  'Никогда не копай прямо вниз': 'Never dig straight down', 'Измерения': 'Dimensions', 'Верхний мир': 'Overworld', 'Квадратное солнце': 'A square sun',
+  'Огненный мир': 'The fire world', 'Слишком жарко': 'Too hot', 'Край': 'The edge', 'Дракон ждёт': 'The dragon waits', 'Блок': 'Block',
+  'Ни один крипер не обнял тебя': 'Not one creeper hugged you', 'Свиньям': 'The pigs', 'За уют': 'For the cosiness', 'Овцам': 'The sheep',
+  'За шерсть': 'For the wool', 'За каждый блок': 'For every block', 'Солнце встаёт. Пора домой.': 'The sun is up. Time to go home.',
+  // club
+  'Клуб, о котором молчат': 'The Club Nobody Mentions', 'по мотивам фильма о подпольном бойцовском клубе': 'after a film about an underground fight club',
+  'Ты встретишь себя через секунду': "You'll meet yourself in a second", 'Правила': 'Rules', 'Правило первое': 'Rule one',
+  'Никому не говорить': 'Tell no one', 'Правило второе': 'Rule two', 'Правило третье': 'Rule three', 'Бой до конца': 'Fight to the end',
+  'Правило четвёртое': 'Rule four', 'Один на один': 'One on one', 'Правило пятое': 'Rule five', 'Без рубашек': 'No shirts',
+  'Правило шестое': 'Rule six', 'Сколько нужно': 'As long as it takes', 'Подвал': 'Basement', 'Лампа': 'Lamp', 'Синяк': 'Bruise',
+  'Правило седьмое': 'Rule seven', 'Новичок дерётся': 'New guy fights', 'Правило восьмое': 'Rule eight', 'Не останавливайся': "Don't stop",
+  'Не стой: ты догонишь себя': "Don't stand still: you'll catch yourself", 'Рассказчик': 'Narrator', 'Двойник': 'Double', 'Тоже ты': 'Also you',
+  'Мыло': 'Soap', 'Розовое': 'Pink', 'Бессонница': 'Insomnia', 'Шестой месяц': 'Month six', 'Каталог мебели': 'Furniture catalogue',
+  'Прочитан': 'Read cover to cover', 'Кулак': 'Fist', 'Зуб': 'Tooth', 'Пластырь': 'Band-aid', 'Самолёт': 'Plane', 'Одноразовый': 'Single-serving',
+  'Ты не твоя работа': 'You are not your job', 'Проект': 'Project', 'Без окон': 'No windows', 'Кадр': 'Frame', 'Двадцать пятый': 'Twenty-fifth',
+  'Метка смены части': 'Changeover mark', 'В углу экрана': 'In the corner of the screen', 'Бомба': 'Bomb',
+  'Всё, что у тебя есть, владеет тобой': 'The things you own end up owning you', 'Подвалу': 'The basement', 'За тишину': 'For the silence',
+  'Себе': 'Yourself', 'Бессоннице': 'Insomnia', 'За ночи': 'For the nights', 'Ты никому не расскажешь': "You won't tell anyone",
+  // upside
+  'Изнанка титров': 'The Credits Upside Down', 'по мотивам сериала об очень странных делах': 'after a series about very strange things',
+  'Гирлянда мигает — мир переворачивается': 'The lights blink: the world flips', 'Мальчик': 'Boy', 'Пропал': 'Missing', 'Девочка': 'Girl',
+  'С номером': 'With a number', 'Друзья': 'Friends', 'На великах': 'On bikes', 'Шериф': 'Sheriff', 'Пьёт кофе': 'Drinks coffee', 'Мама': 'Mum',
+  'Слышит лампочки': 'Hears the bulbs', 'Чудовище': 'Monster', 'Без лица': 'No face', 'Велик': 'Bike', 'Рация': 'Walkie-talkie',
+  'Фонарик': 'Flashlight', 'Вафли': 'Waffles', 'Замороженные': 'Frozen', 'Лаборатория': 'Lab', 'Закрыта': 'Closed',
+  'Роли в одном мире, имена — в другом': 'Roles in one world, names in the other', 'Изнанка': 'Upside down', 'Воздух': 'Air', 'Пепел': 'Ash',
+  'Свет': 'Light', 'Не работает': 'Broken', 'Стоит': 'Stands', 'В стене': 'In the wall', 'Лампочки': 'Bulbs', 'Говорят': 'Talk',
+  'Код': 'Code', 'Морзе': 'Morse', 'Друзья не врут': "Friends don't lie", 'Восьмидесятые': 'The eighties', 'На кассете': 'On tape',
+  'Аркада': 'Arcade', 'Закрывается': 'Closing', 'Причёски': 'Hair', 'Огромные': 'Huge', 'Ролики': 'Roller skates', 'Кассета': 'Cassette',
+  'Плеер': 'Walkman', 'Ни одна лампочка не перегорела': 'Not one bulb burnt out', 'Гирлянде': 'The lights', 'За сигналы': 'For the signals',
+  'Велосипедам': 'The bikes', 'За скорость': 'For the speed', 'Друзьям': 'Friends', 'За поиски': 'For searching',
+  'Ты вернулся с той стороны': 'You came back from the other side',
+  // wizard
+  'Школа волшебства': 'The School of Magic', 'по мотивам сказки о мальчике со шрамом': 'after a tale about a boy with a scar',
+  'Письмо пришло. Сова ждёт.': 'The letter came. The owl is waiting.', 'Ученик': 'Pupil', 'Со шрамом': 'With a scar', 'Друг': 'Friend',
+  'Рыжий': 'Ginger', 'Подруга': 'Friend', 'Всё знает': 'Knows it all', 'Директор': 'Headmaster', 'С бородой': 'With a beard',
+  'Профессор зелий': 'Potions master', 'Мрачный': 'Gloomy', 'Великан': 'Giant', 'Добрый': 'Kind', 'Сова': 'Owl', 'Кот': 'Cat', 'Жаба': 'Toad',
+  'Тот, кого': 'The one who', 'Нельзя называть': 'Must not be named', 'Шляпа': 'Hat', 'Думает': 'Thinks', 'Ни одна сова не опоздала': 'Not one owl was late',
+  'Предметы': 'Things', 'Палочка': 'Wand', 'Перо феникса': 'Phoenix feather', 'Метла': 'Broom', 'Быстрая': 'Fast', 'Мантия': 'Cloak',
+  'Невидимая': 'Invisible', 'Видит всех': 'Sees everyone', 'Снитч': 'Snitch', 'Золотой': 'Golden', 'Перо': 'Quill', 'Пергамент': 'Parchment',
+  'Чернила': 'Ink', 'Лестницы': 'Staircases', 'Двигаются': 'They move', 'Бладжеры отскакивают от краёв': 'Bludgers bounce off the edges',
+  'Заклинания': 'Spells', 'Люмос': 'Lumos', 'Полёт': 'Flight', 'Левиоса': 'Leviosa', 'Защита': 'Defence', 'Патронус': 'Patronus',
+  'Котёл': 'Cauldron', 'Зелье': 'Potion', 'Мандрагора': 'Mandrake', 'Платформа девять и три четверти': 'Platform nine and three quarters',
+  'Сове': 'The owl', 'За почту': 'For the post', 'Великану': 'The giant', 'За торт': 'For the cake', 'Шалость удалась': 'Mischief managed',
+  // wanted
+  'Звёзды розыска': 'Wanted Stars', 'по мотивам игры о большом городе и плохих решениях': 'after a game about a big city and bad decisions',
+  'ПОТРАЧЕНО': 'WASTED', 'Добро пожаловать в город. Веди себя тихо.': 'Welcome to the city. Keep it quiet.', 'Главный герой': 'Main character',
+  'Друг детства': 'Childhood friend', 'Предаст': 'Will betray', 'Полиция': 'Police', 'Везде': 'Everywhere', 'Таксист': 'Cab driver',
+  'Без лицензии': 'No licence', 'Радиоведущий': 'Radio host', 'Шутит': 'Jokes', 'Прохожие': 'Passers-by', 'Не смотрят': "Don't look",
+  'Машина': 'Car', 'Неприятности': 'Trouble', 'Вертолёт': 'Helicopter', 'Светит прожектором': 'Shines a spotlight', 'Сирена': 'Siren',
+  'Не умолкает': 'Never stops', 'Каждая пачка денег — ещё звезда': 'Every wad of cash is another star', 'Миссии': 'Missions', 'Доставка': 'Delivery',
+  'Срочно': 'Urgent', 'Гонка': 'Race', 'Без правил': 'No rules', 'Ограбление': 'Heist', 'Почти удалось': 'Almost worked', 'Погоня': 'Chase',
+  'Пять звёзд': 'Five stars', 'Побег': 'Escape', 'Через пирс': 'Over the pier', 'Одна': 'One', 'Пять': 'Five', 'Перекраска': 'Respray',
+  'Помогает': 'Helps', 'Не стой в луче прожектора': 'Stay out of the spotlight', 'Радио': 'Radio', 'Рок': 'Rock', 'Ток-шоу': 'Talk show',
+  'Абсурд': 'Nonsense', 'Реклама': 'Ads', 'Чаще песен': 'More than songs', 'Пляж': 'Beach', 'Пальмы': 'Palms', 'Неон': 'Neon',
+  'Ни один пешеход не перешёл на зелёный': 'Not one pedestrian crossed on green', 'Пальмам': 'The palms', 'За тень': 'For the shade',
+  'Полиции': 'The police', 'За погоню': 'For the chase', 'Городу': 'The city', 'Звёзды погасли': 'The stars went out',
+  // dino
+  'Парк динозавров': 'Dinosaur Park', 'по мотивам фильма об острове с динозаврами': 'after a film about an island of dinosaurs',
+  'Добро пожаловать. Держитесь крепче.': 'Welcome. Hold on tight.', 'Тираннозавр': 'Tyrannosaurus', 'Сверху': 'From above',
+  'Велоцирапторы': 'Velociraptors', 'Умные': 'Clever', 'Палеонтолог': 'Palaeontologist', 'В шляпе': 'In a hat', 'Математик': 'Mathematician',
+  'Основатель': 'Founder', 'Не жалел денег': 'Spared no expense', 'Комар': 'Mosquito', 'В янтаре': 'In amber', 'Джип': 'Jeep', 'Забор': 'Fence',
+  'Ток': 'Current', 'Стакан воды': 'A glass of water', 'Дрожит': 'Trembles', 'Брахиозавр': 'Brachiosaurus', 'Чихает': 'Sneezes',
+  'Вода в стакане дрожит — держись': 'The water trembles: hold on', 'Парк': 'Park', 'Ворота': 'Gates', 'Открываются': 'Opening',
+  'Без тока': 'No power', 'Вольер': 'Paddock', 'Кухня': 'Kitchen', 'Не прятаться': 'No hiding', 'Генератор': 'Generator', 'Сломан': 'Broken',
+  'Рёв': 'Roar', 'Топот': 'Stomp', 'Улетел': 'Flew off', 'Сверху челюсть. Не задерживайся.': "A jaw from above. Don't linger.",
+  'Наука': 'Science', 'ДНК': 'DNA', 'Из янтаря': 'From amber', 'Лягушки': 'Frogs', 'Помогли': 'Helped', 'Ошибка': 'Mistake', 'Янтарь': 'Amber',
+  'Яйцо': 'Egg', 'Жизнь найдёт путь': 'Life finds a way', 'За предупреждение': 'For the warning', 'Джипу': 'The jeep', 'За побег': 'For the escape',
+  'Шляпе': 'The hat', 'За стиль': 'For the style', 'Парк закрыт': 'Park closed',
+  // deep
+  'Океан чужой планеты': 'An Alien Ocean', 'по мотивам игры о выживании под водой': 'after a game about surviving underwater',
+  'Корабль разбился. Ты под водой.': 'The ship crashed. You are underwater.', 'Выживший': 'Survivor', 'Спасательная капсула': 'Lifepod',
+  'Протекает': 'Leaking', 'Глазастик': 'Peeper', 'Смотрит': 'Watching', 'Левиафан': 'Leviathan', 'Где-то рядом': 'Somewhere near',
+  'В записях': 'In the logs', 'Компьютер': 'Computer', 'Всё под контролем': 'All under control', 'Вода': 'Water', 'Подлодка': 'Submarine',
+  'Маленькая': 'A small one', 'Сканер': 'Scanner', 'Сканирует': 'Scanning', 'Хватай пузыри, пока дышишь': 'Grab bubbles while you breathe',
+  'Глубина': 'Depth', 'Мелководье': 'Shallows', 'Безопасно': 'Safe', 'Водоросли': 'Kelp', 'Целый лес': 'A whole forest', 'Пещеры': 'Caves',
+  'Тесно': 'Tight', 'Обрыв': 'Drop-off', 'Не заплывай': "Don't swim out", 'Бездна': 'The abyss', 'Смотрит в ответ': 'Looks back',
+  'Двести': 'Two hundred', 'Пятьсот': 'Five hundred', 'Совсем близко': 'Very close', 'Левиафан проплыл мимо. Почти.': 'The leviathan swam past. Almost.',
+  'Титан': 'Titanium', 'Из обломков': 'From the wreck', 'Медь': 'Copper', 'Мало': 'Not enough', 'Батарея': 'Battery', 'Садится': 'Running down',
+  'Нож': 'Knife', 'Ласты': 'Fins', 'Баллон': 'Tank', 'Ни одна рыба не дала себя поймать': 'Not one fish let itself be caught',
+  'Пузырям': 'The bubbles', 'Глазастикам': 'The peepers', 'Ракете': 'The rocket', 'За путь домой': 'For the way home', 'Поверхность ждёт': 'The surface is waiting',
+  // basement
+  'Мальчик в подвале': 'The Boy in the Basement', 'по мотивам игры о слезах и подвале': 'after a game about tears and a basement',
+  'Мама слышит голос сверху': 'Mum hears a voice from above', 'Мухи': 'Flies', 'Жужжат': 'Buzzing', 'Черепа': 'Skulls',
+  'Плюются слезами': 'Spit tears', 'Девять жизней': 'Nine lives', 'Не верит в долг': "Doesn't believe in debt", 'Ключ': 'Key',
+  'Монетка': 'Penny', 'Половинка': 'Half', 'Слёзы — твоё единственное оружие': 'Tears are your only weapon', 'Этажи': 'Floors',
+  'Сыро': 'Damp', 'Глубже': 'Deeper', 'Чрево': 'The womb', 'Не спрашивай': "Don't ask", 'Собор': 'Cathedral', 'Светло': 'Bright',
+  'Пилюля': 'Pill', 'Руна': 'Rune', 'Секретная комната': 'Secret room', 'За стеной': 'Behind the wall', 'Каждый забег — другой': 'Every run is different',
+  'Луковица': 'Onion', 'Больше слёз': 'More tears', 'Вилка': 'Fork', 'Мамина': "Mum's", 'Носок': 'Sock', 'Тоже мамин': "Mum's too",
+  'Лук': 'Bow', 'Крест': 'Cross', 'Нимб': 'Halo', 'Черепа плюют крестом. Не стой в линию.': 'Skulls spit in a cross. Stay off their lines.',
+  'Маме': 'Mum', 'За заботу': 'For caring', 'Мухам': 'The flies', 'За приют': 'For the shelter', 'Ты выбрался. На этот раз.': 'You got out. This time.',
+  // hell
+  'Ад на Марсе': 'Hell on Mars', 'по мотивам игры о демонах и дробовике': 'after a game about demons and a shotgun',
+  'Портал открыт. Демоны вышли.': 'The portal is open. The demons are out.', 'Десантник': 'Marine', 'Бесы': 'Imps', 'Кидают огонь': 'Throw fire',
+  'Розовый демон': 'Pink demon', 'Кусается': 'Bites', 'Какодемон': 'Cacodemon', 'Летает': 'Flies', 'Кибердемон': 'Cyberdemon',
+  'В финале': 'In the finale', 'Учёные': 'Scientists', 'Открыли портал': 'Opened the portal', 'Дробовик': 'Shotgun', 'Пила': 'Chainsaw',
+  'Плазма': 'Plasma', 'Бочки': 'Barrels', 'Взрываются': 'Explode', 'Аптечки': 'Medkits', 'Не хватает': 'Never enough',
+  'Бесы светятся, прежде чем бросить': 'Imps glow before they throw', 'База': 'Base', 'Ангар': 'Hangar', 'Тёмный': 'Dark',
+  'Токсичные отходы': 'Toxic waste', 'Секретная дверь': 'Secret door', 'В ад': 'To hell', 'Огонь попадёт в бочку — отойди': 'Fire hits a barrel: step back',
+  'Гитары': 'Guitars', 'Тяжёлые': 'Heavy', 'Быстрее': 'Faster', 'Не бывает': "Doesn't exist", 'Рви': 'Rip', 'и': 'and', 'Мечи': 'Tear',
+  'Ни один демон не ушёл живым': 'Not one demon left alive', 'Дробовику': 'The shotgun', 'За надёжность': 'For being reliable',
+  'Бочкам': 'The barrels', 'За фейерверк': 'For the fireworks', 'Пиле': 'The chainsaw', 'За решение': 'For the solution',
+  'Ад закрыт на ремонт': 'Hell is closed for repairs', 'Рви и мечи': 'Rip and tear',
+  // night
+  'Ночная смена': 'The Night Shift', 'по мотивам игры о пиццерии с роботами': 'after a game about a pizzeria with robots',
+  'Алло? Алло? Это твоя первая ночь.': "Hello? Hello? It's your first night.", 'Охранник': 'Night guard', 'Медведь': 'Bear', 'Поёт': 'Sings',
+  'Кролик': 'Bunny', 'Ходит': 'Walks', 'Курица': 'Chicken', 'Хочет есть': 'Hungry', 'Лис': 'Fox', 'За занавеской': 'Behind the curtain',
+  'Голос в трубке': 'Voice on the phone', 'Ободряет': 'Reassuring', 'Двери': 'Doors', 'Энергия': 'Power', 'Кончается': 'Running out',
+  'Вентилятор': 'Fan', 'Крутится': 'Spinning', 'На свету они не двигаются': "In the light they don't move", 'Пиццерия': 'Pizzeria', 'Сцена': 'Stage',
+  'Пустая': 'Empty', 'Без камеры': 'No camera', 'Коридор': 'Hallway', 'Длинный': 'Long', 'Пиратская бухта': 'Pirate cove', 'Кладовка': 'Storeroom',
+  'Тесная': 'Cramped', 'Полночь': 'Midnight', 'Час': 'One o’clock', 'Гудит': 'Hums', 'Свет гаснет — они идут': 'Lights out: they come',
+  'Не выключать': "Don't switch off", 'Не смотреть': "Don't look", 'Долго': 'Too long', 'Дождаться': 'Wait for', 'Шести утра': '6 a.m.',
+  'Четыре': 'Four', 'Ни один костюм не пустой': 'Not one costume is empty', 'Фонарику': 'The flashlight', 'Телефону': 'The phone',
+  'За советы': 'For the tips', 'Утру': 'The morning', 'За то, что пришло': 'For coming', 'Шесть утра': '6 a.m.', '6:00 утро': '6:00 AM',
+  // chomp
+  'Жёлтый обжора': 'The Yellow Glutton', 'по мотивам аркады из восьмидесятых': 'after an arcade game from the eighties',
+  'Ты точка. Он голоден.': 'You are a dot. He is hungry.', 'Точка': 'Dot', 'Обжора': 'Glutton', 'Жёлтый, круглый': 'Yellow, round',
+  'Красный призрак': 'Red ghost', 'Злится': 'Angry', 'Розовый призрак': 'Pink ghost', 'Хитрит': 'Sly', 'Голубой призрак': 'Cyan ghost',
+  'Стесняется': 'Shy', 'Оранжевый': 'Orange', 'Сам по себе': 'Does his own thing', 'Вишня': 'Cherry', 'Клубника': 'Strawberry',
+  'Яблоко': 'Apple', 'Лабиринт': 'Maze', 'Тоннель': 'Tunnel', 'Насквозь': 'Straight through', 'Ни одна точка не уцелела': 'Not one dot survived',
+  'Ест точки': 'Eats dots', 'Точки': 'Dots', 'Убегают': 'Run away', 'Призраки': 'Ghosts', 'Синеют': 'Turn blue', 'Жизни': 'Lives',
+  'Рекорд': 'High score', 'Восемь нулей': 'Eight zeros', 'Вака': 'Waka', 'Ещё одну?': 'One more?', 'Беги. Он ускоряется.': 'Run. He speeds up.',
+  'Автомат': 'Cabinet', 'Джойстик': 'Joystick', 'Залип': 'Sticky', 'Экран': 'Screen', 'Мерцает': 'Flickers', 'Пятьдесят шесть': 'Fifty-six',
+  'Игра окончена? Ещё нет.': 'Game over? Not yet.', 'Призракам': 'The ghosts', 'Вишне': 'The cherry', 'За бонус': 'For the bonus',
+  'Что не съеден': 'For not being eaten', 'Вставь монетку': 'Insert coin', 'Вака-вака': 'Waka-waka',
+  // snap
+  'Половина вселенной': 'Half the Universe', 'по мотивам фильма о перчатке с камнями': 'after a film about a gauntlet with stones',
+  'Один щелчок — и половины нет': 'One snap and half is gone', 'С перчаткой': 'With the gauntlet', 'Со щитом': 'With a shield',
+  'Бог грома': 'God of thunder', 'Опоздал': 'Late', 'Гений': 'Genius', 'В броне': 'In armour', 'Енот': 'Raccoon', 'Не енот': 'Not a raccoon',
+  'Знает три слова': 'Knows three words', 'Разум': 'Mind', 'Перчатка': 'Gauntlet', 'Золотая': 'Golden', 'Камни': 'Stones', 'Шесть': 'Six',
+  'После щелчка слова рассыпаются': 'After the snap words turn to dust', 'Пространство': 'Space', 'Реальность': 'Reality', 'Сила': 'Power',
+  'Фиолетовый': 'Purple', 'Цена': 'The price', 'Половина': 'Half', 'Вернётся': 'Will return', 'Идеально сбалансировано': 'Perfectly balanced',
+  'Битва': 'Battle', 'Открыт': 'Open', 'Щит': 'Shield', 'Молот': 'Hammer', 'Достоин': 'Worthy', 'Всё': 'Everything',
+  'Я люблю тебя три тысячи раз': 'I love you three thousand times', 'Камням': 'The stones', 'За силу': 'For the power', 'Перчатке': 'The gauntlet',
+  'За щелчок': 'For the snap', 'Половине': 'The half', 'За возвращение': 'For coming back', 'Вселенная снова целая': 'The universe is whole again',
+  // neon
+  'Неоновая маска': 'The Neon Mask', 'по мотивам игры о масках и неоне восьмидесятых': 'after a game about masks and eighties neon',
+  'На автоответчике новое сообщение': 'New message on the machine', 'Человек в маске': 'Man in a mask', 'Петух': 'Rooster', 'Тоже маска': 'Also a mask',
+  'Лошадь': 'Horse', 'И это маска': 'Mask again', 'Бандиты': 'Mobsters', 'В белых костюмах': 'In white suits', 'Продавец': 'Clerk',
+  'Всегда разный': 'Never the same', 'Телефон': 'Phone', 'Адрес': 'Address', 'Дверь': 'Door', 'Бита': 'Bat', 'Комбо': 'Combo',
+  'Без промаха': 'No misses', 'Один удар решает всё': 'One hit settles it', 'Пусто': 'Empty', 'Лестница': 'Stairs', 'Ждёт у входа': 'Waits at the door',
+  'Голубой': 'Cyan', 'Перемотана': 'Rewound', 'Прыгай сверху, держи комбо': 'Jump from above, keep the combo', 'Синтезатор': 'Synth',
+  'Бас': 'Bass', 'Давит': 'Pounding', 'Ритм': 'Beat', 'Сто тридцать': 'One-thirty', 'Майами': 'Miami', 'Восемьдесят': 'Eighty', 'Девять': 'Nine',
+  'Ни одна маска не сказала правду': 'Not one mask told the truth', 'Маскам': 'The masks', 'За анонимность': 'For anonymity', 'За звонки': 'For the calls',
+  'Неону': 'The neon', 'Пора уходить. Машина ждёт.': 'Time to go. The car is waiting.', 'Уровень зачищен': 'Level cleared',
+  // code
+  'Проснись, избранный': 'Wake Up, Chosen One', 'по мотивам фильма о красной таблетке': 'after a film about a red pill',
+  'Следуй за белым кроликом': 'Follow the white rabbit', 'Избранный': 'The chosen one', 'Наставник': 'Mentor', 'В тёмных очках': 'In dark glasses',
+  'Агенты': 'Agents', 'Все одинаковые': 'All the same', 'Оракул': 'Oracle', 'Печёт печенье': 'Bakes cookies', 'Белый': 'White', 'Дважды': 'Twice',
+  'Синяя': 'Blue one', 'Таблетка': 'Pill', 'Ложка': 'Spoon', 'Её нет': "There isn't one", 'Звонит': 'Ringing',
+  'Ложки нет. Титры есть.': 'There is no spoon. There are credits.', 'Программа': 'Program', 'Пули': 'Bullets', 'Медленно': 'Slowly',
+  'Крыша': 'Rooftop', 'Не допрыгнул': "Didn't make the jump", 'Зеркало': 'Mirror', 'Течёт': 'Melting', 'Дежавю': 'Déjà vu', 'Ноль': 'Zero',
+  'Один': 'One', 'Выход': 'Exit', 'Через телефон': 'Through the phone', 'Красный код падает. Не стой.': "Red code falls. Don't stand.",
+  'Корабль': 'Ship', 'Над землёй': 'Above ground', 'Еда': 'Food', 'Безвкусная': 'Tasteless', 'Последний': 'The last', 'Сон': 'Dream',
+  'Явь': 'Waking', 'Добро пожаловать в реальный мир': 'Welcome to the real world', 'Оператору': 'The operator', 'За выходы': 'For the exits',
+  'Кролику': 'The rabbit', 'За нору': 'For the hole', 'За выбор': 'For the choice', 'Ты проснулся': 'You woke up',
+  // liner
+  'Непотопляемый лайнер': 'The Unsinkable Liner', 'по мотивам драмы на воде': 'after a drama at sea', 'Корабль, который не может утонуть': 'The ship that cannot sink',
+  'Пассажир': 'Passenger', 'Художник': 'Artist', 'Третий класс': 'Third class', 'Невеста': 'Bride', 'Первый класс': 'First class', 'Уверен': 'Confident',
+  'Айсберг': 'Iceberg', 'Играет до конца': 'Plays to the end', 'Нос': 'Bow', 'Корма': 'Stern', 'Палуба': 'Deck', 'Сердце океана': 'Heart of the ocean',
+  'В кармане': 'In a pocket', 'Шлюпки': 'Lifeboats', 'Не на всех': 'Not enough', 'Я король мира!': "I'm the king of the world!",
+  'Плавание': 'Voyage', 'Прямо на север': 'Due north', 'Скорость': 'Speed', 'Полный вперёд': 'Full ahead', 'Вахта': 'Lookout',
+  'Без бинокля': 'No binoculars', 'Поднимается': 'Rising', 'Лёд': 'Ice', 'Холод': 'Cold', 'Ночь': 'Night', 'Хватило бы двоим': 'Room for two',
+  'Вода поднимается. Не жди.': "The water rises. Don't wait.", 'Скрипка': 'Violin', 'Последняя': 'The last', 'Песня': 'Song',
+  'Сердце будет': 'The heart will', 'Флейта': 'Flute', 'Ирландская': 'Irish', 'Волна': 'Wave', 'Пена': 'Foam', 'Оркестр играл до конца': 'The band played to the end',
+  'Шлюпке': 'The lifeboat', 'За место': 'For the seat', 'За плавучесть': 'For floating', 'За северный свет': 'For the northern lights',
+  'Сердце будет жить': 'The heart will go on',
+  // our film
+  'наш фильм': 'our film', 'Фильм окончен. Не вставай.': "The film is over. Don't get up.", 'Сама себя': 'Itself',
+  'Верхний край кадра': 'Top of the frame', 'Нижний край кадра': 'Bottom of the frame', 'а также': 'and also', 'Плёнка': 'Film stock',
+  'Зритель в третьем ряду': 'Viewer in row three', 'Неизвестен': 'Unknown', 'Все персонажи вымышлены, кроме тебя': 'All characters are fictional, except you',
+  'Постановка': 'Production', 'Режиссёр': 'Director', 'Случай': 'Chance', 'Сценарий': 'Script', 'Никто не дочитал': 'Nobody finished it',
+  'Оператор': 'Camera', 'Камера, что не ждёт': "A camera that won't wait", 'Монтаж': 'Editing', 'Вырезано': 'Cut', 'Аня': 'Ann', 'Боря': 'Bob',
+  'Вера': 'Cara', 'Гоша': 'Dan', 'Проектор № 2': 'Projector No. 2', 'Помощник режиссёра': 'Assistant director', 'Кофе': 'Coffee',
+  'Снято одним дублем. Почти.': 'Shot in one take. Almost.', 'Композитор': 'Composer', 'Звукорежиссёр': 'Sound', 'Шорох попкорна': 'Popcorn rustle',
+  'Песня «До конца»': 'The song "To the End"', 'Все, кто остался': 'Everyone who stayed', 'Музыка не прозвучала ни разу': 'The music never played once',
+  'Транспорт': 'Transport', 'Водитель': 'Driver', 'Без прав': 'No licence', 'Лифт': 'Lift', 'Только вниз': 'Down only', 'Грузовик': 'Truck',
+  'Уже едет': 'On its way', 'Ни одна машина не затормозила': 'Not one car braked', 'Каскадёры': 'Stunts', 'Падения': 'Falls', 'Ещё падения': 'More falls',
+  'Дублёр': 'Stunt double', 'Отсутствовал': 'Absent', 'Ни одна точка не пострадала': 'No dots were harmed', 'Страховка': 'Insurance',
+  'Не предусмотрена': 'Not included', 'Тем, кто не ушёл': 'Those who stayed', 'Спасибо': 'Thank you', 'Тем, кто ушёл': 'Those who left',
+  'Тоже спасибо': 'Thank you too', 'Билетёру': 'The usher', 'Папе': 'Dad', 'Коту': 'The cat', 'Свет в зале включат через минуту': 'The lights come on in a minute',
+  'Уборка зала': 'Cleaning', 'Уже идёт': 'Under way', 'Сцены после титров не будет': 'There is no scene after the credits',
+
+  // ===== the game around the films =====
+  // deaths
+  'Начало': 'Beginning', 'Стоп. Снято.': 'Cut. Print.', 'Тебя застрелили': 'You were shot', 'Гвоздь достал тебя': 'A nail got you',
+  'В тебя попал метеорит': 'A meteor hit you', 'Гриб оказался сильнее': 'The mushroom won', 'Крипер взорвался рядом': 'A creeper blew up nearby',
+  'Бладжер не промахнулся': "The bludger didn't miss", 'Тебя съел обжора': 'The glutton ate you', 'был предателем': 'was the traitor',
+  'не был предателем': 'was not the traitor', 'Тебя убил предатель': 'The traitor got you', 'Тебя придавило фигурой': 'A shape crushed you',
+  'Череп оказался ближе, чем казалось': 'The skull was closer than it looked', 'Тебя залили слезами': 'You drowned in tears',
+  'Тебя проглотил левиафан': 'The leviathan swallowed you', 'Тебя стёр код': 'The code erased you', 'Выбыл: ты пошевелился': 'Eliminated: you moved',
+  'Ты встретил себя': 'You met yourself', 'Кончился кислород': 'Out of oxygen', 'Тебя поймал аниматроник': 'An animatronic caught you',
+  'Тебя съел тираннозавр': 'The tyrannosaurus ate you', 'Тебя унесло за верх кадра': 'Carried off the top of the frame', 'Ты утонул': 'You drowned',
+  'Ты выпал из кадра': 'You fell out of the frame', 'Кость оказалась быстрее': 'The bone was faster', 'Синяя кость: надо было стоять': 'Blue bone: you had to stay still',
+  'Снайпер с вертолёта': 'A sniper in the helicopter', 'Тебя смыло дождём': 'The rain washed you away', 'Тебя сбила полиция': 'The police ran you over',
+  'Тебя поджарил бес': 'An imp roasted you', 'Бочка взорвалась рядом': 'A barrel blew up nearby', 'Один удар — и всё': 'One hit and done',
+  'Тебя догнала лава': 'The lava caught you', 'Тебя накрыло титрами': 'The credits came down on you', 'Тебя завалило обломками': 'Buried under rubble',
+  // on the films
+  'СБОР': 'MEET', 'ПРАЗДНУЙ!': 'CELEBRATE!', 'ТИШЕ ЕДЕШЬ…': 'RED LIGHT…', 'СТОП': 'STOP', 'ИЗНАНКА БЛИЗКО': 'THE UPSIDE DOWN IS NEAR',
+  'ВОЗВРАЩАЕМСЯ': 'COMING BACK', 'СВЕТ: НЕТ': 'LIGHT: OFF', 'СВЕТ: ЕСТЬ': 'LIGHT: ON', '* ПОЩАДИТЬ': '* SPARE', '* Кости приближаются.': '* Bones approach.',
+  'комбо x{0}': 'combo x{0}', 'ПАРИРОВАНО!': 'PARRIED!', 'НОКАУТ!': 'KNOCKOUT!', 'МИССИЯ ВЫПОЛНЕНА': 'MISSION PASSED', '+ УВАЖЕНИЕ': '+ RESPECT',
+  'СЧЁТ {0}': 'SCORE {0}',
+  // what happens to THE END
+  'Контракт выполнен': 'Contract fulfilled', 'Курс пройден!': 'Course clear!', 'Королевство помнит тебя': 'The kingdom remembers you',
+  'Красный был предателем.': 'Red was the traitor.', 'АВАРИЙНОЕ СОБРАНИЕ': 'EMERGENCY MEETING', 'Игрок 456 прошёл': 'Player 456 made it',
+  'Взлёт разрешён': 'Cleared for take-off', 'Линия! +100': 'Line! +100', 'Ш-ш-ш… бум.': 'Sss… boom.', 'Где мой разум?': 'Where is my mind?',
+  'Ты видел изнанку': 'You saw the other side', 'Вингардиум левиоса!': 'Wingardium leviosa!', 'Левиафан сыт': 'The leviathan is full',
+  'Слёзы кончились': 'Out of tears', 'УТРО': 'MORNING', 'Конец — это тоже код': 'The end is code too', 'Весь вечер — за один сеанс': 'The whole evening in one screening',
+  // the pause
+  'Пауза': 'Paused', 'Пауза (кнопка)': 'Pause', 'ПЛЁНКА ОСТАНОВЛЕНА': 'FILM STOPPED', 'P — ПРОДОЛЖИТЬ': 'P — RESUME', 'В МЕНЮ': 'TO MENU', 'ЖИЗНЬ ЗАКОНЧИТСЯ': 'THIS LIFE ENDS',
+  // menus
+  'Успей на всех сеансах и собери все звёзды': 'Make every session in time and collect every star', 'Свет в зале': 'House Lights',
+  'Успей везде и собери больше половины звёзд, но не все': 'Make every session, collect over half the stars but not all',
+  'Мимо звёзд': 'Past the Stars', 'Успей везде, но собери меньше половины звёзд': 'Make every session but collect under half the stars',
+  'Пустой зал': 'An Empty Hall', 'Опоздай хоть раз, но собери половину звёзд или больше': 'Be late at least once, collect half the stars or more',
+  'Опоздай хоть раз и собери меньше половины звёзд': 'Be late at least once and collect under half the stars', 'Назад': 'Back', 'смотреть': 'watch',
+  'смотреть (читы)': 'watch (cheats)', 'закрыта': 'locked', 'Марафон': 'Marathon', 'Все {0} фильмов подряд на одних часах': 'All {0} films back to back on one clock',
+  'рекорд {0}': 'best {0}', 'Одна жизнь': 'One Life', 'Откроется после всех пяти концовок': 'Opens after all five endings',
+  'Весь вечер без единого дубля. Ошибся — всё сначала': 'The whole evening without a single retake. One slip and you start over',
+  'прожита': 'lived', 'сеанс {0}': 'session {0}', 'закрыто': 'locked', 'Сеанс {0}': 'Session {0}', 'Все титры сразу': 'All the Credits at Once',
+  'Откроется после первой концовки': 'Opens after the first ending', 'Секретный сеанс: титры всех фильмов вперемешку': 'Secret session: every film’s credits, all mixed up',
+  'пройден': 'done', 'закрыт': 'locked', 'Восхождение': 'The Ascent', 'Откроется после секретного сеанса': 'Opens after the secret session',
+  'Вверх по титрам, пока снизу поднимается лава': 'Up the credits while lava rises from below', 'пройдено': 'done', 'Золотая точка': 'Golden dot',
+  'Награда за прожитую одну жизнь': 'The reward for living one life', 'вкл': 'on', 'выкл': 'off', 'Полный экран': 'Fullscreen', 'Язык': 'Язык',
+  'Русский': 'Русский', 'Эффекты': 'Effects', 'нет WebGL': 'no WebGL', 'высокие': 'high', 'низкие': 'low',
+  'Свечение, разводы цвета, плёнка VHS. Низкие — без свечения': 'Glow, colour fringes, VHS tape. Low: no glow',
+  'Чит-режим': 'Cheat mode', 'Снаряды не убивают': "Hazards don't kill", 'да': 'yes', 'нет': 'no', 'Начать с любого сеанса': 'Start from any session',
+  'Любая концовка': 'Any ending', 'K во время сеанса — пропустить его': 'K during a session skips it',
+  'Забег с читами не открывает концовки и рекорды': 'A run with cheats opens no endings and sets no records', 'Продолжить вечер': 'Continue the evening',
+  'Начать вечер': 'Start the evening', 'Режимы': 'Modes', 'Достижения': 'Achievements', 'Концовки': 'Endings', 'Статистика вечера': 'Evening statistics',
+  'Читы': 'Cheats', 'Настройки': 'Settings', 'Новый забег': 'New run', 'С какого сеанса': 'Pick a session', '{0} сеансов. Один вечер. Одна жизнь.': '{0} sessions. One evening. One life.',
+  'Открытые можно пересмотреть. Под каждой — как её открыть.': 'Watch the ones you opened. Under each: how to open it.',
+  'Для тестов и просмотра концовок': 'For testing and watching endings', 'Тестовый забег, в рекорды не идёт': "A test run, it doesn't count for records",
+  'Другие способы провести вечер': 'Other ways to spend the evening', 'F — экран': 'F — screen', 'M — звук': 'M — sound', 'N — музыка': 'N — music',
+  'Открыто {0} из {1}': '{0} of {1} unlocked', 'Последний вечер': 'Last evening', 'Вечер ещё идёт': 'The evening is still on', 'ПРОГРАММА ВЕЧЕРА': "TONIGHT'S PROGRAMME",
+  '← → — листать': '← → — turn pages', 'ESC — назад': 'ESC — back', '↑ ↓ — выбрать': '↑ ↓ — choose', 'ПРОБЕЛ или касание — открыть': 'SPACE or tap — open',
+  'ЧИТ-РЕЖИМ': 'CHEAT MODE',
+  // the cards
+  'МАРАФОН': 'MARATHON', 'СЕАНС {0} ИЗ {1}': 'SESSION {0} OF {1}', 'ТАЙМЕР {0}': 'TIMER {0}', 'ЗВЁЗД {1}': 'STARS {1}',
+  'следи за красным лазером': 'watch for the red laser', 'прыгай на грибы сверху': 'jump on mushrooms from above', 'гвозди блестят перед падением': 'nails glint before they fall',
+  'двигайся, только пока кукла поёт': 'move only while the doll sings', 'гравитация слабая, прыжки длинные': 'low gravity, long jumps',
+  'криперы взрывают слова': 'creepers blow up words', 'бладжеры отскакивают от краёв': 'bludgers bounce off the edges', 'не дай себя догнать': "don't let it catch you",
+  'красный код падает столбами сверху': 'red code falls in columns', 'вода поднимается снизу': 'water rises from below',
+  'не стой на месте: ты догонишь себя': "don't stand still: you'll catch yourself", 'предатель вспыхивает красным, прыжок сверху выкидывает': 'the traitor flashes red; jump on top to eject',
+  'упавшая фигура становится платформой': 'a landed shape becomes a platform', 'гирлянда мигает — сейчас перевернётся': 'the lights blink: the world is about to flip',
+  'стакан дрожит — сейчас подбросит': 'the glass trembles: you are about to be thrown', 'на свету они замирают': 'they freeze in the light',
+  'перчатка светится — половина слов исчезнет': 'the gauntlet glows: half the words will vanish', 'черепа плюются слезами крестом': 'skulls spit tears in a cross',
+  'хватай пузыри, в воде можно грести прыжком': 'grab bubbles; jump to swim', 'дойди до конца': 'get to the end',
+  'появилась рамка — прыгай через кости': 'a box appears: jump the bones', 'розовые капли можно отбить прыжком': 'pink drops can be parried with a jump',
+  'каждая пачка денег — ещё звезда розыска': 'every wad of cash is another wanted star', 'бесы светятся перед броском, бочки взрываются': 'imps glow before they throw; barrels explode',
+  'прыжок сверху убивает, сбоку — убивают тебя': 'from above you kill; from the side they kill you', 'вверх! снизу поднимается лава': 'up! lava rises from below',
+  'у каждого фильма свои правила': 'every film has its own rules', 'ДУБЛЬ {0}': 'TAKE {0}', 'СЕАНС {0} ОКОНЧЕН': 'SESSION {0} OVER',
+  '{0} — успел, таймер {1}': '{0} — in time, timer {1}', '{0} — опоздал на {1}': '{0} — late by {1}', 'ПРОБЕЛ — СЛЕДУЮЩИЙ СЕАНС: {0}': 'SPACE — NEXT SESSION: {0}',
+  // endings
+  'ВРЕМЯ {0}': 'TIME {0}', 'В ГРАФИКЕ {1}/{2}': 'ON TIME {1}/{2}', 'ПРОБЕЛ — НАЗАД': 'SPACE — BACK', 'ПРОБЕЛ — СТАТИСТИКА ВЕЧЕРА': "SPACE — THE EVENING'S STATS",
+  'ТОРОПИСЬ ЖИТЬ. ЖИЗНЬ ОДНА.': 'HURRY UP AND LIVE. YOU ONLY GET ONE.', 'ТОРОПИСЬ ЖИТЬ.': 'HURRY UP AND LIVE.',
+  'Тебя сбил грузовик.': 'You were hit by a truck.', 'Ты слишком долго смотрел чужие титры': 'You watched other people’s credits too long',
+  'и почти ничего не успел собрать.': 'and collected almost nothing.', 'Перерождения в другом мире не будет.': 'There will be no rebirth in another world.',
+  'Ты собрал почти всё, что видел.': 'You collected almost everything you saw.', 'Но смотрел слишком долго.': 'But you watched for too long.',
+  'Зал опустел. Сеанс давно закончился.': 'The hall is empty. The screening ended long ago.', 'Ты успел на каждый сеанс.': 'You made every session in time.',
+  'Но пробежал мимо почти всех звёзд.': 'But you ran past almost every star.', 'Спешить жить — не значит не смотреть.': "Hurrying to live doesn't mean not looking.",
+  'Свет в зале включили.': 'The house lights are on.', 'Ты успел. Почти все звёзды — с тобой.': 'You made it. Almost every star is with you.',
+  '{0} {1} в темноте.': '{0} {1} in the dark.', 'осталась': 'stayed', 'остались': 'stayed', 'Вернуться за ними нельзя: жизнь одна.': "You can't go back for them: you only get one life.",
+  'Ты успел всё.': 'You made it all.', 'Все {0} {1} — с тобой.': 'All {0} {1} are with you.', 'звезда': 'star', 'звезды': 'stars', 'звёзд': 'stars',
+  // modes
+  'ОДНА ЖИЗНЬ': 'ONE LIFE', 'Одна жизнь.': 'One life.', 'Она оборвалась на сеансе {0}:': 'It ended at session {0}:', 'ПРОБЕЛ — В МЕНЮ': 'SPACE — MENU',
+  'Ты её прожил.': 'You lived it.', 'Ни одного дубля. Ни одного «ещё раз».': 'Not one retake. Not one "once more".', 'ТВОЯ ТОЧКА ТЕПЕРЬ ЗОЛОТАЯ': 'YOUR DOT IS GOLDEN NOW',
+  'МАРАФОН ОКОНЧЕН': 'MARATHON OVER', 'НОВЫЙ РЕКОРД': 'NEW RECORD', 'РЕКОРД {0}': 'RECORD {0}', '{0} ФИЛЬМОВ': '{0} FILMS', 'ДУБЛЬ': 'TAKE', 'ДУБЛЯ': 'TAKES',
+  'ДУБЛЕЙ': 'TAKES', 'ДАЛЬШЕ: {0}': 'NEXT: {0}', 'СЕКРЕТНЫЙ СЕАНС ПРОЙДЕН': 'SECRET SESSION DONE', 'ОТКРЫТО: ВОСХОЖДЕНИЕ': 'UNLOCKED: THE ASCENT',
+  'Восхождение.': 'The Ascent.', 'Ты прошёл все титры обратно —': 'You went back through all the credits', 'до самого начала.': 'to the very beginning.',
+  'Дальше титров нет. Дальше — жизнь.': 'There are no more credits. Only life.', 'ВСЕ ТИТРЫ СРАЗУ': 'ALL THE CREDITS AT ONCE', 'Весь вечер за один сеанс': 'The whole evening in one screening',
+  'Ты видел их все': 'You saw them all', 'СЕКРЕТНЫЙ СЕАНС 26': 'SECRET SESSION 26', 'по мотивам всего вечера сразу': 'after the whole evening at once',
+  'обратно по титрам — к самому началу': 'back up the credits, to the very beginning',
+  // achievements
+  'Первый сеанс': 'First Screening', 'Дойди до THE END любого фильма': 'Reach THE END of any film', 'С первого дубля': 'One Take',
+  'Пройди фильм, ни разу не умерев': 'Finish a film without dying', 'Звездочёт': 'Stargazer', 'Собери все звёзды одного фильма': 'Collect every star in a film',
+  'Торопыга': 'In a Hurry', 'Пройди фильм быстрее 15 секунд': 'Finish a film in under 15 seconds', 'Глаза закрыты': 'Eyes Shut',
+  'Пройди фильм, не взяв ни одной звезды': 'Finish a film without taking a star', 'Опоздавший': 'Latecomer', 'Опоздай на сеанс больше чем на минуту': 'Be late for a session by over a minute',
+  'Обогнал себя': 'Beat Yourself', 'Побей свой рекорд в любом фильме': 'Beat your record in any film', 'Дубль одиннадцать': 'Take Eleven',
+  'Дойди до THE END после десяти смертей подряд': 'Reach THE END after ten deaths in a row', 'Пройди «Решимость» без единого дубля': 'Finish “Determination” without a retake',
+  'Пройди «Игру на выживание» без единого дубля': 'Finish “The Survival Game” without a retake', 'Пройди «Ночную смену» без единого дубля': 'Finish “The Night Shift” without a retake',
+  'Киномания': 'Cinephile', 'Пройди каждый фильм вечера хотя бы раз': 'Finish every film of the evening at least once', 'Сто дублей': 'A Hundred Takes',
+  'Умри сто раз за всё время': 'Die a hundred times in total', 'Вечер окончен': 'The Evening Is Over', 'Досмотри вечер до любой концовки': 'Watch the evening to any ending',
+  'Без перерождения': 'No Reincarnation', 'Получи концовку «Грузовик»': 'Get the “Truck” ending', 'Получи концовку The Beginning': 'Get The Beginning ending',
+  'Режиссёрская версия': "Director's Cut", 'Открой все пять концовок': 'Open all five endings', 'Марафонец': 'Marathoner', 'Пройди марафон': 'Finish the marathon',
+  'Без антракта': 'No Intermission', 'Пройди марафон быстрее 12 минут': 'Finish the marathon in under 12 minutes', 'Пройди вечер в режиме «Одна жизнь»': 'Finish the evening in One Life',
+  'Пройди секретный сеанс': 'Finish the secret session', 'Поднимись по титрам до самого начала': 'Climb the credits to the very beginning', 'Грибник': 'Mushroom Picker',
+  'Раздави десять грибов': 'Squash ten mushrooms', 'Это был красный': 'It Was Red', 'Выкинь предателя прыжком сверху': 'Eject the traitor by jumping on top',
+  'Отбивная': 'Parry King', 'Отбей пять розовых капель за один дубль': 'Parry five pink drops in one take', 'Набери пять звёзд розыска': 'Reach five wanted stars',
+  'Цепная реакция': 'Chain Reaction', 'Пусть огонь беса подорвёт бочку': "Let an imp's fire blow up a barrel", 'Убей трёх бандитов подряд, не касаясь слов': 'Kill three mobsters in a row without touching a word',
+  'Сухим из подвала': 'Dry-Eyed', 'Пройди «Мальчика в подвале» без единого дубля': 'Finish “The Boy in the Basement” without a retake', 'Большой экран': 'Big Screen',
+  'Включи полный экран': 'Go fullscreen', 'ДОСТИЖЕНИЕ': 'ACHIEVEMENT',
+  // statistics
+  'Сначала посмотри хотя бы один фильм.': 'Watch at least one film first.', 'ФИЛЬМ': 'FILM', 'ДУБЛИ': 'TAKES', 'ГДЕ УМИРАЛ: ОТ ТИТРА ДО THE END': 'WHERE YOU DIED: FROM TITLE TO THE END',
+  'ВСЕГО {0}': 'TOTAL {0}', 'Самый смертельный: «{0}» — {1} {2}': 'Deadliest: “{0}” — {1} {2}', 'дубль': 'take', 'дубля': 'takes', 'дублей': 'takes',
+  'Чаще всего: «{0}» × {1}': 'Most often: “{0}” × {1}',
+  // the page around the screen
+  'Сеанс': 'Session', 'Дубль': 'Take', 'Таймер': 'Timer', 'Экран с титрами': 'The screen with the credits', 'Вправо': 'Right',
+  '← → или A D — идти · Пробел или ↑ — прыжок · P — пауза · M — звук · N — музыка · F — полный экран': '← → or A D — move · Space or ↑ — jump · P — pause · M — sound · N — music · F — fullscreen',
+};
+
+// ===== src/js/02b-i18n.js =====
+// ---------- language: the game is written in Russian; English comes from the EN dictionary ----------
+// tr(s) translates one string (ignoring case, keeping capitals); Tf(fmt, …) translates a line with
+// {0}, {1}… filled in. In English every text drawn on the canvas goes through tr, so plain strings
+// need no changes in the code; the credits are translated before they are cut into words.
+const LANG = (() => {
+  const s = store.get('gtte-lang');
+  if (s === 'ru' || s === 'en') return s;
+  return /^(ru|uk|be|kk)\b/i.test(navigator.language || '') ? 'ru' : 'en';
+})();
+const CYR = /[А-Яа-яЁё]/;
+const I18N_MISS = new Set();
+let EN_LOW = null;
+function tr(s) {
+  if (LANG !== 'en' || typeof s !== 'string' || !CYR.test(s)) return s;
+  if (s[0] === '~') return '~' + tr(s.slice(1));
+  if (!EN_LOW) {
+    // a key written in capitals never replaces the same words written normally
+    EN_LOW = new Map();
+    for (const k in EN) { const l = k.toLowerCase(); if (!EN_LOW.has(l) || k !== k.toUpperCase()) EN_LOW.set(l, EN[k]); }
+  }
+  const v = EN_LOW.get(s.toLowerCase());
+  if (v !== undefined) {
+    if (s === s.toUpperCase() && s !== s.toLowerCase()) return v.toUpperCase();
+    // a line that starts with a capital starts with one in English too
+    return s[0] !== s[0].toLowerCase() ? v[0].toUpperCase() + v.slice(1) : v;
+  }
+  // a line made of parts, like a menu note: translate each part
+  if (s.includes(' · ')) return s.split(' · ').map(tr).join(' · ');
+  if (s.length > 1) I18N_MISS.add(s);
+  return s;
+}
+function Tf(fmt, ...args) {
+  return tr(fmt).replace(/\{(\d)\}/g, (_, i) => tr(String(args[i])));
+}
+function setLang(l) { store.set('gtte-lang', l); location.reload(); }
+// in English every string drawn or measured on a canvas is translated on the way
+function patchCtx(c) {
+  if (LANG !== 'en') return;
+  const fill = c.fillText, stroke = c.strokeText, measure = c.measureText;
+  c.fillText = function (t, ...a) { return fill.call(this, tr(t), ...a); };
+  c.strokeText = function (t, ...a) { return stroke.call(this, tr(t), ...a); };
+  c.measureText = function (t) { return measure.call(this, tr(t)); };
+}
+patchCtx(ctx);
+// the page around the canvas: labels marked with data-t, and the aria labels
+if (LANG === 'en') {
+  document.documentElement.lang = 'en';
+  // data-t may name its own key, for a word that is translated differently on the page
+  for (const el of document.querySelectorAll('[data-t]')) el.textContent = tr(el.dataset.t || el.textContent.trim());
+  for (const el of document.querySelectorAll('[aria-label]')) el.setAttribute('aria-label', tr(el.getAttribute('aria-label')));
+}
+
 // ===== src/js/03-sound.js =====
 // ---------- sound: a projector hum, and every word you land on plays a note ----------
 const AU = { c: null, out: null, html: null, unlocked: false, muted: store.get('gtte-mute') === '1' };
@@ -1636,7 +2125,7 @@ function horn() {
   }
 }
 const PENTA = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21];
-const SOLFEGE = { 'До': 523.3, 'Ре': 587.3, 'Ми': 659.3, 'Фа': 698.5, 'Соль': 784, 'Ля': 880, 'Си': 987.8 };
+const SOLFEGE = { 'До': 523.3, 'Ре': 587.3, 'Ми': 659.3, 'Фа': 698.5, 'Соль': 784, 'Ля': 880, 'Си': 987.8, Do: 523.3, Re: 587.3, Mi: 659.3, Fa: 698.5, Sol: 784, La: 880, Ti: 987.8 };
 function landNote(pl, impact) {
   const base = LV.sound.base * (LV.sound.base < 300 ? 2 : 1);
   const f = pl.note || base * Math.pow(2, PENTA[Math.floor(clamp((pl.x + pl.w / 2) / W, 0, .999) * PENTA.length)] / 12) / (pl.size >= 30 ? 2 : 1);
@@ -1798,7 +2287,17 @@ function platform(text, font, size, x, base, color, extra = {}) {
   return p;
 }
 function measure(text, font) { ctx.font = font; return ctx.measureText(text.replace('~', '')).width; }
-function row(words, [font, size, sep], y, color, extra) {
+// a line that is too wide for the frame (a longer translation, say) gets a slightly smaller type
+function fit(font, size, width, room) {
+  if (width <= room) return [font, size];
+  const k = room / width, px = Math.floor(size * k);
+  return [font.replace(/(\d+(?:\.\d+)?)px/, px + 'px'), px];
+}
+const ROOM = W - 28, HALF = W / 2 - 18 - 12;
+function row(words, [font0, size0, sep], y, color, extra) {
+  const total = words.reduce((s, t) => s + measure(t, font0), 0) + sep * (words.length - 1);
+  const [font, size] = fit(font0, size0, total, ROOM);
+  if (size !== size0) sep *= size / size0;
   const ws = words.map(t => measure(t, font));
   const x0 = CX - (ws.reduce((s, v) => s + v, 0) + sep * (words.length - 1)) / 2;
   let x = x0;
@@ -1824,27 +2323,29 @@ function layout() {
       stars.push({ x: CX + a[0], y: y + a[1], got: false, banked: false, L: film });
     } else if (type === 'title') {
       // the title is separate words, the gaps between them are the first way down
-      const { out, x0, ws } = row(a[0].split(' '), f.title, y, P.film, { glow: true });
-      checkpoints.push({ name: 'Начало', top: out[0].top, x: x0 + ws[0] / 2 });
+      const { out, x0, ws } = row(tr(a[0]).split(' '), f.title, y, P.film, { glow: true });
+      checkpoints.push({ name: tr('Начало'), top: out[0].top, x: x0 + ws[0] / 2 });
       y += LINE * 1.6;
     } else if (type === 'h') {
       y += LINE * .45;
-      const text = a[0].toUpperCase();
-      const p = platform(text, f.head[0], f.head[1], CX - measure(text, f.head[0]) / 2, y, P.film);
-      checkpoints.push({ name: a[0], top: p.top, x: CX });
+      const text = tr(a[0]).toUpperCase(), [hf, hs] = fit(f.head[0], f.head[1], measure(text, f.head[0]), ROOM);
+      const p = platform(text, hf, hs, CX - measure(text, hf) / 2, y, P.film);
+      checkpoints.push({ name: tr(a[0]), top: p.top, x: CX });
       y += LINE * 1.15;
     } else if (type === 'r') {
-      const role = a[0].toUpperCase();
-      platform(role, f.role[0], f.role[1], CX - 18 - measure(role, f.role[0]), y, P.dim, extra);
-      platform(a[1], f.name[0], f.name[1], CX + 18, y, P.film, extra);
+      // the role ends left of the centre and the name starts right of it; each keeps to its half
+      const role = tr(a[0]).toUpperCase(), name = tr(a[1]);
+      const [rf, rs] = fit(f.role[0], f.role[1], measure(role, f.role[0]), HALF), [nf, ns] = fit(f.name[0], f.name[1], measure(name, f.name[0]), HALF);
+      platform(role, rf, rs, CX - 18 - measure(role, rf), y, P.dim, extra);
+      platform(name, nf, ns, CX + 18, y, P.film, extra);
       y += LINE;
     } else if (type === 'c') {
       // a sentence: every word stands apart, so there is always a gap to drop through
       const fragile = a[0].startsWith('~');
-      row(a[0].replace('~', '').split(' ').map(t => (fragile ? '~' : '') + t), f.sent, y, P.film, extra);
+      row(tr(a[0].replace('~', '')).split(' ').map(t => (fragile ? '~' : '') + t), f.sent, y, P.film, extra);
       y += LINE;
     } else if (type === 'w') {
-      const { out } = row(a, f.list, y, P.film, extra);
+      const { out } = row(a.map(tr), f.list, y, P.film, extra);
       out.slice(0, -1).forEach(p => deco.push({ text: '·', font: p.font, x: p.x + p.w + f.list[2] / 2 - 3, base: y, color: P.dim }));
       y += LINE;
     } else if (type === 'end') {
@@ -4439,10 +4940,10 @@ function menuItems() {
   if (menu.screen === 'modes') {
     const life = loadRun('life'), lock = (open, how) => open ? null : how;
     return [
-      { label: 'Марафон', sub: `Все ${EVENING} фильмов подряд на одних часах`, open: true, note: marathonBest() ? `рекорд ${fmt(marathonBest())}` : 'смотреть', act: startMarathon },
+      { label: 'Марафон', sub: Tf('Все {0} фильмов подряд на одних часах', EVENING), open: true, note: marathonBest() ? Tf('рекорд {0}', fmt(marathonBest())) : 'смотреть', act: startMarathon },
       { label: 'Одна жизнь', sub: lock(lifeOpen(), 'Откроется после всех пяти концовок') || 'Весь вечер без единого дубля. Ошибся — всё сначала', open: lifeOpen(),
-        note: lifeDone() ? 'прожита' : life.li > 0 ? `сеанс ${life.li + 1}` : lifeOpen() ? 'смотреть' : 'закрыто', act: lifeOpen() ? startLife : null },
-      { label: `Сеанс ${EVENING + 1} · Все титры сразу`, sub: lock(mixOpen(), 'Откроется после первой концовки') || 'Секретный сеанс: титры всех фильмов вперемешку', open: mixOpen(),
+        note: lifeDone() ? 'прожита' : life.li > 0 ? Tf('сеанс {0}', life.li + 1) : lifeOpen() ? 'смотреть' : 'закрыто', act: lifeOpen() ? startLife : null },
+      { label: Tf('Сеанс {0} · Все титры сразу', EVENING + 1), sub: lock(mixOpen(), 'Откроется после первой концовки') || 'Секретный сеанс: титры всех фильмов вперемешку', open: mixOpen(),
         note: store.get('gtte-mix-done') ? 'пройден' : mixOpen() ? 'смотреть' : 'закрыт', act: mixOpen() ? () => startExtra('mix') : null },
       { label: 'Восхождение', sub: lock(riseOpen(), 'Откроется после секретного сеанса') || 'Вверх по титрам, пока снизу поднимается лава', open: riseOpen(),
         note: store.get('gtte-rise-done') ? 'пройдено' : riseOpen() ? 'смотреть' : 'закрыто', act: riseOpen() ? () => startExtra('rise') : null },
@@ -4454,6 +4955,7 @@ function menuItems() {
   if (menu.screen === 'options') return [
     { label: 'Полный экран', note: 'F', act: toggleFullscreen },
     { label: 'Звук', note: AU.muted ? 'выкл' : 'вкл', act: () => setMute(!AU.muted) },
+    { label: 'Язык · Language', note: LANG === 'en' ? 'English' : 'Русский', act: () => setLang(LANG === 'en' ? 'ru' : 'en') },
     { label: 'Музыка', note: MUS.on ? 'вкл' : 'выкл', act: () => setMusic(!MUS.on) },
     { label: 'Эффекты', note: FX.ok ? FX_NAMES[FX.mode] : 'нет WebGL', act: FX.ok ? () => setFxMode({ high: 'low', low: 'off', off: 'high' }[FX.mode]) : null },
     { label: 'Свечение, разводы цвета, плёнка VHS. Низкие — без свечения', info: true, dim: true },
@@ -4477,7 +4979,7 @@ function menuItems() {
   ];
   const modesOpen = 1 + [lifeOpen(), mixOpen(), riseOpen()].filter(Boolean).length, gotAch = Object.keys(achGot()).length;
   return [
-    { label: RUN.li > 0 ? `Продолжить вечер · сеанс ${RUN.li + 1}` : 'Начать вечер', act: () => { if (CHEAT.on) RUN.cheat = true; reelChange(() => startLevel(RUN.li)); } },
+    { label: RUN.li > 0 ? Tf('Продолжить вечер · сеанс {0}', RUN.li + 1) : 'Начать вечер', act: () => { if (CHEAT.on) RUN.cheat = true; reelChange(() => startLevel(RUN.li)); } },
     { label: 'Режимы', note: `${modesOpen} / 4`, act: () => go('modes') },
     { label: 'Достижения', note: `${gotAch} / ${ACH.length}`, act: () => { menu.page = 0; go('ach'); } },
     { label: 'Концовки', note: `${seen.length} / 5`, act: () => go('endings') },
@@ -4515,7 +5017,7 @@ function replayEnding(key) {
   S.camY = endTop - H * .6;
   S.p.x = e.x + 30; S.p.y = e.top - PH; S.p.vy = 0;
   S.ending = key; S.modeT = 0; S.replay = true;
-  const d = DEMO[key];
+  const d = DEMO[key] || DEMO.full;
   const total = LEVELS.reduce((n, L) => n + L.credits.filter(c => c[0] === '*').length, 0);
   S.summary = store.json('gtte-summary-' + key) || { time: d[0], inTime: d[1], got: Math.round(d[2] / 103 * total), total, fast: d[1] === EVENING };
   S.endDot = { x: S.p.x + PW / 2, y: S.p.y + PH / 2 - S.camY };
@@ -4538,8 +5040,8 @@ function drawMenu(t) {
   caption(titles[menu.screen], `600 ${menu.screen === 'main' ? 40 : 34}px ${SERIF}`, 74, film);
   ctx.shadowBlur = 0;
   const st = menu.screen === 'stats' && store.json('gtte-laststats'), en = st && ENDINGS.find(e => e.key === st.ending);
-  const subs = { main: `${EVENING} сеансов. Один вечер. Одна жизнь.`, endings: 'Открытые можно пересмотреть. Под каждой — как её открыть.', cheats: 'Для тестов и просмотра концовок', levels: 'Тестовый забег, в рекорды не идёт',
-    modes: 'Другие способы провести вечер', options: 'F — экран · M — звук · N — музыка', ach: `Открыто ${Object.keys(achGot()).length} из ${ACH.length}`, stats: st ? `Последний вечер · ${en ? en.name : 'Одна жизнь'}` : 'Вечер ещё идёт' };
+  const subs = { main: Tf('{0} сеансов. Один вечер. Одна жизнь.', EVENING), endings: 'Открытые можно пересмотреть. Под каждой — как её открыть.', cheats: 'Для тестов и просмотра концовок', levels: 'Тестовый забег, в рекорды не идёт',
+    modes: 'Другие способы провести вечер', options: 'F — экран · M — звук · N — музыка', ach: Tf('Открыто {0} из {1}', Object.keys(achGot()).length, ACH.length), stats: st ? `Последний вечер · ${en ? en.name : 'Одна жизнь'}` : 'Вечер ещё идёт' };
   caption(subs[menu.screen], `italic 500 ${menu.screen === 'main' ? 20 : 17}px ${SERIF}`, 104, dim);
 
   const items = menuItems(), endings = menu.screen === 'endings' || menu.screen === 'modes', levels = menu.screen === 'levels';
@@ -4576,7 +5078,7 @@ function drawMenu(t) {
     ctx.textAlign = 'left';
     ctx.font = it.info ? `italic 500 15px ${SERIF}` : `500 ${levels ? 18 : 21}px ${SERIF}`;
     ctx.fillStyle = sel ? '#ffffff' : it.info ? dim : film;
-    ctx.fillText((endings && !it.open && it.sub ? '🔒︎ ' : '') + it.label, 56, y - (endings && it.sub ? 8 : 0));
+    ctx.fillText((endings && !it.open && it.sub ? '🔒︎ ' : '') + tr(it.label), 56, y - (endings && it.sub ? 8 : 0));
     if (it.sub) { ctx.font = `500 11px ${MONO}`; ctx.fillStyle = it.open ? '#b9f27c' : dim; ctx.fillText(it.sub, 56, y + 14); }
     if (it.note) { ctx.textAlign = 'right'; ctx.font = `500 11px ${MONO}`; ctx.fillStyle = it.note === 'вкл' || it.note === 'да' ? CUT : dim; ctx.fillText(it.note.toUpperCase(), W - 56, y - (endings ? 8 : 0)); }
     ctx.globalAlpha = 1;
@@ -4632,13 +5134,13 @@ function drawIntro() {
   ctx.fillStyle = '#efe8dc'; ctx.globalAlpha = .06 * k;
   ctx.beginPath(); ctx.moveTo(CX, cy); ctx.arc(CX, cy, 170, -Math.PI / 2, -Math.PI / 2 + sw * PI2); ctx.closePath(); ctx.fill();
   ctx.globalAlpha = .1 * k; ctx.font = `600 220px ${SERIF}`; ctx.textBaseline = 'middle'; ctx.fillText(String(n), CX, cy + 10); ctx.textBaseline = 'alphabetic';
-  const tag = RUN.kind === 'marathon' ? `МАРАФОН · ${fmt(marathonTime())} · ` : RUN.kind === 'life' ? 'ОДНА ЖИЗНЬ · ' : '';
-  caption(LV.extra ? LV.tag : `${tag}СЕАНС ${S.li + 1} ИЗ ${EVENING}`, `500 12px ${MONO}`, H * .33, tag || LV.extra ? '#ffd23f' : '#8e877c', k);
+  const tag = RUN.kind === 'marathon' ? Tf('МАРАФОН · {0} · ', fmt(marathonTime())) : RUN.kind === 'life' ? tr('ОДНА ЖИЗНЬ · ') : '';
+  caption(LV.extra ? LV.tag : tag + Tf('СЕАНС {0} ИЗ {1}', S.li + 1, EVENING), `500 12px ${MONO}`, H * .33, tag || LV.extra ? '#ffd23f' : '#8e877c', k);
   ctx.shadowColor = LV.pal.accent; ctx.shadowBlur = 20;
   caption(LV.name, LV.fonts.head[0], H * .33 + 50, LV.pal.light ? '#ffffff' : LV.pal.film, k);
   ctx.shadowBlur = 0;
   caption(LV.genre, `italic 500 20px ${SERIF}`, H * .33 + 86, '#a59d92', k);
-  caption(`ТАЙМЕР ${fmt(S.par)} · ЗВЁЗД ${stars.length}`, `500 12px ${MONO}`, H * .33 + 124, LV.pal.accent === '#2121ff' ? '#6f7cff' : LV.pal.accent, k);
+  caption(Tf('ТАЙМЕР {0} · ЗВЁЗД {1}', fmt(S.par), stars.length), `500 12px ${MONO}`, H * .33 + 124, LV.pal.accent === '#2121ff' ? '#6f7cff' : LV.pal.accent, k);
   caption(introHint(), `500 11px ${MONO}`, H * .33 + 150, '#8e877c', k);
 }
 function introHint() {
@@ -4674,7 +5176,7 @@ function drawCut() {
   // some films end a take their own way
   caption(LV.deathTitle || 'Стоп. Снято.', LV.deathFont ? `400 46px ${LV.deathFont}` : `italic 600 64px ${SERIF}`, H / 2 - 10, LV.deathCol || '#efe8dc', k);
   caption(S.cutWhy.toUpperCase(), `500 13px ${MONO}`, H / 2 + 26, '#8e877c', k);
-  caption(`ДУБЛЬ ${S.take}`, `500 13px ${MONO}`, H / 2 + 52, CUT, k);
+  caption(Tf('ДУБЛЬ {0}', S.take), `500 13px ${MONO}`, H / 2 + 52, CUT, k);
 }
 
 function drawClear() {
@@ -4687,17 +5189,17 @@ function drawClear() {
   ctx.fillStyle = `rgba(6,5,8,${.86 * k})`; rr(28, H * .1, W - 56, 190, 10); ctx.fill();
   ctx.strokeStyle = `rgba(255,255,255,${.12 * k})`; ctx.lineWidth = 1; rr(28, H * .1, W - 56, 190, 10); ctx.stroke();
   ctx.setLineDash([4, 5]); ctx.beginPath(); ctx.moveTo(40, H * .1 + 146); ctx.lineTo(W - 40, H * .1 + 146); ctx.stroke(); ctx.setLineDash([]);
-  caption(`СЕАНС ${S.li + 1} ОКОНЧЕН`, `500 12px ${MONO}`, H * .1 + 36, '#a59d92', k);
+  caption(Tf('СЕАНС {0} ОКОНЧЕН', S.li + 1), `500 12px ${MONO}`, H * .1 + 36, '#a59d92', k);
   caption(LV.name, LV.fonts.head[0], H * .1 + 76, LV.pal.light ? '#ffffff' : LV.pal.film, k);
   // time against the timer as a bar
   const bw = 300, bx = CX - bw / 2, by = H * .1 + 104, f = clamp(r.t / (r.par * 1.6), 0, 1);
   ctx.globalAlpha = k; ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fillRect(bx, by, bw, 6);
   ctx.fillStyle = ok ? '#b9f27c' : CUT; ctx.fillRect(bx, by, bw * f, 6);
   ctx.fillStyle = '#ffffff'; ctx.fillRect(bx + bw / 1.6 - 1, by - 4, 2, 14); ctx.globalAlpha = 1;
-  caption(ok ? `${fmt(r.t)} — успел, таймер ${fmt(r.par)}` : `${fmt(r.t)} — опоздал на ${fmt(r.t - r.par)}`, `500 13px ${MONO}`, by + 34, ok ? '#b9f27c' : CUT, k);
+  caption(ok ? Tf('{0} — успел, таймер {1}', fmt(r.t), fmt(r.par)) : Tf('{0} — опоздал на {1}', fmt(r.t), fmt(r.t - r.par)), `500 13px ${MONO}`, by + 34, ok ? '#b9f27c' : CUT, k);
   caption(`★ ${r.got} / ${r.total}`, `500 13px ${MONO}`, by + 58, LV.pal.star, k);
   drawCueMarks(T, 2.4);
-  if (T > 2.2) caption(`ПРОБЕЛ — СЛЕДУЮЩИЙ СЕАНС: ${LEVELS[S.li + 1].name.toUpperCase()}`, `500 11px ${MONO}`, H - 30, LV.pal.light ? '#1b1b3a' : '#a59d92', k);
+  if (T > 2.2) caption(Tf('ПРОБЕЛ — СЛЕДУЮЩИЙ СЕАНС: {0}', tr(LEVELS[S.li + 1].name).toUpperCase()), `500 11px ${MONO}`, H - 30, LV.pal.light ? '#1b1b3a' : '#a59d92', k);
 }
 
 // ===== src/js/19-endings.js =====
@@ -4758,7 +5260,7 @@ function lines(T, rows, color, glow) {
 }
 function endingStats(T, at, color, y = H - 92) {
   const s = S.summary;
-  if (T > at) caption(`ВРЕМЯ ${fmt(s.time)} · В ГРАФИКЕ ${s.inTime}/${EVENING} · ★ ${s.got}/${s.total}`, `500 12px ${MONO}`, y, color, clamp((T - at) / .8, 0, 1));
+  if (T > at) caption(Tf('ВРЕМЯ {0} · В ГРАФИКЕ {1}/{2} · ★ {3}/{4}', fmt(s.time), s.inTime, EVENING, s.got, s.total), `500 12px ${MONO}`, y, color, clamp((T - at) / .8, 0, 1));
   if (T > at + 1) caption(S.replay ? 'ПРОБЕЛ — НАЗАД' : 'ПРОБЕЛ — СТАТИСТИКА ВЕЧЕРА', `500 12px ${MONO}`, y + 30, color, clamp((T - at - 1) / .8, 0, 1));
 }
 const MOTTO = 'ТОРОПИСЬ ЖИТЬ. ЖИЗНЬ ОДНА.';
@@ -4854,7 +5356,7 @@ function drawEnding(t) {
     lines(T, [
       [2.0, 'Свет в зале включили.', big, y0],
       [3.2, 'Ты успел. Почти все звёзды — с тобой.', mid, y0 + 48],
-      [4.4, `${miss} ${plural(miss, 'осталась', 'остались', 'остались')} в темноте.`, mid, y0 + 76],
+      [4.4, Tf('{0} {1} в темноте.', miss, plural(miss, 'осталась', 'остались', 'остались')), mid, y0 + 76],
       [5.4, 'Вернуться за ними нельзя: жизнь одна.', mid, y0 + 104],
       [6.6, 'ТОРОПИСЬ ЖИТЬ.', motto, y0 + 170, '#b5291f'],
     ], '#1a1416');
@@ -4869,6 +5371,7 @@ function drawEnding(t) {
 }
 
 function plural(n, one, few, many) {
+  if (LANG === 'en') return tr(n === 1 ? one : many);
   const m10 = n % 10, m100 = n % 100;
   return m10 === 1 && m100 !== 11 ? one : m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20) ? few : many;
 }
@@ -4916,7 +5419,7 @@ function drawFull(t, T) {
   const ink = '#1a1416';
   lines(T, [
     [4.0, 'Ты успел всё.', `italic 600 34px ${SERIF}`, H * .18],
-    [5.0, `Все ${n} ${plural(n, 'звезда', 'звезды', 'звёзд')} — с тобой.`, `italic 500 21px ${SERIF}`, H * .18 + 40],
+    [5.0, Tf('Все {0} {1} — с тобой.', n, plural(n, 'звезда', 'звезды', 'звёзд')), `italic 500 21px ${SERIF}`, H * .18 + 40],
   ], ink);
   // GOING TO THE END → GOING TO THE BEGINNING
   if (T > 6.6) {
@@ -4944,7 +5447,7 @@ function drawFull(t, T) {
 // ===== src/js/20-hud.js =====
 // ---------- hud ----------
 function hud() {
-  $('lvl').textContent = `${LV.extra ? LV.name.toUpperCase() : `${S.li + 1} / ${EVENING}`} · ${checkpoints[S.cp] ? checkpoints[S.cp].name : ''}`;
+  $('lvl').textContent = `${LV.extra ? tr(LV.name).toUpperCase() : `${S.li + 1} / ${EVENING}`} · ${checkpoints[S.cp] ? checkpoints[S.cp].name : ''}`;
   $('take').textContent = S.take;
   $('stars').textContent = `${stars.filter(s => s.got).length} / ${stars.length}`;
   $('fresh').hidden = !(S.mode === 'menu' && RUN.li > 0);
@@ -5002,6 +5505,7 @@ const FX = {
 const FX_NAMES = { high: 'высокие', low: 'низкие', off: 'выкл' };
 // words that must stay sharp over the paused, blurred frame are drawn here and laid on top in the shader
 const fxUi = document.createElement('canvas'), fxUiCtx = fxUi.getContext('2d');
+patchCtx(fxUiCtx);
 fxUi.width = cv.width; fxUi.height = cv.height;
 function fxPauseWords(words) {
   if (!FX.ok || FX.mode === 'off') return false;
@@ -5455,7 +5959,7 @@ MECH.thug = {
     ctx.textAlign = 'left'; ctx.font = `400 18px ${PACIFICO}`;
     ctx.shadowColor = '#ff2ad8'; ctx.shadowBlur = 12; ctx.fillStyle = '#ffe14d';
     ctx.fillText(`${S.score}`, 16, 34);
-    if (S.combo > 1) { ctx.fillStyle = '#00f0ff'; ctx.shadowColor = '#00f0ff'; ctx.fillText(`комбо x${S.combo}`, 16, 60); }
+    if (S.combo > 1) { ctx.fillStyle = '#00f0ff'; ctx.shadowColor = '#00f0ff'; ctx.fillText(Tf('комбо x{0}', S.combo), 16, 60); }
     ctx.shadowBlur = 0;
     // scanlines of a worn tape
     ctx.fillStyle = 'rgba(0,0,0,.18)';
@@ -5843,7 +6347,7 @@ Object.assign(GAGS, {
       const labels = ['БИТЬ', 'ГОВОРИТЬ', 'ВЕЩИ', 'ПОЩАДА'], y = g.top - 50, w = 104, k = clamp((T - .8) / .3, 0, 1);
       if (!k) return;
       ctx.globalAlpha = k;
-      const line = '* Ты пощадил титры.', n = Math.floor(clamp((T - 1.3) * 18, 0, line.length));
+      const line = tr('* Ты пощадил титры.'), n = Math.floor(clamp((T - 1.3) * 18, 0, line.length));
       ctx.fillStyle = '#ffffff'; ctx.font = `400 18px ${TINY}`; ctx.textAlign = 'left'; ctx.fillText(line.slice(0, n), CX - 2 * w - 6, y - 18);
       labels.forEach((s, i) => {
         const x = CX - 2 * w - 6 + i * (w + 4), sel = i === 3;
@@ -5912,7 +6416,7 @@ Object.assign(GAGS, {
     },
     screen(g, T) {
       ctx.shadowColor = '#ff2ad8'; ctx.shadowBlur = 16;
-      caption(`СЧЁТ ${S.score || 0}`, `400 34px ${PACIFICO}`, g.top - S.camY - 96, '#ffe14d', clamp(T / .4, 0, 1));
+      caption(Tf('СЧЁТ {0}', S.score || 0), `400 34px ${PACIFICO}`, g.top - S.camY - 96, '#ffe14d', clamp(T / .4, 0, 1));
       ctx.shadowBlur = 0;
     },
   },
@@ -6009,8 +6513,8 @@ function drawOver() {
   ctx.globalAlpha = 1; ctx.fillStyle = `rgba(0,0,0,${.95 * k})`; ctx.fillRect(0, 0, W, H);
   lines(T, [
     [.6, 'Одна жизнь.', `italic 600 40px ${SERIF}`, H * .34],
-    [1.6, `Она оборвалась на сеансе ${S.lostAt + 1}:`, `italic 500 21px ${SERIF}`, H * .34 + 46],
-    [2.0, `«${LEVELS[S.lostAt].name}».`, `italic 500 21px ${SERIF}`, H * .34 + 74],
+    [1.6, Tf('Она оборвалась на сеансе {0}:', S.lostAt + 1), `italic 500 21px ${SERIF}`, H * .34 + 46],
+    [2.0, Tf('«{0}».', LEVELS[S.lostAt].name), `italic 500 21px ${SERIF}`, H * .34 + 74],
     [2.6, S.cutWhy.toUpperCase(), `500 12px ${MONO}`, H * .34 + 112, '#8e877c'],
     [3.6, MOTTO, `600 22px ${MONO}`, H * .34 + 180, CUT],
     [4.6, 'ПРОБЕЛ — В МЕНЮ', `500 12px ${MONO}`, H - 60, '#8e877c'],
@@ -6056,14 +6560,14 @@ function drawMarathonClear() {
     ctx.fillStyle = `rgba(6,5,8,${.88 * k})`; rr(28, H * .12, W - 56, 230, 10); ctx.fill();
     caption('МАРАФОН ОКОНЧЕН', `500 12px ${MONO}`, H * .12 + 36, '#a59d92', k);
     caption(fmt(M.time), `600 64px ${SERIF}`, H * .12 + 104, M.time <= EVENING * GUEST_PAR ? '#b9f27c' : CUT, k);
-    caption(M.record ? 'НОВЫЙ РЕКОРД' : M.best ? `РЕКОРД ${fmt(M.best)}` : '', `500 12px ${MONO}`, H * .12 + 132, '#ffd23f', k);
-    caption(`${EVENING} ФИЛЬМОВ · ${M.deaths} ${plural(M.deaths, 'ДУБЛЬ', 'ДУБЛЯ', 'ДУБЛЕЙ')} · ★ ${M.got} / ${M.total}`, `500 12px ${MONO}`, H * .12 + 166, '#efe8dc', k);
+    caption(M.record ? 'НОВЫЙ РЕКОРД' : M.best ? Tf('РЕКОРД {0}', fmt(M.best)) : '', `500 12px ${MONO}`, H * .12 + 132, '#ffd23f', k);
+    caption(Tf('{0} ФИЛЬМОВ · {1} {2} · ★ {3} / {4}', EVENING, M.deaths, plural(M.deaths, 'ДУБЛЬ', 'ДУБЛЯ', 'ДУБЛЕЙ'), M.got, M.total), `500 12px ${MONO}`, H * .12 + 166, '#efe8dc', k);
     if (T > 2.4) caption('ПРОБЕЛ — В МЕНЮ', `500 11px ${MONO}`, H * .12 + 206, '#a59d92', k);
     return;
   }
   // between films: one line under the gag, then the cue marks and the change
   const r = RUN.res[S.li], k = clamp((T - .6) / .5, 0, 1);
-  if (r) caption(`${S.li + 1} / ${EVENING} · ${fmt(r.t)} · ★ ${r.got}/${r.total} · ДАЛЬШЕ: ${LEVELS[S.li + 1].name.toUpperCase()}`, `500 11px ${MONO}`, H - 30, LV.pal.light ? '#1b1b3a' : '#d8d0c4', k);
+  if (r) caption(`${S.li + 1} / ${EVENING} · ${fmt(r.t)} · ★ ${r.got}/${r.total} · ` + Tf('ДАЛЬШЕ: {0}', tr(LEVELS[S.li + 1].name).toUpperCase()), `500 11px ${MONO}`, H - 30, LV.pal.light ? '#1b1b3a' : '#d8d0c4', k);
   drawCueMarks(T, 1.5);
 }
 
@@ -6226,7 +6730,7 @@ function drawStats(t) {
     ctx.globalAlpha = r ? 1 : .35;
     ctx.textAlign = 'left'; ctx.font = `500 10px ${MONO}`; ctx.fillStyle = dim; ctx.fillText(String(i + 1).padStart(2, '0'), x.n, yy);
     ctx.font = `500 13px ${SERIF}`; ctx.fillStyle = film;
-    let name = L.name; while (ctx.measureText(name).width > x.time - x.name - 48 && name.length > 4) name = name.slice(0, -2) + '…';
+    let name = tr(L.name); while (ctx.measureText(name).width > x.time - x.name - 48 && name.length > 4) name = name.slice(0, -2) + '…';
     ctx.fillText(name, x.name, yy);
     // the death map: a strip for the film, a red tick for every take lost on it
     ctx.fillStyle = 'rgba(255,255,255,.08)'; ctx.fillRect(x.map, yy - 6, mapW, 4);
@@ -6241,9 +6745,9 @@ function drawStats(t) {
   }
   ctx.globalAlpha = 1; ctx.textAlign = 'center';
   y += EVENING * 15 + 6;
-  caption(`ВСЕГО ${fmt(sum.time)} · ${sum.deaths} ${plural(sum.deaths, 'ДУБЛЬ', 'ДУБЛЯ', 'ДУБЛЕЙ')} · ★ ${sum.got} / ${sum.total}`, `500 12px ${MONO}`, y, film);
-  if (sum.worst) caption(`Самый смертельный: «${LEVELS[sum.worst[0]].name}» — ${sum.worst[1]} ${plural(sum.worst[1], 'дубль', 'дубля', 'дублей')}`, `italic 500 17px ${SERIF}`, y + 22, film);
-  if (sum.why) caption(`Чаще всего: «${sum.why[0].toLowerCase()}» × ${sum.why[1]}`, `italic 500 17px ${SERIF}`, y + 42, dim);
+  caption(Tf('ВСЕГО {0} · {1} {2} · ★ {3} / {4}', fmt(sum.time), sum.deaths, plural(sum.deaths, 'ДУБЛЬ', 'ДУБЛЯ', 'ДУБЛЕЙ'), sum.got, sum.total), `500 12px ${MONO}`, y, film);
+  if (sum.worst) caption(Tf('Самый смертельный: «{0}» — {1} {2}', LEVELS[sum.worst[0]].name, sum.worst[1], plural(sum.worst[1], 'дубль', 'дубля', 'дублей')), `italic 500 17px ${SERIF}`, y + 22, film);
+  if (sum.why) caption(Tf('Чаще всего: «{0}» × {1}', tr(sum.why[0]).toLowerCase(), sum.why[1]), `italic 500 17px ${SERIF}`, y + 42, dim);
 }
 
 // ===== src/js/22e-secret.js =====
@@ -6334,7 +6838,7 @@ function drawExtraClear() {
   ctx.fillStyle = `rgba(6,5,8,${.86 * k})`; rr(28, H * .1, W - 56, 170, 10); ctx.fill();
   caption('СЕКРЕТНЫЙ СЕАНС ПРОЙДЕН', `500 12px ${MONO}`, H * .1 + 36, '#ffd23f', k);
   caption(fmt(r.t), `600 52px ${SERIF}`, H * .1 + 92, '#efe8dc', k);
-  caption(`${r.takes - 1} ${plural(r.takes - 1, 'ДУБЛЬ', 'ДУБЛЯ', 'ДУБЛЕЙ')} · ★ ${r.got} / ${r.total}`, `500 12px ${MONO}`, H * .1 + 122, '#efe8dc', k);
+  caption(Tf('{0} {1} · ★ {2} / {3}', r.takes - 1, plural(r.takes - 1, 'ДУБЛЬ', 'ДУБЛЯ', 'ДУБЛЕЙ'), r.got, r.total), `500 12px ${MONO}`, H * .1 + 122, '#efe8dc', k);
   caption('ОТКРЫТО: ВОСХОЖДЕНИЕ', `500 12px ${MONO}`, H * .1 + 150, CUT, k);
   if (T > 5.4) caption('ПРОБЕЛ — В МЕНЮ', `500 11px ${MONO}`, H - 30, '#a59d92', k);
 }
@@ -6519,7 +7023,7 @@ function drawRiseEnding(t, T) {
     [5.8, 'до самого начала.', `italic 500 21px ${SERIF}`, H * .3 + 74],
     [7.0, 'Дальше титров нет. Дальше — жизнь.', `italic 500 21px ${SERIF}`, H * .3 + 120],
     [8.2, MOTTO, `600 22px ${MONO}`, H * .3 + 186, '#b5291f'],
-    [9.2, `ВРЕМЯ ${fmt(rr_.t)} · ${rr_.takes - 1} ${plural(rr_.takes - 1, 'ДУБЛЬ', 'ДУБЛЯ', 'ДУБЛЕЙ')}`, `500 12px ${MONO}`, H - 92, '#6a5a50'],
+    [9.2, Tf('ВРЕМЯ {0} · {1} {2}', fmt(rr_.t), rr_.takes - 1, plural(rr_.takes - 1, 'ДУБЛЬ', 'ДУБЛЯ', 'ДУБЛЕЙ')), `500 12px ${MONO}`, H - 92, '#6a5a50'],
     [10, 'ПРОБЕЛ — В МЕНЮ', `500 12px ${MONO}`, H - 62, '#6a5a50'],
   ], '#1a1416');
 }

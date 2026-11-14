@@ -55,7 +55,7 @@ function lines(T, rows, color, glow) {
 }
 function endingStats(T, at, color, y = H - 92) {
   const s = S.summary;
-  if (T > at) caption(`ВРЕМЯ ${fmt(s.time)} · В ГРАФИКЕ ${s.inTime}/${EVENING} · ★ ${s.got}/${s.total}`, `500 12px ${MONO}`, y, color, clamp((T - at) / .8, 0, 1));
+  if (T > at) caption(Tf('ВРЕМЯ {0} · В ГРАФИКЕ {1}/{2} · ★ {3}/{4}', fmt(s.time), s.inTime, EVENING, s.got, s.total), `500 12px ${MONO}`, y, color, clamp((T - at) / .8, 0, 1));
   if (T > at + 1) caption(S.replay ? 'ПРОБЕЛ — НАЗАД' : 'ПРОБЕЛ — СТАТИСТИКА ВЕЧЕРА', `500 12px ${MONO}`, y + 30, color, clamp((T - at - 1) / .8, 0, 1));
 }
 const MOTTO = 'ТОРОПИСЬ ЖИТЬ. ЖИЗНЬ ОДНА.';
@@ -151,7 +151,7 @@ function drawEnding(t) {
     lines(T, [
       [2.0, 'Свет в зале включили.', big, y0],
       [3.2, 'Ты успел. Почти все звёзды — с тобой.', mid, y0 + 48],
-      [4.4, `${miss} ${plural(miss, 'осталась', 'остались', 'остались')} в темноте.`, mid, y0 + 76],
+      [4.4, Tf('{0} {1} в темноте.', miss, plural(miss, 'осталась', 'остались', 'остались')), mid, y0 + 76],
       [5.4, 'Вернуться за ними нельзя: жизнь одна.', mid, y0 + 104],
       [6.6, 'ТОРОПИСЬ ЖИТЬ.', motto, y0 + 170, '#b5291f'],
     ], '#1a1416');
@@ -166,6 +166,7 @@ function drawEnding(t) {
 }
 
 function plural(n, one, few, many) {
+  if (LANG === 'en') return tr(n === 1 ? one : many);
   const m10 = n % 10, m100 = n % 100;
   return m10 === 1 && m100 !== 11 ? one : m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20) ? few : many;
 }
@@ -213,7 +214,7 @@ function drawFull(t, T) {
   const ink = '#1a1416';
   lines(T, [
     [4.0, 'Ты успел всё.', `italic 600 34px ${SERIF}`, H * .18],
-    [5.0, `Все ${n} ${plural(n, 'звезда', 'звезды', 'звёзд')} — с тобой.`, `italic 500 21px ${SERIF}`, H * .18 + 40],
+    [5.0, Tf('Все {0} {1} — с тобой.', n, plural(n, 'звезда', 'звезды', 'звёзд')), `italic 500 21px ${SERIF}`, H * .18 + 40],
   ], ink);
   // GOING TO THE END → GOING TO THE BEGINNING
   if (T > 6.6) {

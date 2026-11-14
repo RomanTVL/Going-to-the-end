@@ -23,6 +23,7 @@ const FX = {
 const FX_NAMES = { high: 'высокие', low: 'низкие', off: 'выкл' };
 // words that must stay sharp over the paused, blurred frame are drawn here and laid on top in the shader
 const fxUi = document.createElement('canvas'), fxUiCtx = fxUi.getContext('2d');
+patchCtx(fxUiCtx);
 fxUi.width = cv.width; fxUi.height = cv.height;
 function fxPauseWords(words) {
   if (!FX.ok || FX.mode === 'off') return false;

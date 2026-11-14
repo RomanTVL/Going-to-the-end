@@ -85,7 +85,7 @@ function drawExtraClear() {
   ctx.fillStyle = `rgba(6,5,8,${.86 * k})`; rr(28, H * .1, W - 56, 170, 10); ctx.fill();
   caption('СЕКРЕТНЫЙ СЕАНС ПРОЙДЕН', `500 12px ${MONO}`, H * .1 + 36, '#ffd23f', k);
   caption(fmt(r.t), `600 52px ${SERIF}`, H * .1 + 92, '#efe8dc', k);
-  caption(`${r.takes - 1} ${plural(r.takes - 1, 'ДУБЛЬ', 'ДУБЛЯ', 'ДУБЛЕЙ')} · ★ ${r.got} / ${r.total}`, `500 12px ${MONO}`, H * .1 + 122, '#efe8dc', k);
+  caption(Tf('{0} {1} · ★ {2} / {3}', r.takes - 1, plural(r.takes - 1, 'ДУБЛЬ', 'ДУБЛЯ', 'ДУБЛЕЙ'), r.got, r.total), `500 12px ${MONO}`, H * .1 + 122, '#efe8dc', k);
   caption('ОТКРЫТО: ВОСХОЖДЕНИЕ', `500 12px ${MONO}`, H * .1 + 150, CUT, k);
   if (T > 5.4) caption('ПРОБЕЛ — В МЕНЮ', `500 11px ${MONO}`, H - 30, '#a59d92', k);
 }
@@ -270,7 +270,7 @@ function drawRiseEnding(t, T) {
     [5.8, 'до самого начала.', `italic 500 21px ${SERIF}`, H * .3 + 74],
     [7.0, 'Дальше титров нет. Дальше — жизнь.', `italic 500 21px ${SERIF}`, H * .3 + 120],
     [8.2, MOTTO, `600 22px ${MONO}`, H * .3 + 186, '#b5291f'],
-    [9.2, `ВРЕМЯ ${fmt(rr_.t)} · ${rr_.takes - 1} ${plural(rr_.takes - 1, 'ДУБЛЬ', 'ДУБЛЯ', 'ДУБЛЕЙ')}`, `500 12px ${MONO}`, H - 92, '#6a5a50'],
+    [9.2, Tf('ВРЕМЯ {0} · {1} {2}', fmt(rr_.t), rr_.takes - 1, plural(rr_.takes - 1, 'ДУБЛЬ', 'ДУБЛЯ', 'ДУБЛЕЙ')), `500 12px ${MONO}`, H - 92, '#6a5a50'],
     [10, 'ПРОБЕЛ — В МЕНЮ', `500 12px ${MONO}`, H - 62, '#6a5a50'],
   ], '#1a1416');
 }

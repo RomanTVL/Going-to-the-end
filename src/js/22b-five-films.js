@@ -182,7 +182,7 @@ MECH.thug = {
     ctx.textAlign = 'left'; ctx.font = `400 18px ${PACIFICO}`;
     ctx.shadowColor = '#ff2ad8'; ctx.shadowBlur = 12; ctx.fillStyle = '#ffe14d';
     ctx.fillText(`${S.score}`, 16, 34);
-    if (S.combo > 1) { ctx.fillStyle = '#00f0ff'; ctx.shadowColor = '#00f0ff'; ctx.fillText(`комбо x${S.combo}`, 16, 60); }
+    if (S.combo > 1) { ctx.fillStyle = '#00f0ff'; ctx.shadowColor = '#00f0ff'; ctx.fillText(Tf('комбо x{0}', S.combo), 16, 60); }
     ctx.shadowBlur = 0;
     // scanlines of a worn tape
     ctx.fillStyle = 'rgba(0,0,0,.18)';
@@ -570,7 +570,7 @@ Object.assign(GAGS, {
       const labels = ['БИТЬ', 'ГОВОРИТЬ', 'ВЕЩИ', 'ПОЩАДА'], y = g.top - 50, w = 104, k = clamp((T - .8) / .3, 0, 1);
       if (!k) return;
       ctx.globalAlpha = k;
-      const line = '* Ты пощадил титры.', n = Math.floor(clamp((T - 1.3) * 18, 0, line.length));
+      const line = tr('* Ты пощадил титры.'), n = Math.floor(clamp((T - 1.3) * 18, 0, line.length));
       ctx.fillStyle = '#ffffff'; ctx.font = `400 18px ${TINY}`; ctx.textAlign = 'left'; ctx.fillText(line.slice(0, n), CX - 2 * w - 6, y - 18);
       labels.forEach((s, i) => {
         const x = CX - 2 * w - 6 + i * (w + 4), sel = i === 3;
@@ -639,7 +639,7 @@ Object.assign(GAGS, {
     },
     screen(g, T) {
       ctx.shadowColor = '#ff2ad8'; ctx.shadowBlur = 16;
-      caption(`СЧЁТ ${S.score || 0}`, `400 34px ${PACIFICO}`, g.top - S.camY - 96, '#ffe14d', clamp(T / .4, 0, 1));
+      caption(Tf('СЧЁТ {0}', S.score || 0), `400 34px ${PACIFICO}`, g.top - S.camY - 96, '#ffe14d', clamp(T / .4, 0, 1));
       ctx.shadowBlur = 0;
     },
   },

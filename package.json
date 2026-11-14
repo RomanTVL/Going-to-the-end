@@ -5,7 +5,8 @@
   "scripts": {
     "build": "node tools/build.mjs",
     "test": "node tools/build.mjs --debug && node tools/test.mjs",
-    "test:hazards": "node tools/build.mjs --debug && node tools/test.mjs --hazards"
+    "test:hazards": "node tools/build.mjs --debug && node tools/test.mjs --hazards",
+    "test:en": "node tools/build.mjs --debug && node tools/test.mjs --lang en"
   },
   "devDependencies": {
     "playwright": "1.63.0"

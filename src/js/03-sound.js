@@ -85,7 +85,7 @@ function horn() {
   }
 }
 const PENTA = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21];
-const SOLFEGE = { 'До': 523.3, 'Ре': 587.3, 'Ми': 659.3, 'Фа': 698.5, 'Соль': 784, 'Ля': 880, 'Си': 987.8 };
+const SOLFEGE = { 'До': 523.3, 'Ре': 587.3, 'Ми': 659.3, 'Фа': 698.5, 'Соль': 784, 'Ля': 880, 'Си': 987.8, Do: 523.3, Re: 587.3, Mi: 659.3, Fa: 698.5, Sol: 784, La: 880, Ti: 987.8 };
 function landNote(pl, impact) {
   const base = LV.sound.base * (LV.sound.base < 300 ? 2 : 1);
   const f = pl.note || base * Math.pow(2, PENTA[Math.floor(clamp((pl.x + pl.w / 2) / W, 0, .999) * PENTA.length)] / 12) / (pl.size >= 30 ? 2 : 1);

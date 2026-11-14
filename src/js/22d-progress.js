@@ -156,7 +156,7 @@ function drawStats(t) {
     ctx.globalAlpha = r ? 1 : .35;
     ctx.textAlign = 'left'; ctx.font = `500 10px ${MONO}`; ctx.fillStyle = dim; ctx.fillText(String(i + 1).padStart(2, '0'), x.n, yy);
     ctx.font = `500 13px ${SERIF}`; ctx.fillStyle = film;
-    let name = L.name; while (ctx.measureText(name).width > x.time - x.name - 48 && name.length > 4) name = name.slice(0, -2) + '…';
+    let name = tr(L.name); while (ctx.measureText(name).width > x.time - x.name - 48 && name.length > 4) name = name.slice(0, -2) + '…';
     ctx.fillText(name, x.name, yy);
     // the death map: a strip for the film, a red tick for every take lost on it
     ctx.fillStyle = 'rgba(255,255,255,.08)'; ctx.fillRect(x.map, yy - 6, mapW, 4);
@@ -171,7 +171,7 @@ function drawStats(t) {
   }
   ctx.globalAlpha = 1; ctx.textAlign = 'center';
   y += EVENING * 15 + 6;
-  caption(`ВСЕГО ${fmt(sum.time)} · ${sum.deaths} ${plural(sum.deaths, 'ДУБЛЬ', 'ДУБЛЯ', 'ДУБЛЕЙ')} · ★ ${sum.got} / ${sum.total}`, `500 12px ${MONO}`, y, film);
-  if (sum.worst) caption(`Самый смертельный: «${LEVELS[sum.worst[0]].name}» — ${sum.worst[1]} ${plural(sum.worst[1], 'дубль', 'дубля', 'дублей')}`, `italic 500 17px ${SERIF}`, y + 22, film);
-  if (sum.why) caption(`Чаще всего: «${sum.why[0].toLowerCase()}» × ${sum.why[1]}`, `italic 500 17px ${SERIF}`, y + 42, dim);
+  caption(Tf('ВСЕГО {0} · {1} {2} · ★ {3} / {4}', fmt(sum.time), sum.deaths, plural(sum.deaths, 'ДУБЛЬ', 'ДУБЛЯ', 'ДУБЛЕЙ'), sum.got, sum.total), `500 12px ${MONO}`, y, film);
+  if (sum.worst) caption(Tf('Самый смертельный: «{0}» — {1} {2}', LEVELS[sum.worst[0]].name, sum.worst[1], plural(sum.worst[1], 'дубль', 'дубля', 'дублей')), `italic 500 17px ${SERIF}`, y + 22, film);
+  if (sum.why) caption(Tf('Чаще всего: «{0}» × {1}', tr(sum.why[0]).toLowerCase(), sum.why[1]), `italic 500 17px ${SERIF}`, y + 42, dim);
 }

@@ -15,13 +15,13 @@ function drawIntro() {
   ctx.fillStyle = '#efe8dc'; ctx.globalAlpha = .06 * k;
   ctx.beginPath(); ctx.moveTo(CX, cy); ctx.arc(CX, cy, 170, -Math.PI / 2, -Math.PI / 2 + sw * PI2); ctx.closePath(); ctx.fill();
   ctx.globalAlpha = .1 * k; ctx.font = `600 220px ${SERIF}`; ctx.textBaseline = 'middle'; ctx.fillText(String(n), CX, cy + 10); ctx.textBaseline = 'alphabetic';
-  const tag = RUN.kind === 'marathon' ? `МАРАФОН · ${fmt(marathonTime())} · ` : RUN.kind === 'life' ? 'ОДНА ЖИЗНЬ · ' : '';
-  caption(LV.extra ? LV.tag : `${tag}СЕАНС ${S.li + 1} ИЗ ${EVENING}`, `500 12px ${MONO}`, H * .33, tag || LV.extra ? '#ffd23f' : '#8e877c', k);
+  const tag = RUN.kind === 'marathon' ? Tf('МАРАФОН · {0} · ', fmt(marathonTime())) : RUN.kind === 'life' ? tr('ОДНА ЖИЗНЬ · ') : '';
+  caption(LV.extra ? LV.tag : tag + Tf('СЕАНС {0} ИЗ {1}', S.li + 1, EVENING), `500 12px ${MONO}`, H * .33, tag || LV.extra ? '#ffd23f' : '#8e877c', k);
   ctx.shadowColor = LV.pal.accent; ctx.shadowBlur = 20;
   caption(LV.name, LV.fonts.head[0], H * .33 + 50, LV.pal.light ? '#ffffff' : LV.pal.film, k);
   ctx.shadowBlur = 0;
   caption(LV.genre, `italic 500 20px ${SERIF}`, H * .33 + 86, '#a59d92', k);
-  caption(`ТАЙМЕР ${fmt(S.par)} · ЗВЁЗД ${stars.length}`, `500 12px ${MONO}`, H * .33 + 124, LV.pal.accent === '#2121ff' ? '#6f7cff' : LV.pal.accent, k);
+  caption(Tf('ТАЙМЕР {0} · ЗВЁЗД {1}', fmt(S.par), stars.length), `500 12px ${MONO}`, H * .33 + 124, LV.pal.accent === '#2121ff' ? '#6f7cff' : LV.pal.accent, k);
   caption(introHint(), `500 11px ${MONO}`, H * .33 + 150, '#8e877c', k);
 }
 function introHint() {
@@ -57,7 +57,7 @@ function drawCut() {
   // some films end a take their own way
   caption(LV.deathTitle || 'Стоп. Снято.', LV.deathFont ? `400 46px ${LV.deathFont}` : `italic 600 64px ${SERIF}`, H / 2 - 10, LV.deathCol || '#efe8dc', k);
   caption(S.cutWhy.toUpperCase(), `500 13px ${MONO}`, H / 2 + 26, '#8e877c', k);
-  caption(`ДУБЛЬ ${S.take}`, `500 13px ${MONO}`, H / 2 + 52, CUT, k);
+  caption(Tf('ДУБЛЬ {0}', S.take), `500 13px ${MONO}`, H / 2 + 52, CUT, k);
 }
 
 function drawClear() {
@@ -70,15 +70,15 @@ function drawClear() {
   ctx.fillStyle = `rgba(6,5,8,${.86 * k})`; rr(28, H * .1, W - 56, 190, 10); ctx.fill();
   ctx.strokeStyle = `rgba(255,255,255,${.12 * k})`; ctx.lineWidth = 1; rr(28, H * .1, W - 56, 190, 10); ctx.stroke();
   ctx.setLineDash([4, 5]); ctx.beginPath(); ctx.moveTo(40, H * .1 + 146); ctx.lineTo(W - 40, H * .1 + 146); ctx.stroke(); ctx.setLineDash([]);
-  caption(`СЕАНС ${S.li + 1} ОКОНЧЕН`, `500 12px ${MONO}`, H * .1 + 36, '#a59d92', k);
+  caption(Tf('СЕАНС {0} ОКОНЧЕН', S.li + 1), `500 12px ${MONO}`, H * .1 + 36, '#a59d92', k);
   caption(LV.name, LV.fonts.head[0], H * .1 + 76, LV.pal.light ? '#ffffff' : LV.pal.film, k);
   // time against the timer as a bar
   const bw = 300, bx = CX - bw / 2, by = H * .1 + 104, f = clamp(r.t / (r.par * 1.6), 0, 1);
   ctx.globalAlpha = k; ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fillRect(bx, by, bw, 6);
   ctx.fillStyle = ok ? '#b9f27c' : CUT; ctx.fillRect(bx, by, bw * f, 6);
   ctx.fillStyle = '#ffffff'; ctx.fillRect(bx + bw / 1.6 - 1, by - 4, 2, 14); ctx.globalAlpha = 1;
-  caption(ok ? `${fmt(r.t)} — успел, таймер ${fmt(r.par)}` : `${fmt(r.t)} — опоздал на ${fmt(r.t - r.par)}`, `500 13px ${MONO}`, by + 34, ok ? '#b9f27c' : CUT, k);
+  caption(ok ? Tf('{0} — успел, таймер {1}', fmt(r.t), fmt(r.par)) : Tf('{0} — опоздал на {1}', fmt(r.t), fmt(r.t - r.par)), `500 13px ${MONO}`, by + 34, ok ? '#b9f27c' : CUT, k);
   caption(`★ ${r.got} / ${r.total}`, `500 13px ${MONO}`, by + 58, LV.pal.star, k);
   drawCueMarks(T, 2.4);
-  if (T > 2.2) caption(`ПРОБЕЛ — СЛЕДУЮЩИЙ СЕАНС: ${LEVELS[S.li + 1].name.toUpperCase()}`, `500 11px ${MONO}`, H - 30, LV.pal.light ? '#1b1b3a' : '#a59d92', k);
+  if (T > 2.2) caption(Tf('ПРОБЕЛ — СЛЕДУЮЩИЙ СЕАНС: {0}', tr(LEVELS[S.li + 1].name).toUpperCase()), `500 11px ${MONO}`, H - 30, LV.pal.light ? '#1b1b3a' : '#a59d92', k);
 }
